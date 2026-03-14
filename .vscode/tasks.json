@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "analyze: all packages",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "tool/analyze_all.dart"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "format: all packages",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "tool/format_all.dart"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "test: all packages",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "tool/test_all.dart"
+      ],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish: dry-run all",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "tool/dry_run_all.dart"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "pre-publish",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "tool/pre_publish.dart"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}

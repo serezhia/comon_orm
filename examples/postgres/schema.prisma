@@ -1,0 +1,37 @@
+enum UserRole {
+  admin
+  developer
+  manager
+}
+
+enum TodoStatus {
+  pending
+  inProgress
+  done
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "comon_orm"
+  output = "lib/generated"
+}
+
+model User {
+  id    Int      @id @default(autoincrement())
+  name  String
+  role  UserRole
+  todos Todo[]
+}
+
+model Todo {
+  id        Int        @id @default(autoincrement())
+  title     String
+  status    TodoStatus
+  createdAt DateTime   @default(now())
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id])
+}

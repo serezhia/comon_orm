@@ -1,0 +1,19 @@
+name: comon_orm_postgres_example
+description: Dart Frog example using comon_orm with PostgreSQL.
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+resolution: workspace
+
+dependencies:
+  comon_orm:
+    path: ../../packages/comon_orm
+  comon_orm_postgresql:
+    path: ../../packages/comon_orm_postgresql
+  dart_frog: ^1.2.0
+  postgres: ^3.5.9
+
+dev_dependencies:
+  lints: ^5.1.1

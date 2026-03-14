@@ -1,0 +1,17 @@
+datasource db {
+  provider = "sqlite"
+  url = ":memory:"
+}
+
+generator client {
+  provider = "comon_orm"
+  output = "generated/comon_orm_client.dart"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

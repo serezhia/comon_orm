@@ -1,0 +1,29 @@
+name: comon_orm
+description: Prisma-inspired schema-first ORM core for Dart with schema parsing, code generation, and an in-memory runtime.
+version: 0.0.1-alpha
+homepage: https://github.com/serezhia/comon_orm
+repository: https://github.com/serezhia/comon_orm
+issue_tracker: https://github.com/serezhia/comon_orm/issues
+documentation: https://github.com/serezhia/comon_orm/blob/main/packages/comon_orm/README.md
+topics:
+  - orm
+  - prisma
+  - codegen
+  - schema
+  - database
+
+executables:
+  comon_orm:
+
+environment:
+  sdk: ^3.9.0
+
+resolution: workspace
+
+dependencies:
+  crypto: ^3.0.6
+  meta: ^1.16.0
+
+dev_dependencies:
+  lints: ^5.1.1
+  test: ^1.26.2

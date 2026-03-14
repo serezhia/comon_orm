@@ -1,0 +1,15 @@
+name: _
+description: Root workspace for the comon_orm monorepo.
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+workspace:
+  - packages/comon_orm
+  - packages/comon_orm_postgresql
+  - packages/comon_orm_sqlite
+  - examples/postgres
+
+dev_dependencies:
+  lints: ^5.1.1
