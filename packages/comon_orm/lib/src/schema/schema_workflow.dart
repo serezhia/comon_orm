@@ -20,10 +20,13 @@ class SchemaValidationException implements Exception {
 /// Validated schema together with its source file path.
 class LoadedSchemaDocument {
   /// Creates a loaded schema document.
-  const LoadedSchemaDocument({required this.file, required this.schema});
+  const LoadedSchemaDocument({required this.filePath, required this.schema});
 
   /// Absolute schema file path.
-  final File file;
+  final String filePath;
+
+  /// Absolute schema file handle.
+  File get file => File(filePath);
 
   /// Parsed and validated schema document.
   final SchemaDocument schema;
@@ -101,6 +104,15 @@ class SchemaWorkflow {
     return _validateLoadedSchema(file, source);
   }
 
+  /// Validates raw schema source without reading from the filesystem.
+  LoadedSchemaDocument loadValidatedSchemaSource({
+    required String source,
+    String filePath = 'schema.prisma',
+  }) {
+    final file = File(filePath).absolute;
+    return _validateLoadedSchema(file, source);
+  }
+
   /// Formats raw schema source into the canonical serialized form.
   String formatSource(String source) {
     return schemaToSource(parser.parse(source));
@@ -134,7 +146,7 @@ class SchemaWorkflow {
       return ResolvedGeneratorConfig(
         name: generatorName ?? 'client',
         provider: expectedProvider,
-        outputPath: _resolveRelativePath(loaded.file.path, fallbackOutputPath),
+        outputPath: _resolveRelativePath(loaded.filePath, fallbackOutputPath),
         wasDeclared: false,
       );
     }
@@ -151,8 +163,8 @@ class SchemaWorkflow {
 
     final rawOutput = generator.properties['output'];
     final outputPath = rawOutput == null || rawOutput.trim().isEmpty
-        ? _resolveRelativePath(loaded.file.path, fallbackOutputPath)
-        : _resolveGeneratorOutputPath(loaded.file.path, rawOutput);
+        ? _resolveRelativePath(loaded.filePath, fallbackOutputPath)
+        : _resolveGeneratorOutputPath(loaded.filePath, rawOutput);
 
     return ResolvedGeneratorConfig(
       name: generator.name,
@@ -194,7 +206,7 @@ class SchemaWorkflow {
       name: datasource.name,
       provider: provider,
       url: expectedProvider == 'sqlite'
-          ? _resolveSqliteUrl(loaded.file.path, rawUrl)
+          ? _resolveSqliteUrl(loaded.filePath, rawUrl)
           : rawUrl,
     );
   }
@@ -212,7 +224,7 @@ class SchemaWorkflow {
       );
     }
 
-    return LoadedSchemaDocument(file: file, schema: schema);
+    return LoadedSchemaDocument(filePath: file.path, schema: schema);
   }
 
   List<ValidationIssue> _attachSourceLocations(

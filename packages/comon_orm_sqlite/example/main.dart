@@ -15,6 +15,6 @@ Future<void> main() async {
 
     print('created: ${user.email}');
   } finally {
-    adapter.dispose();
+    adapter.close();
   }
 }

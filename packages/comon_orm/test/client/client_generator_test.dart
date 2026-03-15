@@ -38,6 +38,15 @@ model Post {
         output,
         contains('factory User.fromRecord(Map<String, Object?> record) {'),
       );
+      expect(
+        output,
+        contains('factory User.fromJson(Map<String, Object?> json) {'),
+      );
+      expect(output, contains('User copyWith({'));
+      expect(output, contains('Map<String, Object?> toJson() {'));
+      expect(output, contains('bool operator ==(Object other) {'));
+      expect(output, contains('int get hashCode => Object.hashAll(<Object?>['));
+      expect(output, contains("String toString() => 'User("));
       expect(output, contains('class UserWhereInput {'));
       expect(output, contains('class UserWhereUniqueInput {'));
       expect(output, contains('class UserOrderByInput {'));
@@ -168,6 +177,45 @@ model Todo {
       );
       expect(output, contains('data[\'status\'] = _enumName(status);'));
       expect(output, contains('value: _enumName(status)'));
+    });
+
+    test('emits copyWith, equality and json helpers for models', () {
+      const source = '''
+model Asset {
+  id        Int      @id
+  createdAt DateTime
+  bytes     Bytes
+  amount    BigInt
+  metadata  Json
+}
+''';
+
+      final schema = const SchemaParser().parse(source);
+      final output = const ClientGenerator().generateClient(schema);
+
+      expect(
+        output,
+        contains('factory Asset.fromJson(Map<String, Object?> json) {'),
+      );
+      expect(output, contains('Asset copyWith({'));
+      expect(output, contains("createdAt: _asDateTime(json['createdAt']),"));
+      expect(output, contains("bytes: _asBytes(json['bytes']),"));
+      expect(output, contains("amount: _asBigInt(json['amount']),"));
+      expect(
+        output,
+        contains("json['createdAt'] = createdAt!.toIso8601String();"),
+      );
+      expect(output, contains("json['amount'] = amount!.toString();"));
+      expect(output, contains("json['metadata'] = _jsonEncodable(metadata);"));
+      expect(output, contains('bool operator ==(Object other) {'));
+      expect(output, contains('int get hashCode => Object.hashAll(<Object?>['));
+      expect(output, contains("String toString() => 'Asset("));
+      expect(output, contains('class _Undefined {'));
+      expect(
+        output,
+        contains('bool _deepEquals(Object? left, Object? right) {'),
+      );
+      expect(output, contains('Object? _jsonEncodable(Object? value) {'));
     });
 
     test('treats updatedAt field as optional in create input', () {

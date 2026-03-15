@@ -13,7 +13,7 @@ model User {
 '''),
     );
     expect(adapter, isA<SqliteDatabaseAdapter>());
-    adapter.dispose();
+    adapter.close();
   });
 
   test('opens sqlite adapter from schema path', () async {
@@ -50,7 +50,7 @@ model User {
       expect(adapter, isA<SqliteDatabaseAdapter>());
       expect(openedDatabasePath, databasePath);
       expect(openedSchema.findModel('User'), isNotNull);
-      adapter.dispose();
+      adapter.close();
     } finally {
       tempRoot.deleteSync(recursive: true);
     }
@@ -90,7 +90,7 @@ model User {
         expect(created['email'], 'alice@example.com');
         expect(await adapter.count(const CountQuery(model: 'User')), 1);
       } finally {
-        adapter.dispose();
+        adapter.close();
       }
     } finally {
       tempRoot.deleteSync(recursive: true);

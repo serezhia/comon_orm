@@ -95,9 +95,14 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
   /// Clock used for automatic field values such as `@updatedAt`.
   DateTime Function() now = () => DateTime.now().toUtc();
 
+  /// Closes the underlying SQLite database handle.
+  void close() {
+    _database.close();
+  }
+
   /// Releases the underlying SQLite database handle.
   void dispose() {
-    _database.dispose();
+    close();
   }
 
   @override

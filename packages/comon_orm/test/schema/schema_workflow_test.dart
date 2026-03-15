@@ -73,6 +73,30 @@ model User {
       }
     });
 
+    test('validates source text without relying on filesystem reads', () {
+      const workflow = SchemaWorkflow();
+      final loaded = workflow.loadValidatedSchemaSource(
+        source: '''
+generator client {
+  provider = "comon_orm"
+  output = "lib/generated"
+}
+
+model User {
+  id Int @id
+}
+''',
+        filePath: '/virtual/project/prisma/schema.prisma',
+      );
+      final generator = workflow.resolveGenerator(loaded);
+
+      expect(loaded.filePath, '/virtual/project/prisma/schema.prisma');
+      expect(
+        generator.outputPath,
+        '/virtual/project/prisma/lib/generated/comon_orm_client.dart',
+      );
+    });
+
     test('resolves sqlite datasource file path relative to schema file', () {
       final tempRoot = Directory.systemTemp.createTempSync(
         'comon_orm_workflow_',

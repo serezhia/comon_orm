@@ -1,20 +1,24 @@
+**English** | [Русский](README_RU.md)
+
 # comon_orm_postgresql
 
-PostgreSQL adapter for `comon_orm`.
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
 
-Use this package when your schema declares `provider = "postgresql"` and you need a real runtime adapter, schema introspection, and migrations against PostgreSQL-compatible infrastructure.
+`comon_orm_postgresql` is the PostgreSQL runtime package for `comon_orm`.
 
-## Why This Package
+Use it when your schema declares `provider = "postgresql"` and you need a real adapter, schema introspection, and migrations against PostgreSQL-compatible infrastructure.
 
-`comon_orm_postgresql` bundles the PostgreSQL-specific parts that do not belong in the provider-agnostic core:
+## ✨ What This Package Gives You
 
-- runtime `DatabaseAdapter` implementation backed by `package:postgres`
-- connection helpers for opening adapters from a URL or directly from `schema.prisma`
-- schema application and introspection
+- runtime `DatabaseAdapter` built on `package:postgres`
+- bootstrap from connection config or directly from `schema.prisma`
+- schema application and introspection for the supported PostgreSQL surface
 - migration planning, apply, rollback, history, and status helpers
-- the provider implementation targeted by `dart run comon_orm migrate ...`
+- the provider implementation behind `dart run comon_orm migrate ...`
 
-## Quick Start
+## 🚀 Quick Start
+
+Add dependencies:
 
 ```yaml
 dependencies:
@@ -22,72 +26,94 @@ dependencies:
   comon_orm_postgresql: ^0.0.1-alpha
 ```
 
+Generated-client-first example:
+
 ```dart
 import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
 
 import 'generated/comon_orm_client.dart';
 
 Future<void> main() async {
-  final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
-    schemaPath: 'schema.prisma',
-  );
+	final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
+		schemaPath: 'schema.prisma',
+	);
 
-  try {
-    final client = GeneratedComonOrmClient(adapter: adapter);
-    final user = await client.user.create(
-      data: const UserCreateInput(
-        email: 'alice@example.com',
-        name: 'Alice',
-      ),
-    );
+	try {
+		final db = GeneratedComonOrmClient(adapter: adapter);
 
-    print(user.email);
-  } finally {
-    await adapter.close();
-  }
+		final user = await db.user.create(
+			data: const UserCreateInput(
+				email: 'alice@example.com',
+				name: 'Alice',
+			),
+		);
+
+		final users = await db.user.findMany();
+
+		print(user.email);
+		print(users.length);
+	} finally {
+		await adapter.close();
+	}
 }
 ```
 
-If you want a single helper for local development that also creates missing tables, use `openAndApplyFromSchemaPath(...)`:
+For disposable local bootstrap that also creates missing tables, you can use:
 
 ```dart
 final adapter = await PostgresqlDatabaseAdapter.openAndApplyFromSchemaPath(
-  schemaPath: 'schema.prisma',
+	schemaPath: 'schema.prisma',
 );
 ```
 
-The package `example/` folder uses this simpler development bootstrap flow and keeps a generated client checked in for readability. Regenerate it with `dart run comon_orm generate example/schema.prisma` when the schema changes.
+## 🎯 Key Features
 
-## Migrations
+### 🐘 PostgreSQL Runtime
+
+- pooled `package:postgres` sessions
+- adapter bootstrap via `openFromSchemaPath(...)`
+- SQL-backed query execution for generated client operations
+- aggregate and group-by pushdown
+
+### 🧭 Migrations
+
+- `diff`, `apply`, `rollback`, `status`, and migration history helpers
+- schema-aware warnings for risky changes
+- introspection-backed planning and provider-specific DDL generation
+- support for enum workflows, mapped names, foreign keys, and relation diffs across the supported surface
+
+### 🔍 Introspection and Schema Apply
+
+- introspect live PostgreSQL schema back into `schema.prisma` concepts
+- apply supported schema changes to the database
+- preserve migration metadata used by the unified workflow
+
+## 🧭 Recommended Migration Flow
 
 Most users should call migrations through the unified core CLI:
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name 20260314_init
-dart run comon_orm migrate apply --schema schema.prisma --name 20260314_init
+dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init
+dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
 dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations
 ```
 
-The dispatcher reads `datasource.provider` and forwards the command to this package. The package-level executable is still useful for direct debugging, but it is not the main user story.
+Important:
 
-For the full recommended workflow, including why `openAndApplyFromSchemaPath(...)` is for local development only and how `diff` vs `apply` behaves, read `../../MIGRATIONS.md` from the repo root.
+- the dispatcher reads `datasource.provider` and forwards to this package automatically
+- `openAndApplyFromSchemaPath(...)` is for local development convenience, not the recommended shared or production migration strategy
+- destructive enum transitions and other risky changes still require manual review
 
-## Capabilities
+## 📱 Platform Notes
 
-- PostgreSQL runtime adapter backed by pooled `package:postgres` sessions
-- adapter bootstrap from `schema.prisma` via `openFromSchemaPath(...)`
-- one-call development bootstrap via `openAndApplyFromSchemaPath(...)`
-- schema application and introspection for the supported PostgreSQL surface
-- migration planning, apply, rollback, history, and status helpers
-- SQL pushdown for aggregate and group-by queries
+| Platform / scenario | Status | Notes |
+| --- | --- | --- |
+| Dart CLI / server / backend | ✅ Primary target | Main supported use case |
+| Flutter mobile / desktop | ⚠️ Niche / VM-only scenarios | Possible only in special cases where PostgreSQL access and runtime model fit your app architecture |
+| Dart Web / Flutter Web | ❌ Not supported | PostgreSQL runtime flow is not a browser target |
 
-## Scope
+## 🧱 Scope
 
-- The package targets PostgreSQL semantics, not generic SQL semantics.
-- Destructive enum transitions and other risky changes still surface warnings and may require manual review.
-- The project does not promise CockroachDB or full Prisma parity at this stage.
-
-## Related Packages
-
-- `comon_orm` for the schema parser, generator, query models, and unified CLI
-- `comon_orm_sqlite` for the embedded SQLite workflow
+- This package targets PostgreSQL semantics, not generic SQL semantics.
+- The supported surface is practical, but not full Prisma parity.
+- CockroachDB compatibility is not promised.

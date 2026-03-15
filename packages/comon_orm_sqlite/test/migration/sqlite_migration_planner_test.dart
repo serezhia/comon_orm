@@ -171,7 +171,7 @@ model Post {
         'Cascade',
       );
 
-      database.dispose();
+      database.close();
     });
 
     test('plans additive migration directly from live database', () {
@@ -203,7 +203,7 @@ model User {
         contains('ALTER TABLE "User" ADD COLUMN "nickname" TEXT'),
       );
 
-      database.dispose();
+      database.close();
     });
 
     test('introspects sqlite native type subset from live database', () {
@@ -235,7 +235,7 @@ model Sample {
       expect(sample.findField('payload')!.attribute('db.Text'), isNotNull);
       expect(sample.findField('blob')!.attribute('db.Blob'), isNotNull);
 
-      database.dispose();
+      database.close();
     });
 
     test('introspects compound primary key and unique constraints', () {
@@ -265,7 +265,7 @@ model Membership {
         ],
       );
 
-      database.dispose();
+      database.close();
     });
 
     test('warns when compound model constraints change', () {
@@ -587,7 +587,7 @@ model Tag {
       expect(introspected.findModel('User')?.findField('tags')?.isList, isTrue);
       expect(introspected.findModel('Tag')?.findField('users')?.isList, isTrue);
 
-      database.dispose();
+      database.close();
     });
   });
 }

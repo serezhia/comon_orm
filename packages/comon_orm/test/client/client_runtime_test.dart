@@ -170,6 +170,35 @@ void main() {
       },
     );
 
+    test('generated models support copyWith, json and deep equality', () {
+      final original = User(
+        id: 1,
+        name: 'Alice',
+        email: 'alice@prisma.io',
+        country: 'US',
+        profileViews: 10,
+        posts: const <Post>[
+          Post(id: 7, title: 'Hello', published: true, userId: 1),
+        ],
+      );
+
+      final updated = original.copyWith(country: null, profileViews: 11);
+
+      expect(updated.id, 1);
+      expect(updated.country, isNull);
+      expect(updated.profileViews, 11);
+      expect(updated.posts, hasLength(1));
+
+      final json = original.toJson();
+      final decoded = User.fromJson(json);
+
+      expect(decoded, original);
+      expect(decoded.hashCode, original.hashCode);
+      expect(decoded.toString(), contains('User('));
+      expect(decoded.posts, hasLength(1));
+      expect(decoded.posts!.single.title, 'Hello');
+    });
+
     test('supports generated scalar filters in where inputs', () async {
       final client = GeneratedComonOrmClient(
         adapter: InMemoryDatabaseAdapter(),
