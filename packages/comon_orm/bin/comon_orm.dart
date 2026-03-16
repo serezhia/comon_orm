@@ -83,20 +83,24 @@ Future<void> _generate(List<String> arguments) async {
   if (loaded == null) {
     return;
   }
+  final generator = _workflow.resolveGenerator(
+    loaded,
+    generatorName: parsed.options['generator'],
+  );
 
   final outputPath = parsed.positionals.length >= 2
       ? File(parsed.positionals[1]).absolute.path
-      : _workflow
-            .resolveGenerator(
-              loaded,
-              generatorName: parsed.options['generator'],
-            )
-            .outputPath;
+      : generator.outputPath;
 
   final outputFile = File(outputPath);
   await outputFile.parent.create(recursive: true);
   await outputFile.writeAsString(
-    const ClientGenerator().generateClient(loaded.schema),
+    ClientGenerator(
+      options: _resolveClientGeneratorOptions(
+        generator: generator,
+        anchorDirectory: outputFile.parent,
+      ),
+    ).generateClient(loaded.schema),
   );
   stdout.writeln('Generated client: ${outputFile.path}');
 }
@@ -119,14 +123,82 @@ Future<LoadedSchemaDocument?> _loadValidatedSchema(String schemaPath) async {
 
 Future<void> _generatePreview(List<String> arguments) async {
   final parsed = _parseArguments(arguments, supportedOptions: {'generator'});
-  final loaded = await _loadValidatedSchema(
-    parsed.positionals.isEmpty ? 'schema.prisma' : parsed.positionals.first,
-  );
+  final schemaPath = parsed.positionals.isEmpty
+      ? 'schema.prisma'
+      : parsed.positionals.first;
+  final loaded = await _loadValidatedSchema(schemaPath);
   if (loaded == null) {
     return;
   }
+  final generator = _workflow.resolveGenerator(
+    loaded,
+    generatorName: parsed.options['generator'],
+  );
 
-  stdout.write(const ClientGenerator().generateClient(loaded.schema));
+  stdout.write(
+    ClientGenerator(
+      options: _resolveClientGeneratorOptions(
+        generator: generator,
+        anchorDirectory: File(schemaPath).absolute.parent,
+      ),
+    ).generateClient(loaded.schema),
+  );
+}
+
+ClientGeneratorOptions _resolveClientGeneratorOptions({
+  required ResolvedGeneratorConfig generator,
+  required Directory anchorDirectory,
+}) {
+  final explicitSqliteHelper = generator.sqliteHelper;
+  if (explicitSqliteHelper != null) {
+    return ClientGeneratorOptions(
+      sqliteHelperKind: switch (explicitSqliteHelper) {
+        'flutter' => SqliteClientHelperKind.flutter,
+        _ => SqliteClientHelperKind.vm,
+      },
+    );
+  }
+
+  final pubspec = _findNearestPubspec(anchorDirectory);
+  if (pubspec == null) {
+    return const ClientGeneratorOptions();
+  }
+
+  final source = pubspec.readAsStringSync();
+  final sqliteHelperKind =
+      _pubspecReferencesPackage(source, 'comon_orm_sqlite_flutter')
+      ? SqliteClientHelperKind.flutter
+      : SqliteClientHelperKind.vm;
+  return ClientGeneratorOptions(sqliteHelperKind: sqliteHelperKind);
+}
+
+File? _findNearestPubspec(Directory start) {
+  var current = start.absolute;
+  while (true) {
+    final candidate = File(
+      '${current.path}${Platform.pathSeparator}pubspec.yaml',
+    );
+    if (candidate.existsSync()) {
+      return candidate;
+    }
+
+    final parent = current.parent;
+    if (parent.path == current.path) {
+      return null;
+    }
+    current = parent;
+  }
+}
+
+bool _pubspecReferencesPackage(String source, String packageName) {
+  for (final line in source.split('\n')) {
+    final trimmed = line.trim();
+    if (trimmed == 'name: $packageName' ||
+        trimmed.startsWith('$packageName:')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void _printUsage() {

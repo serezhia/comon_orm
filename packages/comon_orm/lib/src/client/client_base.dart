@@ -21,6 +21,11 @@ class ComonOrmClient {
       (txAdapter) => action(ComonOrmClient(adapter: txAdapter)),
     );
   }
+
+  /// Releases resources owned by the underlying adapter.
+  Future<void> close() async {
+    await _adapter.close();
+  }
 }
 
 /// Binds model-scoped query objects to a concrete model name.
@@ -29,6 +34,13 @@ class ModelDelegate {
 
   final DatabaseAdapter _adapter;
   final String _model;
+
+  /// Runs [action] inside an adapter-managed transaction bound to this model.
+  Future<T> transaction<T>(Future<T> Function(ModelDelegate tx) action) {
+    return _adapter.transaction(
+      (txAdapter) => action(ModelDelegate._(txAdapter, _model)),
+    );
+  }
 
   /// Returns all records that match [query].
   Future<List<Map<String, Object?>>> findMany(FindManyQuery query) {
@@ -119,6 +131,50 @@ class ModelDelegate {
     }
 
     return _adapter.create(query);
+  }
+
+  /// Adds an implicit many-to-many relation link for this model.
+  Future<void> addImplicitManyToManyLink({
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    required Map<String, Object?> targetKeyValues,
+  }) {
+    if (relation.storageKind != QueryRelationStorageKind.implicitManyToMany) {
+      throw ArgumentError.value(
+        relation.storageKind,
+        'relation.storageKind',
+        'Relation storage kind must be implicitManyToMany.',
+      );
+    }
+
+    return _adapter.addImplicitManyToManyLink(
+      sourceModel: _model,
+      relation: relation,
+      sourceKeyValues: sourceKeyValues,
+      targetKeyValues: targetKeyValues,
+    );
+  }
+
+  /// Removes implicit many-to-many relation links for this model.
+  Future<int> removeImplicitManyToManyLinks({
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    Map<String, Object?>? targetKeyValues,
+  }) {
+    if (relation.storageKind != QueryRelationStorageKind.implicitManyToMany) {
+      throw ArgumentError.value(
+        relation.storageKind,
+        'relation.storageKind',
+        'Relation storage kind must be implicitManyToMany.',
+      );
+    }
+
+    return _adapter.removeImplicitManyToManyLinks(
+      sourceModel: _model,
+      relation: relation,
+      sourceKeyValues: sourceKeyValues,
+      targetKeyValues: targetKeyValues,
+    );
   }
 
   /// Updates a single record described by [query].

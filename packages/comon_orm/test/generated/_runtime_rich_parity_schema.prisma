@@ -1,0 +1,62 @@
+datasource db {
+  provider = "sqlite"
+  url = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  member
+
+  @@map("user_role")
+}
+
+model User {
+  id         Int          @id @default(autoincrement())
+  email      String       @unique @map("email_address")
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  role       UserRole
+  managerId  Int?
+  manager    User?        @relation("ManagerChain", fields: [managerId], references: [id])
+  reports    User[]       @relation("ManagerChain")
+  profile    Profile?
+  posts      Post[]       @relation("UserPosts")
+  groups     Group[]
+  memberships Membership[]
+
+  @@unique([email, role])
+  @@map("users")
+}
+
+model Post {
+  id       Int   @id
+  authorId Int   @map("author_id")
+  author   User  @relation("UserPosts", fields: [authorId], references: [id])
+
+  @@map("posts")
+}
+
+model Profile {
+  id     Int   @id
+  userId Int?  @unique
+  user   User? @relation(fields: [userId], references: [id])
+
+  @@map("profiles")
+}
+
+model Group {
+  id    Int    @id
+  users User[]
+
+  @@map("groups")
+}
+
+model Membership {
+  tenantId Int
+  slug     String
+  userId   Int
+  user     User @relation(fields: [userId], references: [id])
+
+  @@id([tenantId, slug])
+  @@map("memberships")
+}

@@ -6,28 +6,121 @@ import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
 import 'package:postgres/postgres.dart' as pg;
 import 'package:test/test.dart';
 
-const String _schemaSource = '''
-enum UserRole {
-  admin
-  developer
-  manager
-}
-
-model User {
-  id Int @id
-  name String
-  role UserRole
-  email String
-  posts Post[]
-}
-
-model Post {
-  id Int @id
-  title String
-  userId Int
-  user User @relation(fields: [userId], references: [id])
-}
-''';
+const GeneratedRuntimeSchema _generatedSchema = GeneratedRuntimeSchema(
+  enums: <GeneratedEnumMetadata>[
+    GeneratedEnumMetadata(
+      name: 'UserRole',
+      databaseName: 'UserRole',
+      values: <String>['admin', 'developer', 'manager'],
+    ),
+  ],
+  models: <GeneratedModelMetadata>[
+    GeneratedModelMetadata(
+      name: 'User',
+      databaseName: 'User',
+      primaryKeyFields: <String>['id'],
+      fields: <GeneratedFieldMetadata>[
+        GeneratedFieldMetadata(
+          name: 'id',
+          databaseName: 'id',
+          kind: GeneratedRuntimeFieldKind.scalar,
+          type: 'Int',
+          isNullable: false,
+          isList: false,
+          isId: true,
+        ),
+        GeneratedFieldMetadata(
+          name: 'name',
+          databaseName: 'name',
+          kind: GeneratedRuntimeFieldKind.scalar,
+          type: 'String',
+          isNullable: false,
+          isList: false,
+        ),
+        GeneratedFieldMetadata(
+          name: 'role',
+          databaseName: 'role',
+          kind: GeneratedRuntimeFieldKind.enumeration,
+          type: 'UserRole',
+          isNullable: false,
+          isList: false,
+        ),
+        GeneratedFieldMetadata(
+          name: 'email',
+          databaseName: 'email',
+          kind: GeneratedRuntimeFieldKind.scalar,
+          type: 'String',
+          isNullable: false,
+          isList: false,
+        ),
+        GeneratedFieldMetadata(
+          name: 'posts',
+          databaseName: 'posts',
+          kind: GeneratedRuntimeFieldKind.relation,
+          type: 'Post',
+          isNullable: false,
+          isList: true,
+          relation: GeneratedRelationMetadata(
+            targetModel: 'Post',
+            cardinality: GeneratedRuntimeRelationCardinality.many,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['id'],
+            targetFields: <String>['userId'],
+            inverseField: 'user',
+          ),
+        ),
+      ],
+    ),
+    GeneratedModelMetadata(
+      name: 'Post',
+      databaseName: 'Post',
+      primaryKeyFields: <String>['id'],
+      fields: <GeneratedFieldMetadata>[
+        GeneratedFieldMetadata(
+          name: 'id',
+          databaseName: 'id',
+          kind: GeneratedRuntimeFieldKind.scalar,
+          type: 'Int',
+          isNullable: false,
+          isList: false,
+          isId: true,
+        ),
+        GeneratedFieldMetadata(
+          name: 'title',
+          databaseName: 'title',
+          kind: GeneratedRuntimeFieldKind.scalar,
+          type: 'String',
+          isNullable: false,
+          isList: false,
+        ),
+        GeneratedFieldMetadata(
+          name: 'userId',
+          databaseName: 'userId',
+          kind: GeneratedRuntimeFieldKind.scalar,
+          type: 'Int',
+          isNullable: false,
+          isList: false,
+        ),
+        GeneratedFieldMetadata(
+          name: 'user',
+          databaseName: 'user',
+          kind: GeneratedRuntimeFieldKind.relation,
+          type: 'User',
+          isNullable: false,
+          isList: false,
+          relation: GeneratedRelationMetadata(
+            targetModel: 'User',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['userId'],
+            targetFields: <String>['id'],
+            inverseField: 'posts',
+          ),
+        ),
+      ],
+    ),
+  ],
+);
 
 void main() {
   group('PostgresqlDatabaseAdapter', () {
@@ -36,9 +129,9 @@ void main() {
 
     setUp(() {
       executor = _ScriptedExecutor();
-      adapter = PostgresqlDatabaseAdapter(
+      adapter = PostgresqlDatabaseAdapter.fromGeneratedSchema(
         executor: executor,
-        schema: const SchemaParser().parse(_schemaSource),
+        schema: _generatedSchema,
       );
     });
 
@@ -413,19 +506,48 @@ model User {
     });
 
     test('auto-populates and refreshes updatedAt fields', () async {
-      final schema = const SchemaParser().parse('''
-model User {
-  id        Int      @id
-  name      String
-  updatedAt DateTime @updatedAt
-}
-''');
       final createdAt = DateTime.utc(2026, 3, 14, 9, 0, 0);
       final changedAt = DateTime.utc(2026, 3, 14, 9, 5, 0);
 
-      final timestampAdapter = PostgresqlDatabaseAdapter(
+      final timestampAdapter = PostgresqlDatabaseAdapter.fromGeneratedSchema(
         executor: executor,
-        schema: schema,
+        schema: const GeneratedRuntimeSchema(
+          models: <GeneratedModelMetadata>[
+            GeneratedModelMetadata(
+              name: 'User',
+              databaseName: 'User',
+              primaryKeyFields: <String>['id'],
+              fields: <GeneratedFieldMetadata>[
+                GeneratedFieldMetadata(
+                  name: 'id',
+                  databaseName: 'id',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'Int',
+                  isNullable: false,
+                  isList: false,
+                  isId: true,
+                ),
+                GeneratedFieldMetadata(
+                  name: 'name',
+                  databaseName: 'name',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'String',
+                  isNullable: false,
+                  isList: false,
+                ),
+                GeneratedFieldMetadata(
+                  name: 'updatedAt',
+                  databaseName: 'updatedAt',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'DateTime',
+                  isNullable: false,
+                  isList: false,
+                  isUpdatedAt: true,
+                ),
+              ],
+            ),
+          ],
+        ),
       )..now = () => createdAt;
 
       executor.queryResponses.add(<Map<String, Object?>>[
@@ -490,18 +612,45 @@ model User {
     });
 
     test('updates and deletes rows selected by compound predicates', () async {
-      final schema = const SchemaParser().parse('''
-model Membership {
-  tenantId Int
-  slug     String
-  role     String
-
-  @@id([tenantId, slug])
-}
-''');
-      final membershipAdapter = PostgresqlDatabaseAdapter(
+      final membershipAdapter = PostgresqlDatabaseAdapter.fromGeneratedSchema(
         executor: executor,
-        schema: schema,
+        schema: const GeneratedRuntimeSchema(
+          models: <GeneratedModelMetadata>[
+            GeneratedModelMetadata(
+              name: 'Membership',
+              databaseName: 'Membership',
+              primaryKeyFields: <String>['tenantId', 'slug'],
+              fields: <GeneratedFieldMetadata>[
+                GeneratedFieldMetadata(
+                  name: 'tenantId',
+                  databaseName: 'tenantId',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'Int',
+                  isNullable: false,
+                  isList: false,
+                  isId: true,
+                ),
+                GeneratedFieldMetadata(
+                  name: 'slug',
+                  databaseName: 'slug',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'String',
+                  isNullable: false,
+                  isList: false,
+                  isId: true,
+                ),
+                GeneratedFieldMetadata(
+                  name: 'role',
+                  databaseName: 'role',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'String',
+                  isNullable: false,
+                  isList: false,
+                ),
+              ],
+            ),
+          ],
+        ),
       );
 
       executor.queryResponses.add(<Map<String, Object?>>[

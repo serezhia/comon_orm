@@ -1,6 +1,7 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
 import 'package:comon_orm/comon_orm.dart';
+import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
 
 class GeneratedComonOrmClient {
   GeneratedComonOrmClient({required DatabaseAdapter adapter})
@@ -8,8 +9,22 @@ class GeneratedComonOrmClient {
 
   GeneratedComonOrmClient._fromClient(this._client);
 
+  static const GeneratedRuntimeSchema runtimeSchema =
+      GeneratedComonOrmMetadata.schema;
+
+  static final RuntimeSchemaView runtimeSchemaView =
+      runtimeSchemaViewFromGeneratedSchema(runtimeSchema);
+
+  static InMemoryDatabaseAdapter createInMemoryAdapter() {
+    return InMemoryDatabaseAdapter.fromGeneratedSchema(schema: runtimeSchema);
+  }
+
+  factory GeneratedComonOrmClient.openInMemory() {
+    return GeneratedComonOrmClient(adapter: createInMemoryAdapter());
+  }
+
   final ComonOrmClient _client;
-  late final UserDelegate user = UserDelegate(_client.model('User'));
+  late final UserDelegate user = UserDelegate._(_client);
 
   Future<T> transaction<T>(
     Future<T> Function(GeneratedComonOrmClient tx) action,
@@ -18,6 +33,202 @@ class GeneratedComonOrmClient {
       (tx) => action(GeneratedComonOrmClient._fromClient(tx)),
     );
   }
+
+  Future<void> close() async {
+    await _client.close();
+  }
+}
+
+class GeneratedComonOrmClientSqlite {
+  const GeneratedComonOrmClientSqlite._();
+
+  static Future<GeneratedComonOrmClient> open({
+    String? databasePath,
+    String? datasourceName,
+    RuntimeDatasourceResolver resolver = const RuntimeDatasourceResolver(),
+    SqliteRuntimeAdapterFactory? adapterFactory,
+  }) async {
+    final adapter = await SqliteDatabaseAdapter.openFromGeneratedSchema(
+      schema: GeneratedComonOrmClient.runtimeSchema,
+      databasePath: databasePath,
+      datasourceName: datasourceName,
+      resolver: resolver,
+      adapterFactory: adapterFactory,
+    );
+    return GeneratedComonOrmClient(adapter: adapter);
+  }
+}
+
+class GeneratedComonOrmMetadata {
+  const GeneratedComonOrmMetadata._();
+
+  static const GeneratedRuntimeSchema schema = GeneratedRuntimeSchema(
+    datasources: <GeneratedDatasourceMetadata>[
+      GeneratedDatasourceMetadata(
+        name: 'db',
+        provider: 'sqlite',
+        url: GeneratedDatasourceUrl(
+          kind: GeneratedDatasourceUrlKind.literal,
+          value: ':memory:',
+        ),
+      ),
+    ],
+    enums: <GeneratedEnumMetadata>[],
+    models: <GeneratedModelMetadata>[
+      GeneratedModelMetadata(
+        name: 'User',
+        databaseName: 'User',
+        primaryKeyFields: <String>['id'],
+        compoundUniqueFieldSets: <List<String>>[],
+        fields: <GeneratedFieldMetadata>[
+          GeneratedFieldMetadata(
+            name: 'id',
+            databaseName: 'id',
+            kind: GeneratedRuntimeFieldKind.scalar,
+            type: 'Int',
+            isNullable: false,
+            isList: false,
+            isId: true,
+            isUnique: false,
+            isUpdatedAt: false,
+            defaultValue: GeneratedFieldDefaultMetadata(
+              kind: GeneratedRuntimeDefaultKind.autoincrement,
+            ),
+          ),
+          GeneratedFieldMetadata(
+            name: 'email',
+            databaseName: 'email',
+            kind: GeneratedRuntimeFieldKind.scalar,
+            type: 'String',
+            isNullable: false,
+            isList: false,
+            isId: false,
+            isUnique: true,
+            isUpdatedAt: false,
+          ),
+          GeneratedFieldMetadata(
+            name: 'name',
+            databaseName: 'name',
+            kind: GeneratedRuntimeFieldKind.scalar,
+            type: 'String',
+            isNullable: false,
+            isList: false,
+            isId: false,
+            isUnique: false,
+            isUpdatedAt: false,
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+class StringFieldUpdateOperationsInput {
+  const StringFieldUpdateOperationsInput({this.set = _undefined});
+
+  final Object? set;
+
+  bool get hasSet => !identical(set, _undefined);
+}
+
+class BoolFieldUpdateOperationsInput {
+  const BoolFieldUpdateOperationsInput({this.set = _undefined});
+
+  final Object? set;
+
+  bool get hasSet => !identical(set, _undefined);
+}
+
+class DateTimeFieldUpdateOperationsInput {
+  const DateTimeFieldUpdateOperationsInput({this.set = _undefined});
+
+  final Object? set;
+
+  bool get hasSet => !identical(set, _undefined);
+}
+
+class BytesFieldUpdateOperationsInput {
+  const BytesFieldUpdateOperationsInput({this.set = _undefined});
+
+  final Object? set;
+
+  bool get hasSet => !identical(set, _undefined);
+}
+
+class JsonFieldUpdateOperationsInput {
+  const JsonFieldUpdateOperationsInput({this.set = _undefined});
+
+  final Object? set;
+
+  bool get hasSet => !identical(set, _undefined);
+}
+
+class IntFieldUpdateOperationsInput {
+  const IntFieldUpdateOperationsInput({
+    this.set = _undefined,
+    this.increment,
+    this.decrement,
+  });
+
+  final Object? set;
+  final int? increment;
+  final int? decrement;
+
+  bool get hasSet => !identical(set, _undefined);
+  bool get hasComputedUpdate => increment != null || decrement != null;
+  bool get hasMultipleOperations =>
+      (hasSet ? 1 : 0) +
+          (increment != null ? 1 : 0) +
+          (decrement != null ? 1 : 0) >
+      1;
+}
+
+class DoubleFieldUpdateOperationsInput {
+  const DoubleFieldUpdateOperationsInput({
+    this.set = _undefined,
+    this.increment,
+    this.decrement,
+  });
+
+  final Object? set;
+  final double? increment;
+  final double? decrement;
+
+  bool get hasSet => !identical(set, _undefined);
+  bool get hasComputedUpdate => increment != null || decrement != null;
+  bool get hasMultipleOperations =>
+      (hasSet ? 1 : 0) +
+          (increment != null ? 1 : 0) +
+          (decrement != null ? 1 : 0) >
+      1;
+}
+
+class BigIntFieldUpdateOperationsInput {
+  const BigIntFieldUpdateOperationsInput({
+    this.set = _undefined,
+    this.increment,
+    this.decrement,
+  });
+
+  final Object? set;
+  final BigInt? increment;
+  final BigInt? decrement;
+
+  bool get hasSet => !identical(set, _undefined);
+  bool get hasComputedUpdate => increment != null || decrement != null;
+  bool get hasMultipleOperations =>
+      (hasSet ? 1 : 0) +
+          (increment != null ? 1 : 0) +
+          (decrement != null ? 1 : 0) >
+      1;
+}
+
+class EnumFieldUpdateOperationsInput<T extends Enum> {
+  const EnumFieldUpdateOperationsInput({this.set = _undefined});
+
+  final Object? set;
+
+  bool get hasSet => !identical(set, _undefined);
 }
 
 class User {
@@ -35,6 +246,26 @@ class User {
     );
   }
 
+  factory User.fromJson(Map<String, Object?> json) {
+    return User(
+      id: json['id'] as int?,
+      email: json['email'] as String?,
+      name: json['name'] as String?,
+    );
+  }
+
+  User copyWith({
+    Object? id = _undefined,
+    Object? email = _undefined,
+    Object? name = _undefined,
+  }) {
+    return User(
+      id: id == _undefined ? this.id : id as int?,
+      email: email == _undefined ? this.email : email as String?,
+      name: name == _undefined ? this.name : name as String?,
+    );
+  }
+
   Map<String, Object?> toRecord() {
     final record = <String, Object?>{};
     if (id != null) {
@@ -48,12 +279,47 @@ class User {
     }
     return Map<String, Object?>.unmodifiable(record);
   }
+
+  Map<String, Object?> toJson() {
+    final json = <String, Object?>{};
+    if (id != null) {
+      json['id'] = id;
+    }
+    if (email != null) {
+      json['email'] = email;
+    }
+    if (name != null) {
+      json['name'] = name;
+    }
+    return Map<String, Object?>.unmodifiable(json);
+  }
+
+  @override
+  String toString() => 'User(id: $id, email: $email, name: $name)';
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is User &&
+            _deepEquals(id, other.id) &&
+            _deepEquals(email, other.email) &&
+            _deepEquals(name, other.name);
+  }
+
+  @override
+  int get hashCode => Object.hashAll(<Object?>[
+    runtimeType,
+    _deepHash(id),
+    _deepHash(email),
+    _deepHash(name),
+  ]);
 }
 
 class UserDelegate {
-  const UserDelegate(this._delegate);
+  const UserDelegate._(this._client);
 
-  final ModelDelegate _delegate;
+  final ComonOrmClient _client;
+  ModelDelegate get _delegate => _client.model('User');
 
   Future<User?> findUnique({
     required UserWhereUniqueInput where,
@@ -74,23 +340,48 @@ class UserDelegate {
 
   Future<User?> findFirst({
     UserWhereInput? where,
+    UserWhereUniqueInput? cursor,
     List<UserOrderByInput>? orderBy,
+    List<UserScalarField>? distinct,
     UserInclude? include,
     UserSelect? select,
     int? skip,
-  }) {
+  }) async {
+    final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
+    final queryOrderBy =
+        orderBy
+            ?.expand((entry) => entry.toQueryOrderBy())
+            .toList(growable: false) ??
+        const <QueryOrderBy>[];
+    final queryDistinct =
+        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryInclude = include?.toQueryInclude();
+    final querySelect = select?.toQuerySelect();
+    if (cursor != null) {
+      final records = await _findManyWithCursor(
+        predicates: predicates,
+        cursor: cursor,
+        orderBy: queryOrderBy,
+        distinct: queryDistinct,
+        include: queryInclude,
+        select: querySelect,
+        skip: skip,
+        take: 1,
+      );
+      if (records.isEmpty) {
+        return null;
+      }
+      return records.first;
+    }
     return _delegate
         .findFirst(
           FindFirstQuery(
             model: 'User',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
+            where: predicates,
+            orderBy: queryOrderBy,
+            distinct: queryDistinct,
+            include: queryInclude,
+            select: querySelect,
             skip: skip,
           ),
         )
@@ -99,28 +390,45 @@ class UserDelegate {
 
   Future<List<User>> findMany({
     UserWhereInput? where,
+    UserWhereUniqueInput? cursor,
     List<UserOrderByInput>? orderBy,
     List<UserScalarField>? distinct,
     UserInclude? include,
     UserSelect? select,
     int? skip,
     int? take,
-  }) {
+  }) async {
+    final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
+    final queryOrderBy =
+        orderBy
+            ?.expand((entry) => entry.toQueryOrderBy())
+            .toList(growable: false) ??
+        const <QueryOrderBy>[];
+    final queryDistinct =
+        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryInclude = include?.toQueryInclude();
+    final querySelect = select?.toQuerySelect();
+    if (cursor != null) {
+      return _findManyWithCursor(
+        predicates: predicates,
+        cursor: cursor,
+        orderBy: queryOrderBy,
+        distinct: queryDistinct,
+        include: queryInclude,
+        select: querySelect,
+        skip: skip,
+        take: take,
+      );
+    }
     return _delegate
         .findMany(
           FindManyQuery(
             model: 'User',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            distinct:
-                distinct?.map((field) => field.name).toSet() ??
-                const <String>{},
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
+            where: predicates,
+            orderBy: queryOrderBy,
+            distinct: queryDistinct,
+            include: queryInclude,
+            select: querySelect,
             skip: skip,
             take: take,
           ),
@@ -218,16 +526,66 @@ class UserDelegate {
   }
 
   Future<User> create({required UserCreateInput data, UserInclude? include}) {
-    return _delegate
-        .create(
-          CreateQuery(
-            model: 'User',
-            data: data.toData(),
-            include: include?.toQueryInclude(),
-            nestedCreates: data.toNestedCreates(),
-          ),
-        )
-        .then(User.fromRecord);
+    final queryInclude = include?.toQueryInclude();
+    return _client.transaction((txClient) async {
+      final tx = GeneratedComonOrmClient._fromClient(txClient);
+      return _performCreateWithRelationWrites(
+        tx: tx,
+        data: data,
+        include: queryInclude,
+      );
+    });
+  }
+
+  Future<int> createMany({
+    required List<UserCreateInput> data,
+    bool skipDuplicates = false,
+  }) {
+    if (data.isEmpty) {
+      return Future<int>.value(0);
+    }
+    return _client.transaction((txClient) async {
+      final tx = GeneratedComonOrmClient._fromClient(txClient);
+      final txDelegate = tx._client.model('User');
+      var createdCount = 0;
+      for (final entry in data) {
+        if (skipDuplicates) {
+          var duplicateFound = false;
+          for (final selector in entry.toUniqueSelectorPredicates()) {
+            final existing = await txDelegate.findUnique(
+              FindUniqueQuery(model: 'User', where: selector),
+            );
+            if (existing != null) {
+              duplicateFound = true;
+              break;
+            }
+          }
+          if (duplicateFound) {
+            continue;
+          }
+        }
+        try {
+          if (entry.hasDeferredRelationWrites) {
+            await _performCreateWithRelationWrites(tx: tx, data: entry);
+          } else {
+            await txDelegate.create(
+              CreateQuery(
+                model: 'User',
+                data: entry.toData(),
+                nestedCreates: entry.toNestedCreates(),
+              ),
+            );
+          }
+        } on Object catch (error) {
+          if (skipDuplicates && _isSkippableDuplicateError(error)) {
+            continue;
+          }
+          rethrow;
+        }
+        createdCount++;
+      }
+      return createdCount;
+    });
   }
 
   Future<User> update({
@@ -236,30 +594,256 @@ class UserDelegate {
     UserInclude? include,
     UserSelect? select,
   }) {
-    return _delegate
-        .update(
-          UpdateQuery(
-            model: 'User',
-            where: where.toPredicates(),
-            data: data.toData(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(User.fromRecord);
+    final predicates = where.toPredicates();
+    final queryInclude = include?.toQueryInclude();
+    final querySelect = select?.toQuerySelect();
+    return _client.transaction((txClient) async {
+      final tx = GeneratedComonOrmClient._fromClient(txClient);
+      final txDelegate = tx._client.model('User');
+      final existing = await txDelegate.findUnique(
+        FindUniqueQuery(model: 'User', where: predicates),
+      );
+      if (existing == null) {
+        throw StateError('No record found for update in User.');
+      }
+      return _performUpdateWithRelationWrites(
+        tx: tx,
+        predicates: predicates,
+        existing: existing,
+        data: data,
+        include: queryInclude,
+        select: querySelect,
+      );
+    });
+  }
+
+  Future<User> upsert({
+    required UserWhereUniqueInput where,
+    required UserCreateInput create,
+    required UserUpdateInput update,
+    UserInclude? include,
+    UserSelect? select,
+  }) {
+    final predicates = where.toPredicates();
+    final queryInclude = include?.toQueryInclude();
+    final querySelect = select?.toQuerySelect();
+    return _client.transaction((txClient) async {
+      final tx = GeneratedComonOrmClient._fromClient(txClient);
+      final txDelegate = tx._client.model('User');
+      final existing = await txDelegate.findUnique(
+        FindUniqueQuery(model: 'User', where: predicates),
+      );
+      if (existing != null) {
+        return _performUpdateWithRelationWrites(
+          tx: tx,
+          predicates: predicates,
+          existing: existing,
+          data: update,
+          include: queryInclude,
+          select: querySelect,
+        );
+      }
+      return _performCreateWithRelationWrites(
+        tx: tx,
+        data: create,
+        include: queryInclude,
+        select: querySelect,
+      );
+    });
   }
 
   Future<int> updateMany({
     required UserWhereInput where,
     required UserUpdateInput data,
   }) {
+    final predicates = where.toPredicates();
+    if (data.hasComputedOperators || data.hasRelationWrites) {
+      return _client.transaction((txClient) async {
+        final tx = GeneratedComonOrmClient._fromClient(txClient);
+        final txDelegate = tx._client.model('User');
+        final existingRecords = await txDelegate.findMany(
+          FindManyQuery(model: 'User', where: predicates),
+        );
+        var updatedCount = 0;
+        for (final record in existingRecords) {
+          await _performUpdateWithRelationWrites(
+            tx: tx,
+            predicates: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
+            existing: record,
+            data: data,
+          );
+          updatedCount++;
+        }
+        return updatedCount;
+      });
+    }
     return _delegate.updateMany(
-      UpdateManyQuery(
+      UpdateManyQuery(model: 'User', where: predicates, data: data.toData()),
+    );
+  }
+
+  Future<List<User>> _findManyWithCursor({
+    required List<QueryPredicate> predicates,
+    required UserWhereUniqueInput cursor,
+    required List<QueryOrderBy> orderBy,
+    required Set<String> distinct,
+    QueryInclude? include,
+    QuerySelect? select,
+    int? skip,
+    int? take,
+  }) async {
+    final rawRecords = await _delegate.findMany(
+      FindManyQuery(
         model: 'User',
-        where: where.toPredicates(),
-        data: data.toData(),
+        where: predicates,
+        orderBy: orderBy,
+        distinct: distinct,
       ),
     );
+    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
+    if (cursorIndex < 0) {
+      return const <User>[];
+    }
+    final effectiveSkip = skip ?? 0;
+    final startIndex = cursorIndex + effectiveSkip;
+    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
+    late final List<Map<String, Object?>> pagedRecords;
+    if (take == null) {
+      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
+    } else if (take >= 0) {
+      pagedRecords = rawRecords
+          .skip(boundedStartIndex)
+          .take(take)
+          .toList(growable: false);
+    } else {
+      final endExclusive = cursorIndex + 1 - effectiveSkip;
+      final boundedEndExclusive = endExclusive <= 0
+          ? 0
+          : (endExclusive > rawRecords.length
+                ? rawRecords.length
+                : endExclusive);
+      final startInclusive = boundedEndExclusive + take;
+      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
+      pagedRecords = rawRecords
+          .sublist(boundedBackwardStart, boundedEndExclusive)
+          .toList(growable: false);
+    }
+    if (include == null && select == null) {
+      return pagedRecords.map(User.fromRecord).toList(growable: false);
+    }
+    final projectedRecords = <User>[];
+    for (final record in pagedRecords) {
+      final projected = await _delegate.findUnique(
+        FindUniqueQuery(
+          model: 'User',
+          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
+          include: include,
+          select: select,
+        ),
+      );
+      if (projected == null) {
+        throw StateError(
+          'User.findMany(cursor: ...) could not reload a paged record by primary key.',
+        );
+      }
+      projectedRecords.add(User.fromRecord(projected));
+    }
+    return List<User>.unmodifiable(projectedRecords);
+  }
+
+  Future<User> _performCreateWithRelationWrites({
+    required GeneratedComonOrmClient tx,
+    required UserCreateInput data,
+    QueryInclude? include,
+    QuerySelect? select,
+  }) async {
+    final txDelegate = tx._client.model('User');
+    final created = await txDelegate.create(
+      CreateQuery(
+        model: 'User',
+        data: data.toData(),
+        nestedCreates: data.toNestedCreates(),
+      ),
+    );
+    final predicates = _primaryKeyWhereUniqueFromRecord(created).toPredicates();
+    if (data.hasDeferredRelationWrites) {
+      await _applyNestedRelationWrites(
+        tx: tx,
+        predicates: predicates,
+        existing: created,
+        data: data.toDeferredRelationUpdateInput(),
+      );
+    }
+    if (include == null && select == null && !data.hasDeferredRelationWrites) {
+      return User.fromRecord(created);
+    }
+    final projected = await txDelegate.findUnique(
+      FindUniqueQuery(
+        model: 'User',
+        where: predicates,
+        include: include,
+        select: select,
+      ),
+    );
+    if (projected == null) {
+      throw StateError(
+        'User create branch could not reload the created record by primary key.',
+      );
+    }
+    return User.fromRecord(projected);
+  }
+
+  UserWhereUniqueInput _primaryKeyWhereUniqueFromRecord(
+    Map<String, Object?> record,
+  ) {
+    return UserWhereUniqueInput(id: (record['id'] as int?)!);
+  }
+
+  Future<User> _performUpdateWithRelationWrites({
+    required GeneratedComonOrmClient tx,
+    required List<QueryPredicate> predicates,
+    required Map<String, Object?> existing,
+    required UserUpdateInput data,
+    QueryInclude? include,
+    QuerySelect? select,
+  }) async {
+    final txDelegate = tx._client.model('User');
+    await txDelegate.update(
+      UpdateQuery(
+        model: 'User',
+        where: predicates,
+        data: data.resolveDataAgainstRecord(existing),
+      ),
+    );
+    await _applyNestedRelationWrites(
+      tx: tx,
+      predicates: predicates,
+      existing: existing,
+      data: data,
+    );
+    final projected = await txDelegate.findUnique(
+      FindUniqueQuery(
+        model: 'User',
+        where: predicates,
+        include: include,
+        select: select,
+      ),
+    );
+    if (projected == null) {
+      throw StateError(
+        'User update branch could not reload the updated record for the provided unique selector.',
+      );
+    }
+    return User.fromRecord(projected);
+  }
+
+  Future<void> _applyNestedRelationWrites({
+    required GeneratedComonOrmClient tx,
+    required List<QueryPredicate> predicates,
+    required Map<String, Object?> existing,
+    required UserUpdateInput data,
+  }) async {
+    return;
   }
 
   Future<User> delete({
@@ -402,6 +986,25 @@ class UserWhereUniqueInput {
       );
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  bool matchesRecord(Map<String, Object?> record) {
+    var selectorCount = 0;
+    var matches = false;
+    if (id != null) {
+      selectorCount++;
+      matches = record['id'] == id;
+    }
+    if (email != null) {
+      selectorCount++;
+      matches = record['email'] == email;
+    }
+    if (selectorCount != 1) {
+      throw StateError(
+        'Exactly one unique selector must be provided for UserWhereUniqueInput.',
+      );
+    }
+    return matches;
   }
 }
 
@@ -981,25 +1584,113 @@ class UserCreateInput {
     return Map<String, Object?>.unmodifiable(data);
   }
 
+  List<List<QueryPredicate>> toUniqueSelectorPredicates() {
+    final selectors = <List<QueryPredicate>>[];
+    if (id != null) {
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'id', operator: 'equals', value: id),
+      ]);
+    }
+    selectors.add(<QueryPredicate>[
+      QueryPredicate(field: 'email', operator: 'equals', value: email),
+    ]);
+    return List<List<QueryPredicate>>.unmodifiable(
+      selectors.map(List<QueryPredicate>.unmodifiable),
+    );
+  }
+
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
+
+  bool get hasDeferredRelationWrites {
+    return false;
+  }
+
+  UserUpdateInput toDeferredRelationUpdateInput() {
+    return UserUpdateInput();
+  }
 }
 
 class UserUpdateInput {
-  const UserUpdateInput({this.email, this.name});
+  const UserUpdateInput({this.email, this.emailOps, this.name, this.nameOps});
 
   final String? email;
+  final StringFieldUpdateOperationsInput? emailOps;
   final String? name;
+  final StringFieldUpdateOperationsInput? nameOps;
+
+  bool get hasComputedOperators {
+    return false;
+  }
+
+  bool get hasRelationWrites {
+    return false;
+  }
 
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
+    if (email != null && emailOps != null) {
+      throw StateError(
+        'Only one of email or emailOps may be provided for UserUpdateInput.email.',
+      );
+    }
     if (email != null) {
       data['email'] = email;
     }
+    if (emailOps != null) {
+      final ops = emailOps!;
+      if (ops.hasSet) {
+        data['email'] = ops.set as String?;
+      }
+    }
+    if (name != null && nameOps != null) {
+      throw StateError(
+        'Only one of name or nameOps may be provided for UserUpdateInput.name.',
+      );
+    }
     if (name != null) {
       data['name'] = name;
+    }
+    if (nameOps != null) {
+      final ops = nameOps!;
+      if (ops.hasSet) {
+        data['name'] = ops.set as String?;
+      }
+    }
+    return Map<String, Object?>.unmodifiable(data);
+  }
+
+  Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
+    final data = <String, Object?>{};
+    if (email != null && emailOps != null) {
+      throw StateError(
+        'Only one of email or emailOps may be provided for UserUpdateInput.email.',
+      );
+    }
+    if (email != null) {
+      data['email'] = email;
+    }
+    if (emailOps != null) {
+      final ops = emailOps!;
+      if (ops.hasSet) {
+        data['email'] = ops.set as String?;
+      }
+    }
+    if (name != null && nameOps != null) {
+      throw StateError(
+        'Only one of name or nameOps may be provided for UserUpdateInput.name.',
+      );
+    }
+    if (name != null) {
+      data['name'] = name;
+    }
+    if (nameOps != null) {
+      final ops = nameOps!;
+      if (ops.hasSet) {
+        data['name'] = ops.set as String?;
+      }
     }
     return Map<String, Object?>.unmodifiable(data);
   }
@@ -1050,4 +1741,121 @@ String? _enumName(Object? value) {
     return value.name;
   }
   return null;
+}
+
+class _Undefined {
+  const _Undefined();
+}
+
+const Object _undefined = _Undefined();
+
+bool _deepEquals(Object? left, Object? right) {
+  if (identical(left, right)) {
+    return true;
+  }
+  if (left is List<Object?> && right is List<Object?>) {
+    if (left.length != right.length) {
+      return false;
+    }
+    for (var index = 0; index < left.length; index++) {
+      if (!_deepEquals(left[index], right[index])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (left is Map<Object?, Object?> && right is Map<Object?, Object?>) {
+    if (left.length != right.length) {
+      return false;
+    }
+    for (final entry in left.entries) {
+      if (!right.containsKey(entry.key)) {
+        return false;
+      }
+      if (!_deepEquals(entry.value, right[entry.key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return left == right;
+}
+
+int _deepHash(Object? value) {
+  if (value is List<Object?>) {
+    return Object.hashAll(value.map(_deepHash));
+  }
+  if (value is Map<Object?, Object?>) {
+    final entries =
+        value.entries
+            .map(
+              (entry) =>
+                  Object.hash(_deepHash(entry.key), _deepHash(entry.value)),
+            )
+            .toList(growable: false)
+          ..sort();
+    return Object.hashAll(entries);
+  }
+  return value.hashCode;
+}
+
+Object? _jsonEncodable(Object? value) {
+  if (value == null || value is String || value is num || value is bool) {
+    return value;
+  }
+  if (value is DateTime) {
+    return value.toIso8601String();
+  }
+  if (value is BigInt) {
+    return value.toString();
+  }
+  if (value is Enum) {
+    return value.name;
+  }
+  if (value is List<Object?>) {
+    return value.map(_jsonEncodable).toList(growable: false);
+  }
+  if (value is Map<Object?, Object?>) {
+    final json = <String, Object?>{};
+    for (final entry in value.entries) {
+      json[entry.key.toString()] = _jsonEncodable(entry.value);
+    }
+    return Map<String, Object?>.unmodifiable(json);
+  }
+  return value;
+}
+
+Object? _requireRecordValue(
+  Map<String, Object?> record,
+  String field,
+  String context,
+) {
+  final value = record[field];
+  if (value == null) {
+    throw StateError('Missing required key "$field" for $context.');
+  }
+  return value;
+}
+
+bool _isSkippableDuplicateError(Object error) {
+  final code = _errorCode(error);
+  if (code == '23505') {
+    return true;
+  }
+  final normalized = error.toString().toLowerCase();
+  return normalized.contains(
+        'duplicate key value violates unique constraint',
+      ) ||
+      normalized.contains('unique constraint failed') ||
+      normalized.contains('unique violation');
+}
+
+String? _errorCode(Object error) {
+  try {
+    final dynamicError = error as dynamic;
+    final code = dynamicError.code;
+    return code is String ? code : null;
+  } catch (_) {
+    return null;
+  }
 }

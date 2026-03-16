@@ -42,7 +42,7 @@ model User {
       expect(history.single.statementCount, 1);
       expect(history.single.kind, SqliteMigrationRecordKind.apply);
 
-      database.dispose();
+      database.close();
     });
 
     test('does not reapply the same migration name twice', () {
@@ -77,7 +77,7 @@ model User {
       expect(secondRun.applied, isFalse);
       expect(runner.loadHistory(database), hasLength(1));
 
-      database.dispose();
+      database.close();
     });
 
     test('refuses warning-bearing migration plans by default', () {
@@ -108,7 +108,7 @@ model User {
       );
       expect(runner.loadHistory(database), isEmpty);
 
-      database.dispose();
+      database.close();
     });
 
     test('records empty migration when schema is already current', () {
@@ -134,7 +134,7 @@ model User {
       expect(history, hasLength(1));
       expect(history.single.statementCount, 0);
 
-      database.dispose();
+      database.close();
     });
 
     test(
@@ -204,7 +204,7 @@ model Post {
         expect(history, hasLength(1));
         expect(history.single.statementCount, greaterThan(0));
 
-        database.dispose();
+        database.close();
       },
     );
 
@@ -281,7 +281,7 @@ model Product {
       expect(prods.single['product_title'], 'Widget');
       expect(prods.single['categoryId'], 1);
 
-      database.dispose();
+      database.close();
     });
 
     test('rebuild preserves scalar data when a mapped column name changes', () {
@@ -351,7 +351,7 @@ model Product {
       expect(rows.single['title_text'], 'Widget');
       expect(rows.single['categoryId'], 1);
 
-      database.dispose();
+      database.close();
     });
 
     test('rebuild preserves rows when a mapped table name changes', () {
@@ -425,7 +425,7 @@ model Product {
       expect(rows.single['title'], 'Widget');
       expect(rows.single['categoryId'], 1);
 
-      database.dispose();
+      database.close();
     });
 
     test('rolls back an applied migration and preserves shared data', () {
@@ -489,7 +489,7 @@ model User {
       expect(history.last.kind, SqliteMigrationRecordKind.rollback);
       expect(history.last.targetName, '20260313_add_user_nickname');
 
-      database.dispose();
+      database.close();
     });
   });
 }

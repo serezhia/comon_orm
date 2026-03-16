@@ -51,7 +51,7 @@ model User {
             ),
           );
         } finally {
-          database.dispose();
+          database.close();
         }
 
         final outBuffer = StringBuffer();
@@ -113,7 +113,7 @@ model User {
           final columns = revertedDatabase.select('PRAGMA table_info("User")');
           expect(columns.any((row) => row['name'] == 'nickname'), isFalse);
         } finally {
-          revertedDatabase.dispose();
+          revertedDatabase.close();
         }
 
         outBuffer.clear();

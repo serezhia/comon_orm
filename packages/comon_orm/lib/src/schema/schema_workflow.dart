@@ -20,10 +20,13 @@ class SchemaValidationException implements Exception {
 /// Validated schema together with its source file path.
 class LoadedSchemaDocument {
   /// Creates a loaded schema document.
-  const LoadedSchemaDocument({required this.file, required this.schema});
+  const LoadedSchemaDocument({required this.filePath, required this.schema});
 
   /// Absolute schema file path.
-  final File file;
+  final String filePath;
+
+  /// Absolute schema file handle.
+  File get file => File(filePath);
 
   /// Parsed and validated schema document.
   final SchemaDocument schema;
@@ -36,6 +39,7 @@ class ResolvedGeneratorConfig {
     required this.name,
     required this.provider,
     required this.outputPath,
+    required this.sqliteHelper,
     required this.wasDeclared,
   });
 
@@ -47,6 +51,9 @@ class ResolvedGeneratorConfig {
 
   /// Absolute output path for the generated client.
   final String outputPath;
+
+  /// Explicit SQLite helper target from the generator block, if configured.
+  final String? sqliteHelper;
 
   /// Whether the generator came from an explicit schema block.
   final bool wasDeclared;
@@ -101,6 +108,15 @@ class SchemaWorkflow {
     return _validateLoadedSchema(file, source);
   }
 
+  /// Validates raw schema source without reading from the filesystem.
+  LoadedSchemaDocument loadValidatedSchemaSource({
+    required String source,
+    String filePath = 'schema.prisma',
+  }) {
+    final file = File(filePath).absolute;
+    return _validateLoadedSchema(file, source);
+  }
+
   /// Formats raw schema source into the canonical serialized form.
   String formatSource(String source) {
     return schemaToSource(parser.parse(source));
@@ -134,7 +150,8 @@ class SchemaWorkflow {
       return ResolvedGeneratorConfig(
         name: generatorName ?? 'client',
         provider: expectedProvider,
-        outputPath: _resolveRelativePath(loaded.file.path, fallbackOutputPath),
+        outputPath: _resolveRelativePath(loaded.filePath, fallbackOutputPath),
+        sqliteHelper: null,
         wasDeclared: false,
       );
     }
@@ -151,13 +168,18 @@ class SchemaWorkflow {
 
     final rawOutput = generator.properties['output'];
     final outputPath = rawOutput == null || rawOutput.trim().isEmpty
-        ? _resolveRelativePath(loaded.file.path, fallbackOutputPath)
-        : _resolveGeneratorOutputPath(loaded.file.path, rawOutput);
+        ? _resolveRelativePath(loaded.filePath, fallbackOutputPath)
+        : _resolveGeneratorOutputPath(loaded.filePath, rawOutput);
+    final sqliteHelper = _resolveOptionalSqliteHelper(
+      generator.properties['sqliteHelper'],
+      generatorName: generator.name,
+    );
 
     return ResolvedGeneratorConfig(
       name: generator.name,
       provider: provider,
       outputPath: outputPath,
+      sqliteHelper: sqliteHelper,
       wasDeclared: true,
     );
   }
@@ -194,7 +216,7 @@ class SchemaWorkflow {
       name: datasource.name,
       provider: provider,
       url: expectedProvider == 'sqlite'
-          ? _resolveSqliteUrl(loaded.file.path, rawUrl)
+          ? _resolveSqliteUrl(loaded.filePath, rawUrl)
           : rawUrl,
     );
   }
@@ -212,7 +234,7 @@ class SchemaWorkflow {
       );
     }
 
-    return LoadedSchemaDocument(file: file, schema: schema);
+    return LoadedSchemaDocument(filePath: file.path, schema: schema);
   }
 
   List<ValidationIssue> _attachSourceLocations(
@@ -379,6 +401,30 @@ class SchemaWorkflow {
     }
 
     return _stripQuotes(trimmed);
+  }
+
+  String? _resolveOptionalSqliteHelper(
+    String? rawValue, {
+    required String generatorName,
+  }) {
+    if (rawValue == null || rawValue.trim().isEmpty) {
+      return null;
+    }
+
+    final value = _resolveScalarValue(
+      rawValue,
+      propertyName: 'generator $generatorName.sqliteHelper',
+    );
+    switch (value) {
+      case 'vm':
+      case 'flutter':
+        return value;
+    }
+
+    throw FormatException(
+      'Generator "$generatorName" uses unsupported sqliteHelper "$value". '
+      'Expected one of: vm, flutter.',
+    );
   }
 
   String _resolveRelativePath(String schemaPath, String configuredPath) {

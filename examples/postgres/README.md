@@ -8,7 +8,7 @@
 - `Todo` с полями `id`, `title`, `status`, `createdAt`, `userId`
 - native PostgreSQL enums: `UserRole` (`admin`, `developer`, `manager`) и `TodoStatus` (`pending`, `inProgress`, `done`)
 - CRUD для `/users` и `/todos`
-- Автоприменение схемы при старте приложения
+- generated-only runtime startup через compiled metadata
 
 ## Запуск PostgreSQL через Docker
 
@@ -34,7 +34,9 @@ dart_frog dev
 
 `generate` теперь использует `generator client { output = "lib/generated" }` из schema, а приложение читает PostgreSQL URL из `datasource db { url = env("DATABASE_URL") }`.
 
-По умолчанию схема применяется автоматически через `openAndApplyFromSchemaPath(...)`. Это удобно для локального старта примера, но не является production-практикой. Если это не нужно, установите `AUTO_APPLY_SCHEMA=false`.
+Runtime path теперь всегда идет через compiled metadata: приложение открывает adapter через `GeneratedComonOrmClient.runtimeSchema` и `openFromGeneratedSchema(...)`, без повторной загрузки `schema.prisma` на обычном старте.
+
+Перед запуском нужно заранее подготовить схему базы через migration/apply tooling.
 
 Общий guide по миграциям и различию между local bootstrap и production migration flow лежит в `MIGRATIONS.md` в корне репозитория.
 
@@ -67,6 +69,48 @@ dart run comon_orm migrate rollback \
 Важно: `diff` здесь создаёт migration artifact для ревью и истории, а `apply` затем строит план заново из live DB и текущей `schema.prisma`. Не относитесь к этому как к строгому replay уже сгенерированного `migration.sql`.
 
 В базе теперь хранится не только история применения, но и metadata для восстановления: provider, checksum, warnings, rebuild flag и snapshots схемы до и после миграции. Поэтому rollback может восстановиться даже без локального `before.prisma`, если миграция уже была записана новым форматом.
+
+## Advanced generated-client flow
+
+Этот demo intentionally оставляет HTTP routes простыми, но checked-in generated client здесь уже включает тот же advanced surface, что и основной ORM flow:
+
+- nested `connect`, `disconnect`, `set` и `connectOrCreate` для relation writes
+- `updateMany(...)` для массовых enum/scalar апдейтов
+- generated-layer `findFirst(cursor: ...)` и forward/backward `findMany(cursor: ...)`
+
+Минимальный пример прямо на schema этого demo:
+
+```dart
+final user = await db.user.create(
+  data: const UserCreateInput(
+    name: 'Alice',
+    role: UserRole.manager,
+  ),
+);
+
+await db.user.update(
+  where: UserWhereUniqueInput(id: user.id!),
+  data: UserUpdateInput(
+    todos: TodoUpdateNestedManyWithoutUserInput(
+      connectOrCreate: [
+        TodoConnectOrCreateWithoutUserInput(
+          where: const TodoWhereUniqueInput(id: 1001),
+          create: const TodoCreateWithoutUserInput(
+            id: 1001,
+            title: 'Ship docs',
+            status: TodoStatus.inProgress,
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+await db.todo.updateMany(
+  where: const TodoWhereInput(status: TodoStatus.pending),
+  data: const TodoUpdateInput(status: TodoStatus.done),
+);
+```
 
 ## Маршруты
 

@@ -1,8 +1,9 @@
 import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
+import 'dart:io';
+
 import 'package:postgres/postgres.dart' as pg;
 import 'package:test/test.dart';
-import 'dart:io';
 
 void main() {
   test('exports postgresql adapter and connection config', () {
@@ -25,31 +26,62 @@ model User {
     expect(adapter, isA<PostgresqlDatabaseAdapter>());
   });
 
-  test('opens postgresql adapter from schema path', () async {
-    final tempRoot = Directory.systemTemp.createTempSync('comon_orm_pg_open_');
-    try {
-      final schemaPath =
-          '${tempRoot.path}${Platform.pathSeparator}schema.prisma';
-      File(schemaPath).writeAsStringSync('''
-datasource db {
-  provider = "postgresql"
-  url = "postgresql://localhost:5432/app"
-}
+  test('opens postgresql adapter from generated schema metadata', () async {
+    late String openedUrl;
+    late RuntimeSchemaView openedSchema;
 
-model User {
-  id Int @id
-}
-''');
+    final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+      schema: const GeneratedRuntimeSchema(
+        datasources: <GeneratedDatasourceMetadata>[
+          GeneratedDatasourceMetadata(
+            name: 'db',
+            provider: 'postgresql',
+            url: GeneratedDatasourceUrl(
+              kind: GeneratedDatasourceUrlKind.literal,
+              value: 'postgresql://localhost:5432/app',
+            ),
+          ),
+        ],
+        models: <GeneratedModelMetadata>[],
+      ),
+      adapterFactory: ({required connectionUrl, required schema}) async {
+        openedUrl = connectionUrl;
+        openedSchema = schema;
+        return PostgresqlDatabaseAdapter.fromRuntimeSchema(
+          executor: _FakeExecutor(),
+          schema: schema,
+        );
+      },
+    );
 
+    expect(adapter, isA<PostgresqlDatabaseAdapter>());
+    expect(openedUrl, 'postgresql://localhost:5432/app');
+    expect(openedSchema.findDatasource('db'), isNotNull);
+  });
+
+  test(
+    'runtime datasource resolution still allows explicit url override',
+    () async {
       late String openedUrl;
-      late SchemaDocument openedSchema;
 
-      final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
-        schemaPath: schemaPath,
+      final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+        schema: const GeneratedRuntimeSchema(
+          datasources: <GeneratedDatasourceMetadata>[
+            GeneratedDatasourceMetadata(
+              name: 'db',
+              provider: 'postgresql',
+              url: GeneratedDatasourceUrl(
+                kind: GeneratedDatasourceUrlKind.literal,
+                value: 'postgresql://localhost:5432/app',
+              ),
+            ),
+          ],
+          models: <GeneratedModelMetadata>[],
+        ),
+        connectionUrl: 'postgresql://override:5432/app',
         adapterFactory: ({required connectionUrl, required schema}) async {
           openedUrl = connectionUrl;
-          openedSchema = schema;
-          return PostgresqlDatabaseAdapter(
+          return PostgresqlDatabaseAdapter.fromRuntimeSchema(
             executor: _FakeExecutor(),
             schema: schema,
           );
@@ -57,59 +89,51 @@ model User {
       );
 
       expect(adapter, isA<PostgresqlDatabaseAdapter>());
-      expect(openedUrl, 'postgresql://localhost:5432/app');
-      expect(openedSchema.findModel('User'), isNotNull);
-    } finally {
-      tempRoot.deleteSync(recursive: true);
-    }
-  });
+      expect(openedUrl, 'postgresql://override:5432/app');
+    },
+  );
 
-  test('opens and applies postgresql adapter from schema path', () async {
-    final tempRoot = Directory.systemTemp.createTempSync(
-      'comon_orm_pg_open_apply_',
+  test('constructs postgresql adapter from generated metadata', () {
+    final adapter = PostgresqlDatabaseAdapter.fromGeneratedSchema(
+      executor: _FakeExecutor(),
+      schema: const GeneratedRuntimeSchema(
+        models: <GeneratedModelMetadata>[
+          GeneratedModelMetadata(
+            name: 'User',
+            databaseName: 'users',
+            primaryKeyFields: <String>['id'],
+            fields: <GeneratedFieldMetadata>[
+              GeneratedFieldMetadata(
+                name: 'id',
+                databaseName: 'id',
+                kind: GeneratedRuntimeFieldKind.scalar,
+                type: 'Int',
+                isNullable: false,
+                isList: false,
+                isId: true,
+              ),
+              GeneratedFieldMetadata(
+                name: 'status',
+                databaseName: 'status',
+                kind: GeneratedRuntimeFieldKind.enumeration,
+                type: 'UserStatus',
+                isNullable: false,
+                isList: false,
+              ),
+            ],
+          ),
+        ],
+        enums: <GeneratedEnumMetadata>[
+          GeneratedEnumMetadata(
+            name: 'UserStatus',
+            databaseName: 'user_status',
+            values: <String>['active', 'disabled'],
+          ),
+        ],
+      ),
     );
-    try {
-      final schemaPath =
-          '${tempRoot.path}${Platform.pathSeparator}schema.prisma';
-      File(schemaPath).writeAsStringSync('''
-datasource db {
-  provider = "postgresql"
-  url = "postgresql://localhost:5432/app"
-}
 
-model User {
-  id Int @id
-}
-''');
-
-      late String appliedUrl;
-      late SchemaDocument appliedSchema;
-      late String openedUrl;
-
-      final adapter =
-          await PostgresqlDatabaseAdapter.openAndApplyFromSchemaPath(
-            schemaPath: schemaPath,
-            schemaApplicator:
-                ({required connectionUrl, required schema}) async {
-                  appliedUrl = connectionUrl;
-                  appliedSchema = schema;
-                },
-            adapterFactory: ({required connectionUrl, required schema}) async {
-              openedUrl = connectionUrl;
-              return PostgresqlDatabaseAdapter(
-                executor: _FakeExecutor(),
-                schema: schema,
-              );
-            },
-          );
-
-      expect(adapter, isA<PostgresqlDatabaseAdapter>());
-      expect(appliedUrl, 'postgresql://localhost:5432/app');
-      expect(openedUrl, 'postgresql://localhost:5432/app');
-      expect(appliedSchema.findModel('User'), isNotNull);
-    } finally {
-      tempRoot.deleteSync(recursive: true);
-    }
+    expect(adapter, isA<PostgresqlDatabaseAdapter>());
   });
 
   test('postgresql cli diff reads datasource url from schema', () async {

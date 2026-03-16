@@ -79,7 +79,7 @@ class SqliteMigrationCli {
       _writeWarnings(draft.plan.warnings);
       return 0;
     } finally {
-      database.dispose();
+      database.close();
     }
   }
 
@@ -104,7 +104,7 @@ class SqliteMigrationCli {
       _writeWarnings(result.plan.warnings);
       return 0;
     } finally {
-      database.dispose();
+      database.close();
     }
   }
 
@@ -126,7 +126,7 @@ class SqliteMigrationCli {
       }
       return 0;
     } finally {
-      database.dispose();
+      database.close();
     }
   }
 
@@ -155,7 +155,7 @@ class SqliteMigrationCli {
       _writeWarnings(result.warnings);
       return 0;
     } finally {
-      database.dispose();
+      database.close();
     }
   }
 
@@ -177,7 +177,7 @@ class SqliteMigrationCli {
       }
       return status.isClean ? 0 : 1;
     } finally {
-      database.dispose();
+      database.close();
     }
   }
 

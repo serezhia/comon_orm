@@ -86,7 +86,7 @@ model User {
           expect(errBuffer.toString(), isEmpty);
           expect(outBuffer.toString(), contains('checksum-mismatch'));
         } finally {
-          database.dispose();
+          database.close();
           tempRoot.deleteSync(recursive: true);
         }
       },
@@ -170,7 +170,7 @@ model User {
           );
           expect(rows.single['name'], 'Ada');
         } finally {
-          database.dispose();
+          database.close();
           tempRoot.deleteSync(recursive: true);
         }
       },
@@ -241,7 +241,7 @@ model User {
           expect(rows.single['name'], 'Ada');
           expect(rows.single['nickname'], 'first');
         } finally {
-          database.dispose();
+          database.close();
           tempRoot.deleteSync(recursive: true);
         }
       },

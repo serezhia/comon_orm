@@ -2,14 +2,15 @@
 
 This project supports two different schema workflows, and mixing them is where most mistakes come from:
 
-- local bootstrap for disposable databases
+- local setup/bootstrap for disposable databases
 - real migrations for shared, staging, and production databases
 
-If the database matters, use migrations. Do not rely on runtime auto-apply in production.
+If the database matters, use migrations. Do not rely on runtime schema auto-apply in production.
 
 ## The Short Version
 
-- `openAndApplyFromSchemaPath(...)` is for local development, examples, tests, and throwaway databases.
+- runtime adapters should open from generated metadata, usually via `openFromGeneratedSchema(...)`.
+- schema apply belongs to CLI, migration, or explicit setup/bootstrap flows.
 - `dart run comon_orm migrate diff ...` creates a reviewed migration artifact on disk.
 - `dart run comon_orm migrate apply ...` applies the current schema to the live database and records migration history.
 - `dart run comon_orm migrate status ...` is the first command to run when local files and the database may have diverged.
@@ -22,7 +23,7 @@ Use this flow when you are developing alone against a disposable local database.
 1. Edit `schema.prisma`.
 2. Run validation and code generation.
 3. Start the app against a local database.
-4. Let the app bootstrap missing tables with `openAndApplyFromSchemaPath(...)` if you want the fastest loop.
+4. Prepare the local database through setup tooling before app runtime starts.
 
 Typical commands:
 
@@ -31,23 +32,127 @@ dart run comon_orm validate schema.prisma
 dart run comon_orm generate schema.prisma
 ```
 
-Typical bootstrap usage:
+Typical runtime usage after local setup:
 
 ```dart
-final adapter = await PostgresqlDatabaseAdapter.openAndApplyFromSchemaPath(
-  schemaPath: 'schema.prisma',
+final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+  schema: GeneratedComonOrmClient.runtimeSchema,
 );
 ```
 
 or:
 
 ```dart
-final adapter = await SqliteDatabaseAdapter.openAndApplyFromSchemaPath(
-  schemaPath: 'schema.prisma',
+final adapter = await SqliteDatabaseAdapter.openFromGeneratedSchema(
+  schema: GeneratedComonOrmClient.runtimeSchema,
 );
 ```
 
-This is intentionally convenient, but it is not the disciplined deployment path.
+Use explicit setup helpers or CLI-driven apply flows to create missing tables before runtime if needed.
+
+## Flutter Local SQLite Flow
+
+Flutter local SQLite needs a separate decision from shared-database migrations.
+
+There are three valid cases:
+
+1. disposable local cache
+2. important offline-first local data
+3. shared backend database behind the app
+
+### Disposable Local Cache
+
+If the local database is just a cache, prefer reset over maintaining complex migration code.
+
+That usually means:
+
+- keep `schema.prisma` and the generated client current
+- recreate the local database when the cache shape changes in a disruptive way
+- use additive local upgrade code only when it removes real startup friction
+
+### Important Offline-First Local Data
+
+If the local SQLite file contains important user data, use explicit app-side upgrades before normal runtime open.
+
+`comon_orm_sqlite_flutter` now exposes a lightweight API for that:
+
+- `SqliteFlutterMigration.sql(...)` for additive steps
+- `SqliteFlutterMigration.rebuildTable(...)` for common rebuild flows
+- `SqliteFlutterMigrator` for ordered versioned upgrades
+- `upgradeSqliteFlutterDatabase(...)` for explicit pre-runtime execution
+
+Typical startup shape:
+
+```dart
+final migrator = SqliteFlutterMigrator(
+  currentVersion: 3,
+  migrations: <SqliteFlutterMigration>[
+    SqliteFlutterMigration.sql(
+      fromVersion: 1,
+      toVersion: 2,
+      debugName: 'add_user_names',
+      statements: <String>[
+        'ALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT "";',
+        'ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT "";',
+      ],
+    ),
+    SqliteFlutterMigration.rebuildTable(
+      fromVersion: 2,
+      toVersion: 3,
+      debugName: 'rebuild_todos',
+      tableName: 'todos',
+      createReplacementTableSql: '''
+        CREATE TABLE todos_new (
+          id INTEGER PRIMARY KEY,
+          title TEXT NOT NULL,
+          note TEXT,
+          status TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+      ''',
+      replacementTableName: 'todos_new',
+      copyData: (tx, sourceTable, targetTable) async {
+        final oldRows = await tx.rawQuery(
+          'SELECT id, title, description, is_done, created_at, updated_at FROM $sourceTable;',
+        );
+        for (final row in oldRows) {
+          await tx.insert(targetTable, <String, Object?>{
+            'id': row['id'],
+            'title': row['title'],
+            'note': row['description'],
+            'status': row['is_done'] == 1 ? 'done' : 'todo',
+            'created_at': row['created_at'],
+            'updated_at': row['updated_at'],
+          });
+        }
+      },
+    ),
+  ],
+);
+
+await upgradeSqliteFlutterDatabase(
+  databasePath: 'app.db',
+  migrator: migrator,
+);
+
+final db = await GeneratedComonOrmClientFlutterSqlite.open(
+  databasePath: 'app.db',
+);
+```
+
+Keep the order explicit:
+
+- upgrade first
+- runtime open second
+
+This is still not the same thing as reviewed shared-database migration rollout.
+
+### Shared Backend Database Behind A Flutter App
+
+If the app talks to a shared PostgreSQL or shared SQLite database, the app is not the migration host.
+
+Use the normal reviewed CLI flow for the database itself and let the app connect only after the database is already in the expected shape.
 
 ## Recommended Shared Dev, Staging, And Production Flow
 
@@ -179,8 +284,10 @@ For SQLite especially, keep backups of real data files before applying risky cha
 
 ## Practical Rules
 
-- Use `openFromSchemaPath(...)` for normal runtime bootstrap.
-- Use `openAndApplyFromSchemaPath(...)` only for disposable local environments.
+- Use `openFromGeneratedSchema(...)` for normal runtime bootstrap.
+- Use schema apply only in CLI, migration, or explicit setup/bootstrap flows.
+- For Flutter local SQLite, use explicit app-side upgrades only for device-local databases that really need in-place migration.
+- For disposable local caches, prefer reset over complex migration code.
 - Never auto-apply schema on application startup in production.
 - Always run `status` before applying to a shared environment.
 - Review warnings before using `--allow-warnings`.
@@ -193,5 +300,7 @@ For SQLite especially, keep backups of real data files before applying risky cha
 - `packages/comon_orm/README.md`
 - `packages/comon_orm_postgresql/README.md`
 - `packages/comon_orm_sqlite/README.md`
+- `packages/comon_orm_sqlite_flutter/README.md`
 - `examples/postgres/README.md`
+- `examples/flutter_sqlite/README.md`
 - `SCHEMA_REFERENCE.md`

@@ -1,0 +1,28 @@
+name: comon_orm_flutter_sqlite_example
+description: Flutter example app using comon_orm_sqlite_flutter with a local SQLite database.
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+  flutter: '>=3.35.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  comon_orm: ^0.0.1-alpha.1
+  comon_orm_sqlite_flutter: ^0.0.1-alpha.1
+  path: ^1.9.1
+  sqflite: ^2.4.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  lints: ^5.1.1
+  sqflite_common_ffi: ^2.4.0+2
+
+flutter:
+  uses-material-design: true

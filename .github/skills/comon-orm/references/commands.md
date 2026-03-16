@@ -56,10 +56,10 @@ These are the normal codegen and app bootstrap steps, not deployment steps.
 dart run comon_orm generate schema.prisma
 ```
 
-Local disposable bootstrap in app code:
+Normal runtime bootstrap in app code:
 
-- `PostgresqlDatabaseAdapter.openAndApplyFromSchemaPath(...)`
-- `SqliteDatabaseAdapter.openAndApplyFromSchemaPath(...)`
+- `PostgresqlDatabaseAdapter.openFromGeneratedSchema(...)`
+- `SqliteDatabaseAdapter.openFromGeneratedSchema(...)`
 
 ## Package-Level Test Commands
 

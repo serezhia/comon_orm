@@ -1,5 +1,9 @@
+import 'dart:async';
+
 // ignore_for_file: library_private_types_in_public_api
 
+import '../runtime_metadata/generated_runtime_schema.dart';
+import '../runtime_metadata/runtime_schema_view.dart';
 import '../schema/schema_ast.dart';
 import '../client/query_aggregates.dart';
 import '../client/query_models.dart';
@@ -27,6 +31,22 @@ abstract interface class DatabaseAdapter {
   /// Creates and returns a single record described by [query].
   Future<Map<String, Object?>> create(CreateQuery query);
 
+  /// Adds an implicit many-to-many link for [relation].
+  Future<void> addImplicitManyToManyLink({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    required Map<String, Object?> targetKeyValues,
+  });
+
+  /// Removes implicit many-to-many links for [relation].
+  Future<int> removeImplicitManyToManyLinks({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    Map<String, Object?>? targetKeyValues,
+  });
+
   /// Updates and returns a single record described by [query].
   Future<Map<String, Object?>> update(UpdateQuery query);
 
@@ -41,6 +61,9 @@ abstract interface class DatabaseAdapter {
 
   /// Runs [action] inside a backend transaction.
   Future<T> transaction<T>(Future<T> Function(DatabaseAdapter tx) action);
+
+  /// Releases resources owned by the adapter.
+  FutureOr<void> close();
 }
 
 /// In-memory adapter intended for tests, examples, and local experimentation.
@@ -50,16 +73,46 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
     Map<String, List<Map<String, Object?>>>? store,
     Map<String, List<_RelationLink>>? relationLinks,
     SchemaDocument? schema,
+    RuntimeSchemaView? runtimeSchema,
+  }) : _store = store ?? <String, List<Map<String, Object?>>>{},
+       _relationLinks = relationLinks ?? <String, List<_RelationLink>>{},
+       _schema =
+           runtimeSchema ??
+           (schema == null
+               ? null
+               : runtimeSchemaViewFromSchemaDocument(schema));
+
+  /// Creates an in-memory adapter backed by runtime schema metadata.
+  InMemoryDatabaseAdapter.fromRuntimeSchema({
+    Map<String, List<Map<String, Object?>>>? store,
+    Map<String, List<_RelationLink>>? relationLinks,
+    required RuntimeSchemaView schema,
   }) : _store = store ?? <String, List<Map<String, Object?>>>{},
        _relationLinks = relationLinks ?? <String, List<_RelationLink>>{},
        _schema = schema;
 
+  /// Creates an in-memory adapter backed by generated runtime metadata.
+  factory InMemoryDatabaseAdapter.fromGeneratedSchema({
+    Map<String, List<Map<String, Object?>>>? store,
+    Map<String, List<_RelationLink>>? relationLinks,
+    required GeneratedRuntimeSchema schema,
+  }) {
+    return InMemoryDatabaseAdapter.fromRuntimeSchema(
+      store: store,
+      relationLinks: relationLinks,
+      schema: runtimeSchemaViewFromGeneratedSchema(schema),
+    );
+  }
+
   final Map<String, List<Map<String, Object?>>> _store;
   final Map<String, List<_RelationLink>> _relationLinks;
-  final SchemaDocument? _schema;
+  final RuntimeSchemaView? _schema;
 
   /// Clock used for automatically populated values such as `@updatedAt`.
   DateTime Function() now = () => DateTime.now().toUtc();
+
+  @override
+  void close() {}
 
   @override
   Future<Map<String, Object?>> create(CreateQuery query) async {
@@ -143,6 +196,34 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
   }
 
   @override
+  Future<void> addImplicitManyToManyLink({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    required Map<String, Object?> targetKeyValues,
+  }) async {
+    _addImplicitManyToManyLink(
+      relation: relation,
+      sourceKeyValues: sourceKeyValues,
+      targetKeyValues: targetKeyValues,
+    );
+  }
+
+  @override
+  Future<int> removeImplicitManyToManyLinks({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    Map<String, Object?>? targetKeyValues,
+  }) async {
+    return _removeImplicitManyToManyLinks(
+      relation: relation,
+      sourceKeyValues: sourceKeyValues,
+      targetKeyValues: targetKeyValues,
+    );
+  }
+
+  @override
   Future<List<Map<String, Object?>>> findMany(FindManyQuery query) async {
     final records = _store[query.model] ?? const <Map<String, Object?>>[];
     final ordered = _applyWhereAndOrderBy(records, query.where, query.orderBy);
@@ -187,7 +268,8 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
   Future<Map<String, Object?>?> findFirst(FindFirstQuery query) async {
     final records = _store[query.model] ?? const <Map<String, Object?>>[];
     final ordered = _applyWhereAndOrderBy(records, query.where, query.orderBy);
-    final skipped = query.skip == null ? ordered : ordered.skip(query.skip!);
+    final distinct = applyDistinctRecords(ordered, query.distinct);
+    final skipped = query.skip == null ? distinct : distinct.skip(query.skip!);
     for (final record in skipped) {
       return Map<String, Object?>.unmodifiable(
         _materializeRecord(
@@ -361,9 +443,9 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
                   ),
                 ),
               )
-              .toList(growable: false),
+              .toList(),
       },
-      schema: _schema,
+      runtimeSchema: _schema,
     )..now = now;
 
     return action(transactionalAdapter).then((value) {
@@ -385,7 +467,7 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
                     ),
                   ),
                 )
-                .toList(growable: false),
+                .toList(),
         });
       return value;
     });
@@ -410,10 +492,10 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
     return nextData;
   }
 
-  Iterable<FieldDefinition> _updatedAtFields(String model) {
+  Iterable<RuntimeFieldView> _updatedAtFields(String model) {
     final modelDefinition = _schema?.findModel(model);
     if (modelDefinition == null) {
-      return const <FieldDefinition>[];
+      return const <RuntimeFieldView>[];
     }
 
     return modelDefinition.fields.where((field) => field.isUpdatedAt);
@@ -981,6 +1063,63 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
         ),
       );
     }
+  }
+
+  int _removeImplicitManyToManyLinks({
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    Map<String, Object?>? targetKeyValues,
+  }) {
+    final forwardLinks = _relationLinks[_relationLinkKey(relation)];
+    if (forwardLinks == null || forwardLinks.isEmpty) {
+      return 0;
+    }
+
+    final removedForward = <_RelationLink>[];
+    forwardLinks.removeWhere((link) {
+      final matchesSource = _keyValuesEqual(
+        link.sourceKeyValues,
+        sourceKeyValues,
+      );
+      final matchesTarget =
+          targetKeyValues == null ||
+          _keyValuesEqual(link.targetKeyValues, targetKeyValues);
+      final shouldRemove = matchesSource && matchesTarget;
+      if (shouldRemove) {
+        removedForward.add(link);
+      }
+      return shouldRemove;
+    });
+
+    if (forwardLinks.isEmpty) {
+      _relationLinks.remove(_relationLinkKey(relation));
+    }
+
+    if (removedForward.isEmpty) {
+      return 0;
+    }
+
+    final reverseRelation = _reverseImplicitManyToManyRelation(relation);
+    if (reverseRelation != null) {
+      final reverseLinks = _relationLinks[_relationLinkKey(reverseRelation)];
+      if (reverseLinks != null) {
+        reverseLinks.removeWhere(
+          (link) => removedForward.any(
+            (removed) =>
+                _keyValuesEqual(
+                  link.sourceKeyValues,
+                  removed.targetKeyValues,
+                ) &&
+                _keyValuesEqual(link.targetKeyValues, removed.sourceKeyValues),
+          ),
+        );
+        if (reverseLinks.isEmpty) {
+          _relationLinks.remove(_relationLinkKey(reverseRelation));
+        }
+      }
+    }
+
+    return removedForward.length;
   }
 
   QueryRelation? _reverseImplicitManyToManyRelation(QueryRelation relation) {

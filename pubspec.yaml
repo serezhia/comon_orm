@@ -9,7 +9,9 @@ workspace:
   - packages/comon_orm
   - packages/comon_orm_postgresql
   - packages/comon_orm_sqlite
+  - packages/comon_orm_sqlite_flutter
   - examples/postgres
+  - examples/flutter_sqlite
 
 dev_dependencies:
   lints: ^5.1.1

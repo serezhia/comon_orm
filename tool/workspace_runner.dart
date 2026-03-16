@@ -4,13 +4,16 @@ const workspaceMembers = <String>[
   'packages/comon_orm',
   'packages/comon_orm_postgresql',
   'packages/comon_orm_sqlite',
+  'packages/comon_orm_sqlite_flutter',
   'examples/postgres',
+  'examples/flutter_sqlite',
 ];
 
 const publishableMembers = <String>[
   'packages/comon_orm',
   'packages/comon_orm_postgresql',
   'packages/comon_orm_sqlite',
+  'packages/comon_orm_sqlite_flutter',
 ];
 
 Future<int> runDartCommandAcrossMembers({
@@ -36,8 +39,10 @@ Future<int> runDartCommandAcrossMembers({
     ranAny = true;
     stdout.writeln('==> $action in $member');
 
+    final executable = packageCommandExecutable(packageDir, command);
+
     final result = await Process.start(
-      Platform.resolvedExecutable,
+      executable,
       command,
       workingDirectory: packageDir.path,
       mode: ProcessStartMode.inheritStdio,
@@ -64,6 +69,35 @@ Future<int> runDartCommandAcrossMembers({
 
   stdout.writeln(successMessage);
   return 0;
+}
+
+String packageCommandExecutable(Directory packageDir, List<String> command) {
+  if (_isFlutterPackage(packageDir) && _canUseFlutter(command)) {
+    return 'flutter';
+  }
+
+  return Platform.resolvedExecutable;
+}
+
+bool _isFlutterPackage(Directory packageDir) {
+  final pubspec = File(joinPath(packageDir.path, 'pubspec.yaml'));
+  if (!pubspec.existsSync()) {
+    return false;
+  }
+
+  final content = pubspec.readAsStringSync();
+  return content.contains('flutter:\n    sdk: flutter');
+}
+
+bool _canUseFlutter(List<String> command) {
+  if (command.isEmpty) {
+    return false;
+  }
+
+  return switch (command.first) {
+    'analyze' || 'test' || 'pub' => true,
+    _ => false,
+  };
 }
 
 Future<int> runRootDartCommand({
