@@ -1,0 +1,25 @@
+model User {
+  id           Int     @id @default(autoincrement())
+  name         String?
+  email        String? @unique
+  country      String?
+  profileViews Int?
+  posts        Post[]
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String?
+  content   String?
+  published Boolean? @default(false)
+  userId    Int
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Membership {
+  tenantId Int
+  slug     String
+  role     String?
+
+  @@id([tenantId, slug])
+}

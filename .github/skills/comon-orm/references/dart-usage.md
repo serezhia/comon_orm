@@ -8,18 +8,15 @@ The normal path is:
 
 1. describe models in `schema.prisma`
 2. run `check` and `generate`
-3. open an adapter from `schema.prisma`
+3. open an adapter from generated runtime metadata
 4. construct the generated client
 5. call model APIs like `create`, `findMany`, `findUnique`, `update`, and `delete`
 
 ## Bootstrap Decision
 
-Choose one of these two runtime bootstraps:
+Normal runtime bootstrap goes through `openFromGeneratedSchema(...)`.
 
-- `openFromSchemaPath(...)`: normal application runtime when schema changes are managed separately
-- `openAndApplyFromSchemaPath(...)`: local development convenience for disposable databases
-
-Do not default to `openAndApplyFromSchemaPath(...)` in production code.
+If tables still need to be created locally, do that through CLI or explicit setup/bootstrap helpers before application runtime starts.
 
 ## PostgreSQL Example
 
@@ -28,8 +25,8 @@ import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
 import 'package:your_app/generated/comon_orm_client.dart';
 
 Future<void> main() async {
-  final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
-    schemaPath: 'schema.prisma',
+  final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+    schema: GeneratedComonOrmClient.runtimeSchema,
   );
 
   try {
@@ -59,8 +56,8 @@ import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
 import 'package:your_app/generated/comon_orm_client.dart';
 
 Future<void> main() async {
-  final adapter = await SqliteDatabaseAdapter.openFromSchemaPath(
-    schemaPath: 'schema.prisma',
+  final adapter = await SqliteDatabaseAdapter.openFromGeneratedSchema(
+    schema: GeneratedComonOrmClient.runtimeSchema,
   );
 
   try {
@@ -74,25 +71,14 @@ Future<void> main() async {
 }
 ```
 
-## Local Development Shortcut
+## Local Development Setup
 
-PostgreSQL:
+If a local database still needs its schema created, run setup through migration/apply tooling or an explicit bootstrap helper outside the adapter runtime surface.
 
-```dart
-final adapter = await PostgresqlDatabaseAdapter.openAndApplyFromSchemaPath(
-  schemaPath: 'schema.prisma',
-);
-```
+For Flutter/local-first SQLite, keep one more split in mind:
 
-SQLite:
-
-```dart
-final adapter = await SqliteDatabaseAdapter.openAndApplyFromSchemaPath(
-  schemaPath: 'schema.prisma',
-);
-```
-
-Use this only when creating missing tables on startup is acceptable.
+- normal runtime open still goes through `GeneratedComonOrmClientFlutterSqlite.open(...)`
+- explicit local upgrades now go through `SqliteFlutterMigrator` and `upgradeSqliteFlutterDatabase(...)` before runtime open
 
 ## Nested Write Example
 
@@ -123,8 +109,8 @@ final created = await client.user.create(
 
 ## Runtime Rules
 
-- prefer `openFromSchemaPath(...)` over manual schema parsing for normal app code
-- use `openAndApplyFromSchemaPath(...)` only for local disposable bootstrap
+- prefer `openFromGeneratedSchema(...)` for normal app code
+- keep schema apply out of the normal runtime adapter path
 - adapters use the validated schema at runtime for mappings, relations, enums, and datasource settings
 - use generated client types for app code when possible instead of lower-level query model APIs
 - drop to lower-level `ComonOrmClient` and query models only when the task needs generic model access or engine-level debugging

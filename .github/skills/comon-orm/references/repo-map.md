@@ -48,8 +48,8 @@ SQLite exports from `packages/comon_orm_sqlite/lib/comon_orm_sqlite.dart`:
 - SQLite rebuild-based migration path and narrower native type subset
 - unified `comon_orm migrate ...` dispatcher based on `datasource.provider`
 - migration history metadata in `_comon_orm_migrations` with provider, checksum, warnings, rebuild flag, and before/after schema snapshots
-- `openFromSchemaPath(...)` helpers for schema-driven runtime bootstrap in both SQL providers
-- `openAndApplyFromSchemaPath(...)` helpers for local disposable bootstrap in both SQL providers
+- `openFromGeneratedSchema(...)` helpers for generated-metadata runtime bootstrap in both SQL providers
+- schema apply remains in migration, CLI, or explicit setup/bootstrap layers
 - generated clients emit compound `WhereUniqueInput` selectors and aggregate/groupBy surfaces
 
 ## Current Migration Model
@@ -69,8 +69,8 @@ SQLite exports from `packages/comon_orm_sqlite/lib/comon_orm_sqlite.dart`:
 ## Practical Rules
 
 - prefer the generated client for app-facing usage examples
-- prefer `openFromSchemaPath(...)` over manual schema parsing for normal adapter bootstrap
-- use `openAndApplyFromSchemaPath(...)` only for local disposable startup
+- prefer `openFromGeneratedSchema(...)` over manual schema parsing for normal adapter bootstrap
+- use schema apply only for setup/bootstrap or migration flows
 - prefer unified migration commands before dropping to provider-specific CLIs
 - treat warning-bearing migration plans as blocked unless the task explicitly allows destructive changes
 - do not describe `migrate apply` as replaying checked-in migration SQL files

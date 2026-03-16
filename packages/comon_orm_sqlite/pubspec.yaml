@@ -1,6 +1,6 @@
 name: comon_orm_sqlite
 description: SQLite adapter for comon_orm with embedded runtime, rebuild-based migrations, and schema introspection.
-version: 0.0.1-alpha
+version: 0.0.2-alpha
 homepage: https://github.com/serezhia/comon_orm
 repository: https://github.com/serezhia/comon_orm
 issue_tracker: https://github.com/serezhia/comon_orm/issues
@@ -21,7 +21,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  comon_orm: ^0.0.1-alpha
+  comon_orm: ^0.0.2-alpha
   sqlite3: ^3.1.2
 
 dev_dependencies:

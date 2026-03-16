@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_flutter_sqlite_example/generated/comon_orm_client.dart';
-import 'package:comon_orm_sqlite_flutter/comon_orm_sqlite_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
@@ -28,10 +26,8 @@ abstract class ExampleTodoStore {
 }
 
 class SqliteExampleTodoStore implements ExampleTodoStore {
-  SqliteExampleTodoStore(this.adapter)
-    : client = GeneratedComonOrmClient(adapter: adapter);
+  SqliteExampleTodoStore(this.client);
 
-  final SqliteFlutterDatabaseAdapter adapter;
   final GeneratedComonOrmClient client;
 
   @override
@@ -66,7 +62,7 @@ class SqliteExampleTodoStore implements ExampleTodoStore {
 
   @override
   Future<void> close() {
-    return adapter.close();
+    return client.close();
   }
 }
 
@@ -144,20 +140,30 @@ class _ExampleAppState extends State<ExampleApp> {
   }
 
   Future<ExampleTodoStore> _openStore() async {
-    final schema = await rootBundle.loadString('schema.prisma');
     final databaseDirectory = await getDatabasesPath();
     final databasePath = p.join(
       databaseDirectory,
       'comon_orm_flutter_example.db',
     );
 
-    final adapter =
-        await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaSource(
-          source: schema,
-          filePath: 'schema.prisma',
-          databasePath: databasePath,
-        );
-    return SqliteExampleTodoStore(adapter);
+    final client = await _openClient(databasePath: databasePath);
+    return SqliteExampleTodoStore(client);
+  }
+
+  Future<GeneratedComonOrmClient> _openClient({
+    required String databasePath,
+  }) async {
+    if (!await databaseExists(databasePath)) {
+      throw StateError(
+        'Missing SQLite database at $databasePath. '
+        'This example now expects a pre-provisioned local database created '
+        'through tooling before runtime startup.',
+      );
+    }
+
+    return GeneratedComonOrmClientFlutterSqlite.open(
+      databasePath: databasePath,
+    );
   }
 
   Future<void> _reloadTodos() async {

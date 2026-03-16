@@ -6,7 +6,7 @@ This file is for choosing the right workflow. If the task only needs commands, l
 
 There are two valid workflows in this repository:
 
-1. local bootstrap for disposable databases
+1. local setup/bootstrap for disposable databases
 2. real migrations for shared, staging, and production databases
 
 Most mistakes happen when they get mixed.
@@ -27,29 +27,13 @@ dart run comon_orm check schema.prisma
 dart run comon_orm generate schema.prisma
 ```
 
-## Local Bootstrap Workflow
+## Local Setup Workflow
 
 Use this only for local development, throwaway databases, tests, and examples.
 
-PostgreSQL:
-
-```dart
-final adapter = await PostgresqlDatabaseAdapter.openAndApplyFromSchemaPath(
-  schemaPath: 'schema.prisma',
-);
-```
-
-SQLite:
-
-```dart
-final adapter = await SqliteDatabaseAdapter.openAndApplyFromSchemaPath(
-  schemaPath: 'schema.prisma',
-);
-```
-
 Rules:
 
-- convenient for empty or disposable databases
+- runtime should still open through generated metadata after setup is done
 - not the recommended production rollout path
 - do not recommend startup auto-apply for shared environments
 
@@ -90,16 +74,16 @@ Normal runtime usage after the database is already in the expected shape:
 PostgreSQL:
 
 ```dart
-final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
-  schemaPath: 'schema.prisma',
+final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+  schema: GeneratedComonOrmClient.runtimeSchema,
 );
 ```
 
 SQLite:
 
 ```dart
-final adapter = await SqliteDatabaseAdapter.openFromSchemaPath(
-  schemaPath: 'schema.prisma',
+final adapter = await SqliteDatabaseAdapter.openFromGeneratedSchema(
+  schema: GeneratedComonOrmClient.runtimeSchema,
 );
 ```
 

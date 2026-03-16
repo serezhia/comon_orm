@@ -124,6 +124,7 @@ Typical keys:
 
 - `provider`
 - `output`
+- `sqliteHelper` for SQLite-family generated helper selection
 
 Example:
 
@@ -134,11 +135,29 @@ generator client {
 }
 ```
 
+SQLite-specific helper selection:
+
+```prisma
+generator client {
+  provider = "comon_orm"
+  output = "lib/generated/comon_orm_client.dart"
+  sqliteHelper = "flutter"
+}
+```
+
+Supported `sqliteHelper` values:
+
+- `vm` to emit the `comon_orm_sqlite` generated opener
+- `flutter` to emit the `comon_orm_sqlite_flutter` generated opener
+
+If `sqliteHelper` is omitted, generation keeps a compatibility fallback for older projects during rollout.
+
 ### Common Generator Keywords
 
 - `generator`
 - `provider`
 - `output`
+- `sqliteHelper`
 
 ## Field Attributes
 
@@ -779,6 +798,6 @@ dart run packages/comon_orm_sqlite/bin/comon_orm_sqlite.dart apply \
 
 ## Practical Notes
 
-- If you want the current implementation status and remaining gaps, use [PRISMA_COMPATIBILITY_PLAN.md](/Users/serezhia/Documents/GitHub/comon_orm/PRISMA_COMPATIBILITY_PLAN.md).
+- If you want the current implementation status, refactor roadmap, and Prisma-like gaps, use [REFACTOR_PLAN.md](/Users/serezhia/Documents/GitHub/comon_orm/REFACTOR_PLAN.md).
 - If you need a runnable example, use [examples/postgres/README.md](/Users/serezhia/Documents/GitHub/comon_orm/examples/postgres/README.md).
-- If you need the smallest working path: write `schema.prisma`, run `validate`, run `generate`, then open a PostgreSQL or SQLite adapter with the parsed schema.
+- If you need the smallest working path: write `schema.prisma`, run `validate`, run `generate`, then open the generated client through `GeneratedComonOrmClient.openInMemory()`, `GeneratedComonOrmClientSqlite.open(...)`, or `GeneratedComonOrmClientPostgresql.open(...)` depending on your runtime.

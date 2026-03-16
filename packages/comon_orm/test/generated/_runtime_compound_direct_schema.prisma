@@ -1,0 +1,27 @@
+model Account {
+  tenantId Int
+  slug     String
+  name     String
+  sessions Session[]
+  profile  Profile?
+
+  @@id([tenantId, slug])
+}
+
+model Session {
+  id          Int     @id @default(autoincrement())
+  tenantId    Int
+  accountSlug String
+  label       String
+  account     Account @relation(fields: [tenantId, accountSlug], references: [tenantId, slug])
+}
+
+model Profile {
+  id          Int     @id
+  tenantId    Int?
+  accountSlug String?
+  bio         String?
+  account     Account? @relation(fields: [tenantId, accountSlug], references: [tenantId, slug])
+
+  @@unique([tenantId, accountSlug])
+}

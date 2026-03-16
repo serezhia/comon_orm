@@ -30,6 +30,8 @@ model User {
 }
 ```
 
+For SQLite-family generated helpers, prefer explicit helper selection in the generator block.
+
 ## Minimal SQLite Schema
 
 ```prisma
@@ -41,6 +43,7 @@ datasource db {
 generator client {
   provider = "comon_orm"
   output = "lib/generated/comon_orm_client.dart"
+  sqliteHelper = "vm"
 }
 
 model User {
@@ -48,6 +51,8 @@ model User {
   name String
 }
 ```
+
+Use `sqliteHelper = "flutter"` when the generated client should emit the Flutter SQLite opener instead.
 
 ## Model Design Pattern
 
@@ -150,7 +155,7 @@ dart run comon_orm migrate diff --schema schema.prisma --name <migration_name> -
 
 If the migration warns about destructive changes, review the warnings before applying.
 
-Do not confuse local bootstrap with real migrations: `openAndApplyFromSchemaPath(...)` is a local convenience, not a production rollout strategy.
+Do not confuse local setup/bootstrap with real migrations: schema apply belongs to tooling or explicit setup helpers, not the normal runtime adapter path.
 
 ## Good Design Defaults
 

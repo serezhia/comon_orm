@@ -31,7 +31,9 @@ Today it provides:
 - default database-factory selection for mobile, desktop, and web
 - open helpers that work with injected `DatabaseFactory` instances
 - a working `DatabaseAdapter` implementation on top of `sqflite_common`
-- local `openAndApply...` helpers for schema-driven bootstrap
+- generated-metadata runtime bootstrap through `openFromGeneratedSchema(...)`
+- explicit setup/bootstrap helpers outside the adapter runtime surface for local database preparation
+- a lightweight app-side migration API for versioned local SQLite upgrades in Dart code
 
 Planned next:
 
@@ -46,35 +48,139 @@ Add dependencies:
 
 ```yaml
 dependencies:
-  comon_orm: ^0.0.1-alpha
-  comon_orm_sqlite_flutter: ^0.0.1-alpha
+  comon_orm: ^0.0.2-alpha
+  comon_orm_sqlite_flutter: ^0.0.2-alpha
 ```
 
-Resolve a database path from `schema.prisma`, apply the schema, and use the adapter:
+Open a Flutter SQLite runtime directly through the generated client helper:
 
 ```dart
-import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_sqlite_flutter/comon_orm_sqlite_flutter.dart';
 
+import 'generated/comon_orm_client.dart';
+
 Future<void> main() async {
-  final adapter = await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaPath(
-    schemaPath: 'schema.prisma',
+  final db = await GeneratedComonOrmClientFlutterSqlite.open(
+    databasePath: 'app.db',
   );
 
   try {
-    final created = await adapter.create(
-      const CreateQuery(
-        model: 'User',
-        data: <String, Object?>{'email': 'alice@example.com'},
+    final created = await db.todo.create(
+      data: TodoCreateInput(
+        title: 'Ship Flutter runtime metadata',
+        createdAt: DateTime.now().toUtc(),
       ),
     );
 
-    print(created['email']);
+    print(created.title);
   } finally {
-    await adapter.close();
+    await db.close();
   }
 }
 ```
+
+That path keeps normal runtime startup on generated metadata only. Local database bootstrap lives in explicit setup helpers outside the adapter runtime surface.
+
+## Runtime Paths
+
+- Runtime path: `GeneratedComonOrmClientFlutterSqlite.open(...)`
+- Setup path: `SqliteFlutterBootstrap` plus `SqliteFlutterSchemaApplier` for explicit local database preparation outside normal runtime startup
+- Local upgrade path: `SqliteFlutterMigrator` plus `upgradeSqliteFlutterDatabase(...)` for versioned app-side SQLite upgrades before runtime open
+
+## Local Flutter Migrations
+
+The package now also exposes a lightweight migration layer for local Flutter SQLite databases.
+
+This is meant for app-side upgrades when the database is local to the device and the upgrade logic should stay in Dart code.
+
+Use it for:
+
+- additive local schema changes
+- backfills on local rows
+- rebuild-heavy migrations where data must be copied into a replacement table
+- offline-first apps with important local SQLite data
+
+Do not use it as a replacement for reviewed shared-database migrations.
+
+The intended startup shape is:
+
+```dart
+import 'package:comon_orm_sqlite_flutter/comon_orm_sqlite_flutter.dart';
+
+import 'generated/comon_orm_client.dart';
+
+final migrator = SqliteFlutterMigrator(
+  currentVersion: 3,
+  migrations: <SqliteFlutterMigration>[
+    SqliteFlutterMigration.sql(
+      fromVersion: 1,
+      toVersion: 2,
+      debugName: 'add_user_names',
+      statements: <String>[
+        'ALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT "";',
+        'ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT "";',
+      ],
+    ),
+    SqliteFlutterMigration.rebuildTable(
+      fromVersion: 2,
+      toVersion: 3,
+      debugName: 'rebuild_todos',
+      tableName: 'todos',
+      createReplacementTableSql: '''
+        CREATE TABLE todos_new (
+          id INTEGER PRIMARY KEY,
+          title TEXT NOT NULL,
+          note TEXT,
+          status TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+      ''',
+      replacementTableName: 'todos_new',
+      copyData: (tx, sourceTable, targetTable) async {
+        final oldRows = await tx.rawQuery(
+          'SELECT id, title, description, is_done, created_at, updated_at FROM $sourceTable;',
+        );
+        for (final row in oldRows) {
+          await tx.insert(targetTable, <String, Object?>{
+            'id': row['id'],
+            'title': row['title'],
+            'note': row['description'],
+            'status': row['is_done'] == 1 ? 'done' : 'todo',
+            'created_at': row['created_at'],
+            'updated_at': row['updated_at'],
+          });
+        }
+      },
+    ),
+  ],
+);
+
+Future<void> main() async {
+  await upgradeSqliteFlutterDatabase(
+    databasePath: 'app.db',
+    migrator: migrator,
+  );
+
+  final db = await GeneratedComonOrmClientFlutterSqlite.open(
+    databasePath: 'app.db',
+  );
+
+  try {
+    print(await db.todo.count());
+  } finally {
+    await db.close();
+  }
+}
+```
+
+Practical rules:
+
+- use CLI-reviewed migrations for shared, staging, and production databases
+- prefer reset over complex migration code when local data is disposable
+- use `SqliteFlutterMigration.sql(...)` for simple additive steps
+- use `SqliteFlutterMigration.rebuildTable(...)` or a custom migration callback for rebuild-heavy local upgrades
+- keep upgrade first and runtime open second
 
 ## Scope
 

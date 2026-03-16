@@ -475,6 +475,7 @@ class FindFirstQuery {
     required this.model,
     this.where = const <QueryPredicate>[],
     this.orderBy = const <QueryOrderBy>[],
+    this.distinct = const <String>{},
     this.include,
     this.select,
     this.skip,
@@ -488,6 +489,9 @@ class FindFirstQuery {
 
   /// Ordering clauses used before selecting the first record.
   final List<QueryOrderBy> orderBy;
+
+  /// Scalar fields used to de-duplicate matching rows before selecting the first record.
+  final Set<String> distinct;
 
   /// Relations to include in the result.
   final QueryInclude? include;

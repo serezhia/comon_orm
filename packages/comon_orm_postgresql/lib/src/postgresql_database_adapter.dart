@@ -6,20 +6,12 @@ import 'package:comon_orm/comon_orm.dart';
 import 'package:postgres/postgres.dart' as pg;
 
 import 'postgresql_connection.dart';
-import 'postgresql_schema_applier.dart';
 
-/// Factory signature used by `openFromSchemaPath` for custom adapter creation.
-typedef PostgresqlAdapterFactory =
+/// Factory signature used by runtime-metadata open helpers.
+typedef PostgresqlRuntimeAdapterFactory =
     Future<PostgresqlDatabaseAdapter> Function({
       required String connectionUrl,
-      required SchemaDocument schema,
-    });
-
-/// Applies a loaded schema to a PostgreSQL database before opening an adapter.
-typedef PostgresqlSchemaApplicator =
-    Future<void> Function({
-      required String connectionUrl,
-      required SchemaDocument schema,
+      required RuntimeSchemaView schema,
     });
 
 /// Query execution surface used by the PostgreSQL adapter runtime.
@@ -52,12 +44,36 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     required PostgresqlQueryExecutor executor,
     required SchemaDocument schema,
     Future<void> Function()? closeCallback,
+  }) : this.fromRuntimeSchema(
+         executor: executor,
+         schema: runtimeSchemaViewFromSchemaDocument(schema),
+         closeCallback: closeCallback,
+       );
+
+  /// Creates an adapter from an already configured [executor] and runtime [schema].
+  PostgresqlDatabaseAdapter.fromRuntimeSchema({
+    required PostgresqlQueryExecutor executor,
+    required RuntimeSchemaView schema,
+    Future<void> Function()? closeCallback,
   }) : _executor = executor,
        _schema = schema,
        _closeCallback = closeCallback;
 
+  /// Creates an adapter from an already configured [executor] and generated metadata.
+  factory PostgresqlDatabaseAdapter.fromGeneratedSchema({
+    required PostgresqlQueryExecutor executor,
+    required GeneratedRuntimeSchema schema,
+    Future<void> Function()? closeCallback,
+  }) {
+    return PostgresqlDatabaseAdapter.fromRuntimeSchema(
+      executor: executor,
+      schema: runtimeSchemaViewFromGeneratedSchema(schema),
+      closeCallback: closeCallback,
+    );
+  }
+
   final PostgresqlQueryExecutor _executor;
-  final SchemaDocument _schema;
+  final RuntimeSchemaView _schema;
   final Future<void> Function()? _closeCallback;
 
   /// Clock used for automatic field values such as `@updatedAt`.
@@ -94,75 +110,84 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     );
   }
 
-  /// Loads a validated schema, resolves its datasource, and opens an adapter.
-  static Future<PostgresqlDatabaseAdapter> openFromSchemaPath({
-    required String schemaPath,
-    String? connectionUrl,
-    String? datasourceName,
-    SchemaWorkflow workflow = const SchemaWorkflow(),
-    PostgresqlAdapterFactory? adapterFactory,
-  }) async {
-    final loaded = await workflow.loadValidatedSchema(schemaPath);
-    final resolvedConnectionUrl =
-        connectionUrl ??
-        workflow
-            .resolveDatasource(
-              loaded,
-              datasourceName: datasourceName,
-              expectedProvider: 'postgresql',
-            )
-            .url;
-
-    return (adapterFactory ?? PostgresqlDatabaseAdapter.openFromUrl)(
-      connectionUrl: resolvedConnectionUrl,
-      schema: loaded.schema,
-    );
-  }
-
-  /// Loads a schema, applies it to the target database, and opens an adapter.
-  static Future<PostgresqlDatabaseAdapter> openAndApplyFromSchemaPath({
-    required String schemaPath,
-    String? connectionUrl,
-    String? datasourceName,
-    SchemaWorkflow workflow = const SchemaWorkflow(),
-    PostgresqlAdapterFactory? adapterFactory,
-    PostgresqlSchemaApplicator? schemaApplicator,
-  }) async {
-    final loaded = await workflow.loadValidatedSchema(schemaPath);
-    final resolvedConnectionUrl =
-        connectionUrl ??
-        workflow
-            .resolveDatasource(
-              loaded,
-              datasourceName: datasourceName,
-              expectedProvider: 'postgresql',
-            )
-            .url;
-
-    await (schemaApplicator ?? _applySchemaFromUrl)(
-      connectionUrl: resolvedConnectionUrl,
-      schema: loaded.schema,
-    );
-
-    return (adapterFactory ?? PostgresqlDatabaseAdapter.openFromUrl)(
-      connectionUrl: resolvedConnectionUrl,
-      schema: loaded.schema,
-    );
-  }
-
-  static Future<void> _applySchemaFromUrl({
+  /// Opens an adapter from a PostgreSQL connection URL and runtime metadata.
+  static Future<PostgresqlDatabaseAdapter> openFromUrlAndRuntimeSchema({
     required String connectionUrl,
-    required SchemaDocument schema,
+    required RuntimeSchemaView schema,
   }) async {
-    final connection = await pg.Connection.openFromUrl(connectionUrl);
-    try {
-      await const PostgresqlSchemaApplier().apply(connection, schema);
-    } finally {
-      await connection.close();
-    }
+    final pg.SessionExecutor pool = pg.Pool<Object?>.withUrl(connectionUrl);
+    final executor = _RetryingSessionExecutorBackedQueryExecutor(pool);
+    return PostgresqlDatabaseAdapter.fromRuntimeSchema(
+      executor: executor,
+      schema: schema,
+      closeCallback: executor.close,
+    );
+  }
+
+  /// Opens an adapter from a PostgreSQL connection URL and generated metadata.
+  static Future<PostgresqlDatabaseAdapter> openFromUrlAndGeneratedSchema({
+    required String connectionUrl,
+    required GeneratedRuntimeSchema schema,
+  }) {
+    return openFromUrlAndRuntimeSchema(
+      connectionUrl: connectionUrl,
+      schema: runtimeSchemaViewFromGeneratedSchema(schema),
+    );
+  }
+
+  /// Resolves datasource metadata and opens an adapter from a runtime schema.
+  static Future<PostgresqlDatabaseAdapter> openFromRuntimeSchema({
+    required RuntimeSchemaView schema,
+    String schemaPath = 'schema.prisma',
+    String? connectionUrl,
+    String? datasourceName,
+    RuntimeDatasourceResolver resolver = const RuntimeDatasourceResolver(),
+    PostgresqlRuntimeAdapterFactory? adapterFactory,
+  }) async {
+    final resolvedConnectionUrl =
+        connectionUrl ??
+        resolver
+            .resolveDatasource(
+              schema: schema,
+              datasourceName: datasourceName,
+              expectedProvider: 'postgresql',
+              schemaPath: schemaPath,
+            )
+            .url;
+
+    final PostgresqlRuntimeAdapterFactory factory =
+        adapterFactory ??
+        ({required String connectionUrl, required RuntimeSchemaView schema}) {
+          return PostgresqlDatabaseAdapter.openFromUrlAndRuntimeSchema(
+            connectionUrl: connectionUrl,
+            schema: schema,
+          );
+        };
+
+    return factory(connectionUrl: resolvedConnectionUrl, schema: schema);
+  }
+
+  /// Resolves datasource metadata and opens an adapter from generated metadata.
+  static Future<PostgresqlDatabaseAdapter> openFromGeneratedSchema({
+    required GeneratedRuntimeSchema schema,
+    String schemaPath = 'schema.prisma',
+    String? connectionUrl,
+    String? datasourceName,
+    RuntimeDatasourceResolver resolver = const RuntimeDatasourceResolver(),
+    PostgresqlRuntimeAdapterFactory? adapterFactory,
+  }) {
+    return openFromRuntimeSchema(
+      schema: runtimeSchemaViewFromGeneratedSchema(schema),
+      schemaPath: schemaPath,
+      connectionUrl: connectionUrl,
+      datasourceName: datasourceName,
+      resolver: resolver,
+      adapterFactory: adapterFactory,
+    );
   }
 
   /// Closes the underlying executor or pool if one was supplied.
+  @override
   Future<void> close() {
     return _closeCallback?.call() ?? Future.value();
   }
@@ -435,6 +460,36 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
   }
 
   @override
+  Future<void> addImplicitManyToManyLink({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    required Map<String, Object?> targetKeyValues,
+  }) {
+    return _insertImplicitManyToManyLink(
+      sourceModel: sourceModel,
+      relation: relation,
+      sourceKeyValues: sourceKeyValues,
+      targetKeyValues: targetKeyValues,
+    );
+  }
+
+  @override
+  Future<int> removeImplicitManyToManyLinks({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    Map<String, Object?>? targetKeyValues,
+  }) {
+    return _deleteImplicitManyToManyLinks(
+      sourceModel: sourceModel,
+      relation: relation,
+      sourceKeyValues: sourceKeyValues,
+      targetKeyValues: targetKeyValues,
+    );
+  }
+
+  @override
   Future<Map<String, Object?>> delete(DeleteQuery query) async {
     return transaction((tx) async {
       final txAdapter = tx as PostgresqlDatabaseAdapter;
@@ -483,6 +538,25 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
 
   @override
   Future<Map<String, Object?>?> findFirst(FindFirstQuery query) async {
+    if (query.distinct.isNotEmpty) {
+      final records = await findMany(
+        FindManyQuery(
+          model: query.model,
+          where: query.where,
+          orderBy: query.orderBy,
+          distinct: query.distinct,
+          include: query.include,
+          select: query.select,
+          skip: query.skip,
+          take: 1,
+        ),
+      );
+      if (records.isEmpty) {
+        return null;
+      }
+      return records.first;
+    }
+
     final selected = await _selectSingleRow(
       model: query.model,
       where: query.where,
@@ -570,7 +644,10 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
   Future<T> transaction<T>(Future<T> Function(DatabaseAdapter tx) action) {
     return _executor.transaction(
       (tx) => action(
-        PostgresqlDatabaseAdapter(executor: tx, schema: _schema)..now = now,
+        PostgresqlDatabaseAdapter.fromRuntimeSchema(
+          executor: tx,
+          schema: _schema,
+        )..now = now,
       ),
     );
   }
@@ -693,10 +770,10 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     return nextData;
   }
 
-  Iterable<FieldDefinition> _updatedAtFields(String model) {
+  Iterable<RuntimeFieldView> _updatedAtFields(String model) {
     final modelDefinition = _schema.findModel(model);
     if (modelDefinition == null) {
-      return const <FieldDefinition>[];
+      return const <RuntimeFieldView>[];
     }
 
     return modelDefinition.fields.where((field) => field.isUpdatedAt);
@@ -1221,7 +1298,7 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     for (var index = 0; index < storage.sourceKeyFields.length; index++) {
       parameters.add(
         _normalizeValueForStorage(
-          storage.sourceModel.name,
+          storage.sourceModel,
           storage.sourceKeyFields[index],
           sourceKeyValues[relation.localKeyFields[index]],
         ),
@@ -1230,7 +1307,7 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     for (var index = 0; index < storage.targetKeyFields.length; index++) {
       parameters.add(
         _normalizeValueForStorage(
-          storage.targetModel.name,
+          storage.targetModel,
           storage.targetKeyFields[index],
           targetKeyValues[relation.targetKeyFields[index]],
         ),
@@ -1241,6 +1318,51 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
       '(${columnNames.map(_quoteIdentifier).join(', ')}) '
       'VALUES (${placeholders.join(', ')}) '
       'ON CONFLICT DO NOTHING',
+      parameters: parameters,
+    );
+  }
+
+  Future<int> _deleteImplicitManyToManyLinks({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    Map<String, Object?>? targetKeyValues,
+  }) async {
+    final storage = _implicitManyToManyStorage(sourceModel, relation);
+    final whereParts = <String>[];
+    final parameters = <Object?>[];
+
+    for (var index = 0; index < storage.sourceKeyFields.length; index++) {
+      whereParts.add(
+        '${_quoteIdentifier(storage.sourceJoinColumns[index])} = ${_parameter(parameters.length + 1)}',
+      );
+      parameters.add(
+        _normalizeValueForStorage(
+          storage.sourceModel,
+          storage.sourceKeyFields[index],
+          sourceKeyValues[relation.localKeyFields[index]],
+        ),
+      );
+    }
+
+    if (targetKeyValues != null) {
+      for (var index = 0; index < storage.targetKeyFields.length; index++) {
+        whereParts.add(
+          '${_quoteIdentifier(storage.targetJoinColumns[index])} = ${_parameter(parameters.length + 1)}',
+        );
+        parameters.add(
+          _normalizeValueForStorage(
+            storage.targetModel,
+            storage.targetKeyFields[index],
+            targetKeyValues[relation.targetKeyFields[index]],
+          ),
+        );
+      }
+    }
+
+    return _executor.execute(
+      'DELETE FROM ${_quoteIdentifier(storage.tableName)} '
+      'WHERE ${whereParts.join(' AND ')}',
       parameters: parameters,
     );
   }
@@ -1349,11 +1471,11 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     );
   }
 
-  ImplicitManyToManyStorageDefinition _implicitManyToManyStorage(
+  RuntimeImplicitManyToManyStorage _implicitManyToManyStorage(
     String sourceModel,
     QueryRelation relation,
   ) {
-    final storage = resolveImplicitManyToManyStorage(
+    final storage = resolveRuntimeImplicitManyToManyStorage(
       schema: _schema,
       sourceModelName: relation.sourceModel ?? sourceModel,
       relationFieldName: relation.field,
@@ -1860,7 +1982,7 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     throw StateError('Unexpected PostgreSQL bytes value: $value');
   }
 
-  ModelDefinition _modelDefinition(String model) {
+  RuntimeModelView _modelDefinition(String model) {
     final definition = _schema.findModel(model);
     if (definition == null) {
       throw StateError('Unknown model $model.');

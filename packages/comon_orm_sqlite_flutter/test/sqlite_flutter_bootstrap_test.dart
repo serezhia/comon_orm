@@ -6,6 +6,20 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  const generatedSchema = GeneratedRuntimeSchema(
+    models: <GeneratedModelMetadata>[],
+    datasources: <GeneratedDatasourceMetadata>[
+      GeneratedDatasourceMetadata(
+        name: 'db',
+        provider: 'sqlite',
+        url: GeneratedDatasourceUrl(
+          kind: GeneratedDatasourceUrlKind.literal,
+          value: 'file:dev.db',
+        ),
+      ),
+    ],
+  );
+
   group('SqliteFlutterBootstrap', () {
     test('resolves sqlite datasource path from schema source', () {
       const bootstrap = SqliteFlutterBootstrap();
@@ -72,19 +86,59 @@ model User {
           filePath: '/app/prisma/schema.prisma',
           databasePath: '/tmp/custom.db',
         );
-
         expect(resolved.databasePath, '/tmp/custom.db');
       },
     );
+
+    test('resolves sqlite datasource path from generated schema', () {
+      const bootstrap = SqliteFlutterBootstrap();
+      final resolved = bootstrap.resolveFromGeneratedSchema(
+        schema: generatedSchema,
+        schemaPath: '/app/prisma/schema.prisma',
+      );
+
+      expect(resolved.databasePath, '/app/prisma/dev.db');
+      expect(resolved.datasource.provider, 'sqlite');
+      expect(resolved.schema.findDatasource('db'), isNotNull);
+    });
+
+    test('opens an in-memory database from generated schema', () async {
+      sqfliteFfiInit();
+
+      const bootstrap = SqliteFlutterBootstrap();
+      final opened = await bootstrap.openFromGeneratedSchema(
+        schema: const GeneratedRuntimeSchema(
+          models: <GeneratedModelMetadata>[],
+          datasources: <GeneratedDatasourceMetadata>[
+            GeneratedDatasourceMetadata(
+              name: 'db',
+              provider: 'sqlite',
+              url: GeneratedDatasourceUrl(
+                kind: GeneratedDatasourceUrlKind.literal,
+                value: ':memory:',
+              ),
+            ),
+          ],
+        ),
+        databaseFactory: databaseFactoryFfi,
+      );
+
+      try {
+        final rows = await opened.database.rawQuery('PRAGMA foreign_keys');
+        expect(rows.single['foreign_keys'], 1);
+        expect(opened.datasource.url, ':memory:');
+      } finally {
+        await opened.database.close();
+      }
+    });
 
     test(
       'opens, applies schema, and runs basic CRUD through the adapter',
       () async {
         sqfliteFfiInit();
 
-        final adapter =
-            await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaSource(
-              source: '''
+        final adapter = await _openAndApplyFromSchemaSource(
+          source: '''
 datasource db {
   provider = "sqlite"
   url = ":memory:"
@@ -96,8 +150,8 @@ model User {
   enabled Boolean @default(false)
 }
 ''',
-              databaseFactory: databaseFactoryFfi,
-            );
+          databaseFactory: databaseFactoryFfi,
+        );
 
         try {
           final created = await adapter.create(
@@ -168,9 +222,8 @@ model User {
     test('supports aggregate and groupBy queries', () async {
       sqfliteFfiInit();
 
-      final adapter =
-          await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaSource(
-            source: '''
+      final adapter = await _openAndApplyFromSchemaSource(
+        source: '''
 datasource db {
   provider = "sqlite"
   url = ":memory:"
@@ -184,8 +237,8 @@ model User {
   profileViews Int
 }
 ''',
-            databaseFactory: databaseFactoryFfi,
-          );
+        databaseFactory: databaseFactoryFfi,
+      );
 
       try {
         for (final user in const <Map<String, Object?>>[
@@ -267,9 +320,8 @@ model User {
       () async {
         sqfliteFfiInit();
 
-        final adapter =
-            await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaSource(
-              source: '''
+        final adapter = await _openAndApplyFromSchemaSource(
+          source: '''
 datasource db {
   provider = "sqlite"
   url = ":memory:"
@@ -287,8 +339,8 @@ model Tag {
   users User[]
 }
 ''',
-              databaseFactory: databaseFactoryFfi,
-            );
+          databaseFactory: databaseFactoryFfi,
+        );
 
         const userTagsRelation = QueryRelation(
           field: 'tags',
@@ -385,9 +437,8 @@ model Tag {
     test('auto-populates and refreshes updatedAt fields', () async {
       sqfliteFfiInit();
 
-      final adapter =
-          await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaSource(
-            source: '''
+      final adapter = await _openAndApplyFromSchemaSource(
+        source: '''
 datasource db {
   provider = "sqlite"
   url = ":memory:"
@@ -399,8 +450,8 @@ model User {
   updatedAt DateTime @updatedAt
 }
 ''',
-            databaseFactory: databaseFactoryFfi,
-          );
+        databaseFactory: databaseFactoryFfi,
+      );
 
       final createdAt = DateTime.utc(2026, 3, 14, 9, 0, 0);
       final updatedAt = DateTime.utc(2026, 3, 14, 9, 5, 0);
@@ -440,9 +491,8 @@ model User {
       () async {
         sqfliteFfiInit();
 
-        final adapter =
-            await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaSource(
-              source: '''
+        final adapter = await _openAndApplyFromSchemaSource(
+          source: '''
 datasource db {
   provider = "sqlite"
   url = ":memory:"
@@ -466,8 +516,8 @@ model Tag {
   @@id([scope, code])
 }
 ''',
-              databaseFactory: databaseFactoryFfi,
-            );
+          databaseFactory: databaseFactoryFfi,
+        );
 
         const userTagsRelation = QueryRelation(
           field: 'tags',
@@ -583,9 +633,8 @@ model Tag {
     test('updates and deletes rows selected by compound predicates', () async {
       sqfliteFfiInit();
 
-      final adapter =
-          await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaSource(
-            source: '''
+      final adapter = await _openAndApplyFromSchemaSource(
+        source: '''
 datasource db {
   provider = "sqlite"
   url = ":memory:"
@@ -599,8 +648,8 @@ model Membership {
   @@id([tenantId, slug])
 }
 ''',
-            databaseFactory: databaseFactoryFfi,
-          );
+        databaseFactory: databaseFactoryFfi,
+      );
 
       try {
         await adapter.create(
@@ -670,9 +719,8 @@ model Membership {
     test('supports updateMany and deleteMany flows', () async {
       sqfliteFfiInit();
 
-      final adapter =
-          await SqliteFlutterDatabaseAdapter.openAndApplyFromSchemaSource(
-            source: '''
+      final adapter = await _openAndApplyFromSchemaSource(
+        source: '''
 datasource db {
   provider = "sqlite"
   url = ":memory:"
@@ -684,8 +732,8 @@ model User {
   enabled Boolean @default(false)
 }
 ''',
-            databaseFactory: databaseFactoryFfi,
-          );
+        databaseFactory: databaseFactoryFfi,
+      );
 
       try {
         for (final email in const <String>[
@@ -745,4 +793,27 @@ model User {
       }
     });
   });
+}
+
+Future<SqliteFlutterDatabaseAdapter> _openAndApplyFromSchemaSource({
+  required String source,
+  String filePath = 'schema.prisma',
+  String? databasePath,
+  DatabaseFactory? databaseFactory,
+}) async {
+  const bootstrap = SqliteFlutterBootstrap();
+  final opened = await bootstrap.openFromSchemaSource(
+    source: source,
+    filePath: filePath,
+    databasePath: databasePath,
+    databaseFactory: databaseFactory,
+  );
+  await const SqliteFlutterSchemaApplier().apply(
+    opened.database,
+    opened.schema,
+  );
+  return SqliteFlutterDatabaseAdapter(
+    database: opened.database,
+    schema: opened.schema,
+  );
 }
