@@ -1,0 +1,16 @@
+datasource db {
+  provider = "sqlite"
+  url = "file:app.db"
+}
+
+generator client {
+  provider = "comon_orm"
+  output = "lib/generated"
+}
+
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  done      Boolean  @default(false)
+  createdAt DateTime
+}

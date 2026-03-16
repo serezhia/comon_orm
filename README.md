@@ -1,45 +1,191 @@
+**English** | [Русский](README_RU.md)
+
 # comon_orm
 
-`comon_orm` is a Prisma-inspired schema-first ORM toolkit for Dart.
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
 
-This repository is a monorepo for three publishable packages plus an example application. Each package has its own README, example, and release surface.
+`comon_orm` is a schema-first ORM toolkit for Dart inspired by Prisma.
 
-## Packages
+The core idea is simple: define your models in `schema.prisma`, generate a typed Dart client, and work through the generated API instead of hand-written maps, raw SQL strings, and implicit runtime conventions.
 
-- `comon_orm`: provider-agnostic schema parsing, validation, formatting, code generation, query models, migration metadata, and the in-memory adapter
-- `comon_orm_postgresql`: PostgreSQL runtime adapter, schema introspection, DDL, and migration workflow
-- `comon_orm_sqlite`: SQLite runtime adapter, schema introspection, DDL, and rebuild-based migrations
-- `examples/postgres`: runnable Dart Frog example backed by PostgreSQL
+## ✨ Packages
 
-## Start Here
+| Package | Purpose |
+| --- | --- |
+| `packages/comon_orm` | core: parser, validator, formatter, codegen, query models, in-memory adapter, migration metadata |
+| `packages/comon_orm_postgresql` | runtime adapter, introspection, and migrations for PostgreSQL |
+| `packages/comon_orm_sqlite` | runtime adapter, introspection, and rebuild-based migrations for SQLite |
+| `packages/comon_orm_sqlite_flutter` | Flutter-oriented SQLite runtime adapter built on the `sqflite` ecosystem |
+| `examples/postgres` | runnable PostgreSQL-backed example application |
+| `examples/flutter_sqlite` | runnable Flutter example using the Flutter-oriented SQLite runtime |
 
-- For schema parsing, code generation, or in-memory testing, read `packages/comon_orm/README.md`
-- For PostgreSQL-backed applications, read `packages/comon_orm_postgresql/README.md`
-- For SQLite-backed applications, read `packages/comon_orm_sqlite/README.md`
-- For local-vs-production migration practice, read `MIGRATIONS.md`
-- For release order and pre-publish checks, read `RELEASING.md`
+## 🚀 Quick Start
 
-## Current Scope
+The base flow looks like this:
 
-The project is Prisma-inspired, not full Prisma parity. The stable surface today includes:
+```bash
+dart run comon_orm check schema.prisma
+dart run comon_orm format schema.prisma
+dart run comon_orm generate schema.prisma
+```
 
-- `schema.prisma` parsing, validation, formatting, and Dart client generation
-- `@id`, `@unique`, `@@id`, `@@unique`, `@@index`, `@@map`, `@map`, `@updatedAt`, defaults, enums, and mapped names
-- one-to-one, one-to-many, named relations, self-relations, compound references, and implicit many-to-many relations
-- PostgreSQL adapter support with schema introspection and migrations
-- SQLite adapter support with schema introspection and rebuild-based migrations
+After that, you work through the generated client.
 
-Known limits still apply for advanced Prisma features, broader `@db.*` parity, and some provider-specific edge cases. The package READMEs describe the practical scope for each adapter more directly.
+Example with `sqlite`, without building query models manually and without dropping down to low-level APIs:
 
-## Monorepo Development
+```dart
+import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
 
-This repository uses a Dart pub workspace rooted at `pubspec.yaml`.
+import 'generated/comon_orm_client.dart';
 
-- provider packages keep hosted constraints for publishing
-- inside the workspace, inter-package dependencies resolve to local workspace packages automatically
-- run `dart pub get` once at the repo root for a shared resolution
+Future<void> main() async {
+	final adapter = await SqliteDatabaseAdapter.openFromSchemaPath(
+		schemaPath: 'schema.prisma',
+	);
 
-Typical validation flow:
+	try {
+		final db = GeneratedComonOrmClient(adapter: adapter);
+
+		final user = await db.user.create(
+			data: const UserCreateInput(
+				email: 'alice@example.com',
+				name: 'Alice',
+			),
+		);
+
+		final users = await db.user.findMany();
+
+		print(user.email);
+		print(users.length);
+	} finally {
+		adapter.dispose();
+	}
+}
+```
+
+The PostgreSQL version is the same, only the adapter changes:
+
+```dart
+final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
+	schemaPath: 'schema.prisma',
+);
+```
+
+## 🎯 Key Features
+
+### 🧬 Schema-first workflow
+
+- `schema.prisma` as the source of truth
+- parsing, validation, and canonical formatting
+- resolution of `generator client { output = ... }`
+- unified CLI for `check`, `format`, and `generate`
+
+### 🤖 Generated client
+
+- typed models, inputs, and delegate APIs
+- `findUnique`, `findFirst`, `findMany`, `count`
+- `create`, `update`, `updateMany`, `delete`, `deleteMany`
+- `transaction`
+- `select`, `include`, nested create inputs
+- `distinct`, `orderBy`, `skip`, `take`
+- `aggregate` and `groupBy`
+- scalar and compound `WhereUniqueInput`
+
+### 🔗 Relations and schema
+
+- `@id`, `@unique`, `@@id`, `@@unique`, `@@index`
+- `@map`, `@@map`, `@updatedAt`, defaults, enums
+- one-to-one and one-to-many relations
+- named relations and self-relations
+- compound references
+- implicit many-to-many, including compound key scenarios
+- referential actions: `onDelete` and `onUpdate`
+
+### 🐘 PostgreSQL
+
+- runtime adapter built on `package:postgres`
+- bootstrap from `schema.prisma` via `openFromSchemaPath(...)`
+- schema introspection
+- DDL and migration workflow
+- `diff`, `apply`, `rollback`, `status`, and migration history
+- SQL pushdown for aggregate and group-by queries
+- support for part of the native type surface and enum workflows
+
+### 🪶 SQLite
+
+- embedded runtime built on `sqlite3`
+- bootstrap from `schema.prisma` via `openFromSchemaPath(...)`
+- schema introspection
+- `diff`, `apply`, `rollback`, and migration history
+- rebuild-based migrations for schema changes SQLite cannot express with `ALTER TABLE`
+- support for part of the SQLite native type surface
+
+### 🧪 Tests and local development
+
+- `InMemoryDatabaseAdapter` in the core package
+- schema-driven runtime semantics, including `@updatedAt`, when the adapter is created with schema metadata
+- fast test scenarios without starting a real database
+
+## 🧭 Migrations
+
+The preferred user flow goes through the unified CLI in the core package:
+
+```bash
+dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init
+dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
+dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations
+```
+
+Important:
+
+- the dispatcher reads `datasource.provider` and delegates to `comon_orm_postgresql` or `comon_orm_sqlite`
+- `openAndApplyFromSchemaPath(...)` is a convenient local-development bootstrap, not the recommended strategy for shared or production environments
+- destructive changes and warning-bearing migration plans require manual review
+
+Details are documented in [MIGRATIONS.md](MIGRATIONS.md).
+
+## 📱 Platforms
+
+The current project focus is Dart VM and server-side use cases.
+
+| Platform / scenario | Status | Notes |
+| --- | --- | --- |
+| Dart CLI / server / backend | ✅ Primary target | This is the main target platform for the repository today |
+| Flutter mobile / desktop | ⚠️ Mixed support | `comon_orm` core is usable, SQLite can fit VM-based embedded scenarios, and PostgreSQL is possible only in niche direct-connection architectures |
+| Dart Web / Flutter Web | ⚠️ Core + Flutter SQLite path | The `comon_orm` core package is import-safe on web, and `comon_orm_sqlite_flutter` now provides the intended browser/mobile/desktop SQLite runtime path; PostgreSQL remains non-browser |
+
+In short: the repository now has a web-safe core layer, VM-oriented PostgreSQL/SQLite packages for server and tooling workflows, and a separate Flutter-first SQLite package for mobile, desktop, and web embeddings.
+
+## 📚 Where To Start
+
+- Need parser, validator, codegen, or an in-memory runtime: see `packages/comon_orm/README.md`
+- Need a PostgreSQL runtime: see `packages/comon_orm_postgresql/README.md`
+- Need a SQLite runtime: see `packages/comon_orm_sqlite/README.md`
+- Need a Flutter-oriented SQLite runtime: see `packages/comon_orm_sqlite_flutter/README.md`
+- Need an example application: see `examples/postgres/README.md`
+- Need a Flutter SQLite example application: see `examples/flutter_sqlite/README.md`
+- Need the migration workflow: see [MIGRATIONS.md](MIGRATIONS.md)
+- Need the schema DSL reference: see [SCHEMA_REFERENCE.md](SCHEMA_REFERENCE.md)
+- Need the release flow: see [RELEASING.md](RELEASING.md)
+
+## 🧱 Current Boundaries
+
+`comon_orm` is inspired by Prisma, but it does not claim full Prisma parity.
+
+In practice, that means:
+
+- a broad and useful feature surface is already available for real work
+- some advanced Prisma features are not implemented yet
+- `@db.*` coverage is currently selective and provider-specific
+- some provider-specific edge cases are still possible
+
+It is best understood as a pragmatic schema-first ORM for Dart with real migrations and a generated client, not as a line-by-line Prisma clone.
+
+## 🛠️ Monorepo Development
+
+This repository uses a Dart pub workspace from the root.
+
+Baseline validation before publishing:
 
 ```bash
 dart pub get
@@ -60,33 +206,10 @@ Available root helpers:
 - `dart run tool/dry_run_all.dart`
 - `dart run tool/pre_publish.dart`
 
-In VS Code the same flows are available as tasks:
+The same flows are available in VS Code tasks:
 
 - `format: all packages`
 - `analyze: all packages`
 - `test: all packages`
 - `publish: dry-run all`
 - `pre-publish`
-
-These helpers replace the old manual per-package loop:
-
-```bash
-
-cd packages/comon_orm
-dart analyze
-dart test
-
-cd ../comon_orm_postgresql
-dart analyze
-dart test
-
-cd ../comon_orm_sqlite
-dart analyze
-dart test
-```
-
-## Documentation Map
-
-- `SCHEMA_REFERENCE.md`: Prisma-style schema guide and support notes
-- `MIGRATIONS.md`: practical migration workflow for local development, shared environments, and production
-- `examples/postgres/README.md`: runnable PostgreSQL example setup

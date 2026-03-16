@@ -42,7 +42,7 @@ void main() {
     });
 
     tearDown(() {
-      adapter.dispose();
+      adapter.close();
     });
 
     test(
@@ -424,7 +424,7 @@ model ScalarSample {
       expect(filtered, hasLength(1));
       expect(filtered.single['id'], 1);
 
-      scalarAdapter.dispose();
+      scalarAdapter.close();
     });
 
     test('applies schema with defaults and foreign keys', () async {
@@ -473,7 +473,7 @@ model Post {
       expect(foreignKeys.single['on_delete'], 'SET NULL');
       expect(foreignKeys.single['on_update'], 'CASCADE');
 
-      actionDatabase.dispose();
+      actionDatabase.close();
     });
 
     test('supports mapped table and column names at runtime', () async {
@@ -558,7 +558,7 @@ model User {
         'Alicia',
       );
 
-      mappedAdapter.dispose();
+      mappedAdapter.close();
     });
 
     test('auto-populates and refreshes updatedAt fields', () async {
@@ -607,7 +607,7 @@ model User {
 
       expect(updated['updatedAt'], updatedAt);
 
-      timestampAdapter.dispose();
+      timestampAdapter.close();
     });
 
     test(
@@ -727,7 +727,7 @@ model Tag {
         );
         expect(joinRows, hasLength(2));
 
-        relationAdapter.dispose();
+        relationAdapter.close();
       },
     );
 
@@ -867,7 +867,7 @@ model Tag {
           'alice',
         );
 
-        relationAdapter.dispose();
+        relationAdapter.close();
       },
     );
 
@@ -944,7 +944,7 @@ model Membership {
       expect(remaining, hasLength(1));
       expect(remaining.single['slug'], 'alice');
 
-      compoundAdapter.dispose();
+      compoundAdapter.close();
     });
   });
 }

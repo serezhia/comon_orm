@@ -41,7 +41,7 @@ model User {
       expect(draft.beforeSchema, contains('name String'));
       expect(draft.afterSchema, contains('nickname String?'));
 
-      database.dispose();
+      database.close();
     });
 
     test('writes migration draft files to disk', () {
@@ -154,7 +154,7 @@ model User {
       final columns = database.select('PRAGMA table_info("User")');
       expect(columns.any((row) => row['name'] == 'nickname'), isTrue);
 
-      database.dispose();
+      database.close();
     });
 
     test('rolls back the latest applied migration from DB snapshot fallback', () {
@@ -222,7 +222,7 @@ model User {
         expect(rows.single['name'], 'Ada');
       } finally {
         tempRoot.deleteSync(recursive: true);
-        database.dispose();
+        database.close();
       }
     });
 
@@ -269,7 +269,7 @@ model User {
           expect(status.issues, isEmpty);
         } finally {
           tempRoot.deleteSync(recursive: true);
-          database.dispose();
+          database.close();
         }
       },
     );
@@ -323,7 +323,7 @@ model User {
         );
       } finally {
         tempRoot.deleteSync(recursive: true);
-        database.dispose();
+        database.close();
       }
     });
   });

@@ -1,23 +1,25 @@
+**English** | [Русский](README_RU.md)
+
 # comon_orm
 
-Prisma-inspired schema-first ORM core for Dart.
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
 
-Use this package when you want to validate or format `schema.prisma`, generate a Dart client, or run schema-driven tests on top of the in-memory adapter.
+`comon_orm` is the provider-agnostic core of the package family: schema parsing, validation, formatting, code generation, query models, and the in-memory runtime.
 
-## Why This Package
+Use this package when you want to work with `schema.prisma`, generate a typed Dart client, or run fast schema-driven tests without starting a real database.
 
-`comon_orm` is the provider-agnostic foundation for the package family. It gives you:
+## ✨ What This Package Gives You
 
 - schema AST, parser, validator, and workflow helpers
-- schema formatting and generator resolution helpers
+- schema formatting and generator output resolution
 - generated client code emission
 - provider-agnostic query models and `DatabaseAdapter` contracts
-- the in-memory adapter for tests and local workflows
-- migration artifact and risk-analysis helpers that are not tied to a SQL dialect
+- `InMemoryDatabaseAdapter` for tests and local workflows
+- migration artifacts and risk-analysis helpers that are not tied to a SQL dialect
 
-Use `comon_orm_postgresql` or `comon_orm_sqlite` when you need a real database adapter, schema introspection, or migration execution.
+Use `comon_orm_postgresql` or `comon_orm_sqlite` when you need a real database adapter, introspection, or migration execution.
 
-## Quick Start
+## 🚀 Quick Start
 
 Add the dependency:
 
@@ -34,73 +36,93 @@ dart run comon_orm format schema.prisma
 dart run comon_orm generate schema.prisma
 ```
 
-`validate` remains available as an alias for `check`.
+`validate` is still available as an alias for `check`.
 
-Minimal end-to-end example:
+Minimal generated-client-first example:
 
 ```dart
 import 'package:comon_orm/comon_orm.dart';
+
 import 'generated/comon_orm_client.dart';
 
 const workflow = SchemaWorkflow();
 
 Future<void> main() async {
-  final loaded = await workflow.loadValidatedSchema('schema.prisma');
+	final loaded = await workflow.loadValidatedSchema('schema.prisma');
+	final adapter = InMemoryDatabaseAdapter(schema: loaded.schema);
+	final db = GeneratedComonOrmClient(adapter: adapter);
 
-  final adapter = InMemoryDatabaseAdapter(schema: loaded.schema);
-  final client = GeneratedComonOrmClient(adapter: adapter);
+	final user = await db.user.create(
+		data: const UserCreateInput(
+			email: 'alice@example.com',
+			name: 'Alice',
+		),
+	);
 
-  final user = await client.user.create(
-    data: const UserCreateInput(
-      email: 'alice@example.com',
-      name: 'Alice',
-    ),
-  );
+	final users = await db.user.findMany();
 
-  print(user.email);
+	print(user.email);
+	print(users.length);
 }
 ```
 
-Run `dart run comon_orm generate example/schema.prisma` once to refresh the generated client when the example schema changes. The package `example/` folder already contains a generated client so the example stays readable out of the box.
+If the example schema changes, regenerate the client with:
 
-## Common Workflows
+```bash
+dart run comon_orm generate example/schema.prisma
+```
 
-- Validate and format schema files before committing migration or generator changes.
-- Generate a typed client file from `generator client { output = ... }`.
-- Implement custom adapters against `DatabaseAdapter` when you need a backend that is not covered by the provider packages.
-- Run fast tests against `InMemoryDatabaseAdapter`, optionally passing `schema:` when you want runtime semantics such as `@updatedAt`.
+## 🎯 Key Features
 
-## Capabilities
+### 🧬 Schema Workflow
 
-- schema parsing, validation, and canonical formatting
-- generator output resolution from `schema.prisma`
-- generated client code emission
-- provider-agnostic query models for filtering, relation includes, transactions, aggregate, and group-by queries
-- migration metadata and risk-analysis helpers
+- `schema.prisma` parsing, validation, and canonical formatting
+- generator output resolution from `generator client { output = ... }`
+- file-aware validation diagnostics through `SchemaWorkflow`
+- unified CLI for `check`, `format`, and `generate`
 
-## Query Features
+### 🤖 Generated Client Surface
 
-The generated client surface includes more than basic CRUD. Current query features include:
-
-- `findUnique`, `findFirst`, `findMany`, `count`, `create`, `update`, `updateMany`, `delete`, `deleteMany`, and `transaction`
-- typed scalar filters such as `StringFilter`, `IntFilter`, `BoolFilter`, and numeric aggregate filters
-- case-insensitive string matching with `QueryStringMode.insensitive`
+- typed models, inputs, and delegates
+- `findUnique`, `findFirst`, `findMany`, `count`
+- `create`, `update`, `updateMany`, `delete`, `deleteMany`
+- `transaction`
 - `select`, `include`, and nested relation create inputs
-- relation filters for `some`, `none`, `every`, `is`, and `isNot`
 - `distinct`, `orderBy`, `skip`, and `take`
-- `aggregate` and `groupBy` with `having` and aggregate ordering
-- scalar and compound `WhereUniqueInput` selectors
+- `aggregate` and `groupBy`
+- scalar and compound `WhereUniqueInput`
 
-See `SCHEMA_REFERENCE.md` for a fuller reference with concrete examples.
+### 🧪 In-Memory Runtime
 
-## Scope
+- fast tests without a real database
+- schema-driven runtime semantics when created with `schema:`
+- useful for validating generated client behavior and query workflows
 
-- This package does not ship a production SQL adapter on its own.
-- Real migrations and schema introspection live in the provider packages.
-- The project is Prisma-inspired and intentionally does not claim full Prisma parity.
+### 🧱 Shared Building Blocks
 
-## Related Packages
+- provider-agnostic query models
+- `DatabaseAdapter` contracts for custom backends
+- migration artifact and risk-analysis helpers shared by provider packages
+- web-safe schema parsing, validation, and formatting from in-memory source text
 
-- `comon_orm_postgresql` for PostgreSQL runtime, introspection, and migrations
-- `comon_orm_sqlite` for SQLite runtime, introspection, and rebuild-based migrations
-- repository example app in `examples/postgres` for a larger end-to-end flow
+## 📚 Typical Workflows
+
+- validate and format `schema.prisma` before committing generator or migration changes
+- generate a typed client file from your schema
+- run tests against `InMemoryDatabaseAdapter`
+- implement a custom adapter against `DatabaseAdapter` if your backend is not covered by the provider packages
+
+## 📱 Platform Notes
+
+| Platform / scenario | Status | Notes |
+| --- | --- | --- |
+| Dart CLI / server / backend | ✅ Primary target | Main supported use case |
+| Flutter mobile / desktop | ✅ Core package works | Query models, parser, validator, codegen types, and in-memory runtime are usable; file-based tooling still assumes VM filesystem access |
+| Dart Web / Flutter Web | ✅ Core package import is supported | Use source-based workflow APIs such as `loadValidatedSchemaSource(...)`; file-backed workflow and migration artifact loading remain unavailable on web |
+
+## 🧱 Scope
+
+- This package does not ship a production SQL adapter by itself.
+- Real database migrations and schema introspection live in the provider packages.
+- `comon_orm_postgresql` and the current `comon_orm_sqlite` package remain VM-oriented runtime adapters; browser runtimes need separate adapter packages.
+- The project is Prisma-inspired and does not claim full Prisma parity.

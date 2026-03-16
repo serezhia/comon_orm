@@ -114,6 +114,92 @@ class ClientGenerator {
       ..writeln('  }')
       ..writeln('  return null;')
       ..writeln('}')
+      ..writeln()
+      ..writeln('class _Undefined {')
+      ..writeln('  const _Undefined();')
+      ..writeln('}')
+      ..writeln()
+      ..writeln('const Object _undefined = _Undefined();')
+      ..writeln()
+      ..writeln('bool _deepEquals(Object? left, Object? right) {')
+      ..writeln('  if (identical(left, right)) {')
+      ..writeln('    return true;')
+      ..writeln('  }')
+      ..writeln('  if (left is List<Object?> && right is List<Object?>) {')
+      ..writeln('    if (left.length != right.length) {')
+      ..writeln('      return false;')
+      ..writeln('    }')
+      ..writeln('    for (var index = 0; index < left.length; index++) {')
+      ..writeln('      if (!_deepEquals(left[index], right[index])) {')
+      ..writeln('        return false;')
+      ..writeln('      }')
+      ..writeln('    }')
+      ..writeln('    return true;')
+      ..writeln('  }')
+      ..writeln(
+        '  if (left is Map<Object?, Object?> && right is Map<Object?, Object?>) {',
+      )
+      ..writeln('    if (left.length != right.length) {')
+      ..writeln('      return false;')
+      ..writeln('    }')
+      ..writeln('    for (final entry in left.entries) {')
+      ..writeln('      if (!right.containsKey(entry.key)) {')
+      ..writeln('        return false;')
+      ..writeln('      }')
+      ..writeln('      if (!_deepEquals(entry.value, right[entry.key])) {')
+      ..writeln('        return false;')
+      ..writeln('      }')
+      ..writeln('    }')
+      ..writeln('    return true;')
+      ..writeln('  }')
+      ..writeln('  return left == right;')
+      ..writeln('}')
+      ..writeln()
+      ..writeln('int _deepHash(Object? value) {')
+      ..writeln('  if (value is List<Object?>) {')
+      ..writeln('    return Object.hashAll(value.map(_deepHash));')
+      ..writeln('  }')
+      ..writeln('  if (value is Map<Object?, Object?>) {')
+      ..writeln('    final entries = value.entries')
+      ..writeln(
+        '        .map((entry) => Object.hash(_deepHash(entry.key), _deepHash(entry.value)))',
+      )
+      ..writeln('        .toList(growable: false)')
+      ..writeln('      ..sort();')
+      ..writeln('    return Object.hashAll(entries);')
+      ..writeln('  }')
+      ..writeln('  return value.hashCode;')
+      ..writeln('}')
+      ..writeln()
+      ..writeln('Object? _jsonEncodable(Object? value) {')
+      ..writeln(
+        '  if (value == null || value is String || value is num || value is bool) {',
+      )
+      ..writeln('    return value;')
+      ..writeln('  }')
+      ..writeln('  if (value is DateTime) {')
+      ..writeln('    return value.toIso8601String();')
+      ..writeln('  }')
+      ..writeln('  if (value is BigInt) {')
+      ..writeln('    return value.toString();')
+      ..writeln('  }')
+      ..writeln('  if (value is Enum) {')
+      ..writeln('    return value.name;')
+      ..writeln('  }')
+      ..writeln('  if (value is List<Object?>) {')
+      ..writeln('    return value.map(_jsonEncodable).toList(growable: false);')
+      ..writeln('  }')
+      ..writeln('  if (value is Map<Object?, Object?>) {')
+      ..writeln('    final json = <String, Object?>{};')
+      ..writeln('    for (final entry in value.entries) {')
+      ..writeln(
+        '      json[entry.key.toString()] = _jsonEncodable(entry.value);',
+      )
+      ..writeln('    }')
+      ..writeln('    return Map<String, Object?>.unmodifiable(json);')
+      ..writeln('  }')
+      ..writeln('  return value;')
+      ..writeln('}')
       ..writeln();
 
     return buffer.toString();
@@ -236,9 +322,7 @@ class ClientGenerator {
       )
       ..writeln('  }')
       ..writeln()
-      ..writeln('  Future<int> count({')
-      ..writeln('    $whereInputName? where,')
-      ..writeln('  }) {')
+      ..writeln('  Future<int> count({$whereInputName? where}) {')
       ..writeln('    return _delegate.count(')
       ..writeln('      CountQuery(')
       ..writeln('        model: ${_stringLiteral(model.name)},')
@@ -567,6 +651,39 @@ class ClientGenerator {
       ..writeln('    );')
       ..writeln('  }')
       ..writeln()
+      ..writeln('  factory ${model.name}.fromJson(Map<String, Object?> json) {')
+      ..writeln('    return ${model.name}(');
+
+    for (final field in model.fields) {
+      buffer.writeln(
+        '      ${field.name}: ${_fromJsonExpression(schema, field)},',
+      );
+    }
+
+    buffer
+      ..writeln('    );')
+      ..writeln('  }')
+      ..writeln()
+      ..writeln('  ${model.name} copyWith({');
+
+    for (final field in model.fields) {
+      buffer.writeln('    Object? ${field.name} = _undefined,');
+    }
+
+    buffer
+      ..writeln('  }) {')
+      ..writeln('    return ${model.name}(');
+
+    for (final field in model.fields) {
+      buffer.writeln(
+        '      ${field.name}: ${field.name} == _undefined ? this.${field.name} : ${field.name} as ${_modelFieldType(schema, field)},',
+      );
+    }
+
+    buffer
+      ..writeln('    );')
+      ..writeln('  }')
+      ..writeln()
       ..writeln('  Map<String, Object?> toRecord() {')
       ..writeln('    final record = <String, Object?>{};');
 
@@ -582,6 +699,56 @@ class ClientGenerator {
     buffer
       ..writeln('    return Map<String, Object?>.unmodifiable(record);')
       ..writeln('  }')
+      ..writeln()
+      ..writeln('  Map<String, Object?> toJson() {')
+      ..writeln('    final json = <String, Object?>{};');
+
+    for (final field in model.fields) {
+      buffer
+        ..writeln('    if (${field.name} != null) {')
+        ..writeln(
+          '      json[${_stringLiteral(field.name)}] = ${_toJsonExpression(schema, field)};',
+        )
+        ..writeln('    }');
+    }
+
+    final toStringFields = model.fields
+        .map((field) => '${field.name}: \$${field.name}')
+        .join(', ');
+
+    buffer
+      ..writeln('    return Map<String, Object?>.unmodifiable(json);')
+      ..writeln('  }')
+      ..writeln()
+      ..writeln('  @override')
+      ..writeln("  String toString() => '${model.name}($toStringFields)';")
+      ..writeln()
+      ..writeln('  @override')
+      ..writeln('  bool operator ==(Object other) {')
+      ..writeln('    return identical(this, other) ||')
+      ..writeln('        other is ${model.name} &&');
+
+    for (var index = 0; index < model.fields.length; index++) {
+      final field = model.fields[index];
+      final suffix = index == model.fields.length - 1 ? ';' : ' &&';
+      buffer.writeln(
+        '        _deepEquals(${field.name}, other.${field.name})$suffix',
+      );
+    }
+
+    buffer
+      ..writeln('  }')
+      ..writeln()
+      ..writeln('  @override')
+      ..writeln('  int get hashCode => Object.hashAll(<Object?>[')
+      ..writeln('    runtimeType,');
+
+    for (final field in model.fields) {
+      buffer.writeln('    _deepHash(${field.name}),');
+    }
+
+    buffer
+      ..writeln('  ]);')
       ..writeln('}')
       ..writeln();
   }
@@ -1995,6 +2162,19 @@ class ClientGenerator {
     return '$recordAccess == null ? null : ${field.type}.fromRecord($recordAccess as Map<String, Object?>)';
   }
 
+  String _fromJsonExpression(SchemaDocument schema, FieldDefinition field) {
+    final jsonAccess = "json[${_stringLiteral(field.name)}]";
+    if (_isScalarLikeField(schema, field)) {
+      return _fromScalarRecordExpression(schema, field, jsonAccess);
+    }
+
+    if (field.isList) {
+      return '($jsonAccess as List<Object?>?)?.map((item) => ${field.type}.fromJson(item as Map<String, Object?>)).toList(growable: false)';
+    }
+
+    return '$jsonAccess == null ? null : ${field.type}.fromJson($jsonAccess as Map<String, Object?>)';
+  }
+
   String _fromScalarRecordExpression(
     SchemaDocument schema,
     FieldDefinition field,
@@ -2031,6 +2211,27 @@ class ClientGenerator {
     }
 
     return '${field.name}!.toRecord()';
+  }
+
+  String _toJsonExpression(SchemaDocument schema, FieldDefinition field) {
+    if (_isEnumField(schema, field)) {
+      return '${field.name}!.name';
+    }
+
+    if (_isScalarLikeField(schema, field)) {
+      return switch (field.type) {
+        'DateTime' => '${field.name}!.toIso8601String()',
+        'BigInt' => '${field.name}!.toString()',
+        'Json' => '_jsonEncodable(${field.name})',
+        _ => field.name,
+      };
+    }
+
+    if (field.isList) {
+      return '${field.name}!.map((item) => item.toJson()).toList(growable: false)';
+    }
+
+    return '${field.name}!.toJson()';
   }
 
   String _queryValueExpression(
