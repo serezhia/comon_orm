@@ -12,6 +12,8 @@ disable-model-invocation: false
 
 Use this skill to work on `comon_orm` without re-discovering the repository's schema, runtime, and migration conventions every time.
 
+If the task is specifically about choosing a migration strategy by project type, Flutter local upgrades, or explaining when to use reset versus versioned Dart-coded migrations, prefer the dedicated `comon-orm-migration` skill.
+
 This skill is optimized for low-context loading:
 
 - load only the reference file that matches the task shape
@@ -34,7 +36,7 @@ Use this skill when the task mentions any of these triggers:
 - `comon_orm`
 - `schema.prisma`
 - generated client
-- `openFromSchemaPath`
+- `openFromGeneratedSchema`
 - PostgreSQL adapter
 - SQLite adapter
 - `migrate diff`, `migrate apply`, `migrate status`, `migrate rollback`
@@ -84,6 +86,8 @@ Load:
 - [workflow reference](./references/workflow.md)
 - [command reference](./references/commands.md)
 
+If the task is mainly about migration strategy selection across backend, Flutter local-first, disposable local caches, or Flutter web, use the dedicated `comon-orm-migration` skill instead of loading broad repository references here.
+
 Load additionally only if needed:
 
 - [repo map and capability reference](./references/repo-map.md) for provider-specific behavior
@@ -102,8 +106,8 @@ Load additionally only if needed:
 
 - Treat `schema.prisma` as the schema source of truth.
 - Prefer generated clients for app-facing examples.
-- Prefer `openFromSchemaPath(...)` for normal runtime bootstrap.
-- Treat `openAndApplyFromSchemaPath(...)` as a local-development convenience, not a shared or production migration strategy.
+- Prefer generated metadata plus `openFromGeneratedSchema(...)` for normal runtime bootstrap.
+- Treat schema apply as CLI/setup work, not a normal runtime adapter entrypoint.
 - Prefer unified `dart run comon_orm migrate ...` commands before package-specific CLIs.
 - Treat warning-bearing migration plans as blocked unless the task explicitly accepts risk.
 - Do not assume Prisma parity. Check repository support first.
@@ -121,7 +125,7 @@ Load additionally only if needed:
 
 4. Branch by task type.
    For schema design or relation modeling: validate supported constructs, ownership rules, native types, and relation topology.
-   For runtime usage: prefer `openFromSchemaPath(...)` and generated clients when possible.
+   For runtime usage: prefer generated clients plus `openFromGeneratedSchema(...)`.
    For migration work: inspect local artifacts, DB history, warnings, and whether the plan requires `--allow-warnings`.
    For debugging: compare the requested behavior against repository capabilities and current tests before changing code.
 
@@ -142,9 +146,9 @@ Load additionally only if needed:
 
 ### Runtime Adapter Choice
 
-- Prefer `PostgresqlDatabaseAdapter.openFromSchemaPath(...)` for PostgreSQL apps.
-- Prefer `SqliteDatabaseAdapter.openFromSchemaPath(...)` for SQLite apps.
-- Use `openAndApplyFromSchemaPath(...)` only for disposable local bootstrap, examples, and tests.
+- Prefer `PostgresqlDatabaseAdapter.openFromGeneratedSchema(...)` for PostgreSQL apps.
+- Prefer `SqliteDatabaseAdapter.openFromGeneratedSchema(...)` for SQLite apps.
+- Use schema apply only in CLI or explicit setup/bootstrap helpers.
 - Use lower-level parser or workflow APIs only when the task explicitly needs direct schema loading, validation, or codegen internals.
 
 ### Migration Risk Handling

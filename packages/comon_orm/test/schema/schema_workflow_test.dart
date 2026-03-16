@@ -33,9 +33,67 @@ model User {
             '${tempRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}generated${Platform.pathSeparator}comon_orm_client.dart',
           ).path,
         );
+        expect(generator.sqliteHelper, isNull);
       } finally {
         tempRoot.deleteSync(recursive: true);
       }
+    });
+
+    test('resolves explicit sqlite helper target from generator config', () {
+      final tempRoot = Directory.systemTemp.createTempSync(
+        'comon_orm_workflow_',
+      );
+      try {
+        final schemaPath =
+            '${tempRoot.path}${Platform.pathSeparator}schema.prisma';
+        File(schemaPath).writeAsStringSync('''
+generator client {
+  provider = "comon_orm"
+  output = "lib/generated"
+  sqliteHelper = "flutter"
+}
+
+model User {
+  id Int @id
+}
+''');
+
+        const workflow = SchemaWorkflow();
+        final loaded = workflow.loadValidatedSchemaSync(schemaPath);
+        final generator = workflow.resolveGenerator(loaded);
+
+        expect(generator.sqliteHelper, 'flutter');
+      } finally {
+        tempRoot.deleteSync(recursive: true);
+      }
+    });
+
+    test('rejects unsupported sqlite helper target', () {
+      const workflow = SchemaWorkflow();
+      final loaded = workflow.loadValidatedSchemaSource(
+        source: '''
+generator client {
+  provider = "comon_orm"
+  sqliteHelper = "desktop"
+}
+
+model User {
+  id Int @id
+}
+''',
+        filePath: '/virtual/project/prisma/schema.prisma',
+      );
+
+      expect(
+        () => workflow.resolveGenerator(loaded),
+        throwsA(
+          isA<FormatException>().having(
+            (error) => error.message,
+            'message',
+            contains('unsupported sqliteHelper'),
+          ),
+        ),
+      );
     });
 
     test('resolves postgres datasource url from environment', () {

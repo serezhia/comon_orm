@@ -11,8 +11,8 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  comon_orm: ^0.0.1-alpha
-  comon_orm_sqlite_flutter: ^0.0.1-alpha
+  comon_orm: ^0.0.2-alpha
+  comon_orm_sqlite_flutter: ^0.0.2-alpha
   path: ^1.9.1
   sqflite: ^2.4.2
 
@@ -26,5 +26,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets:
-    - schema.prisma

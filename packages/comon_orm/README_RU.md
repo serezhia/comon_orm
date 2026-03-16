@@ -25,7 +25,7 @@
 
 ```yaml
 dependencies:
-  comon_orm: ^0.0.1-alpha
+	comon_orm: ^0.0.2-alpha
 ```
 
 Провалидируйте, отформатируйте и сгенерируйте client из схемы:
@@ -45,12 +45,8 @@ import 'package:comon_orm/comon_orm.dart';
 
 import 'generated/comon_orm_client.dart';
 
-const workflow = SchemaWorkflow();
-
 Future<void> main() async {
-	final loaded = await workflow.loadValidatedSchema('schema.prisma');
-	final adapter = InMemoryDatabaseAdapter(schema: loaded.schema);
-	final db = GeneratedComonOrmClient(adapter: adapter);
+	final db = GeneratedComonOrmClient.openInMemory();
 
 	final user = await db.user.create(
 		data: const UserCreateInput(
@@ -78,6 +74,7 @@ dart run comon_orm generate example/schema.prisma
 
 - parsing, validation и canonical formatting для `schema.prisma`
 - разрешение `generator client { output = ... }`
+- явный выбор SQLite helper target через `generator client { sqliteHelper = "vm" | "flutter" }`
 - file-aware diagnostics через `SchemaWorkflow`
 - единый CLI для `check`, `format` и `generate`
 
@@ -86,16 +83,45 @@ dart run comon_orm generate example/schema.prisma
 - типизированные модели, input-ы и delegates
 - `findUnique`, `findFirst`, `findMany`, `count`
 - `create`, `update`, `updateMany`, `delete`, `deleteMany`
+- `upsert`, `createMany` и `createMany(skipDuplicates: true)`
 - `transaction`
-- `select`, `include`, nested relation create inputs
+- `select`, `include`, nested relation create inputs, а также generated nested `connect`, `disconnect`, `set` и `connectOrCreate`, когда это допускают relation semantics
 - `distinct`, `orderBy`, `skip`, `take`
 - `aggregate` и `groupBy`
 - scalar и compound `WhereUniqueInput`
 
+Продвинутая generated surface сейчас сознательно остается generated-layer-first:
+
+- `createMany(...)` и `updateMany(...)` работают как транзакционные delegate conveniences поверх уже существующих runtime primitives, что сохраняет одинаковую semantics между in-memory и SQL provider-ами вместо расхождения поведения по backend-ам.
+- `findMany(cursor: ...)` и `findFirst(cursor: ...)` пока режут результат на уровне generated delegate, а не обещают adapter-native cursor pushdown.
+
+Короткий advanced example на схеме из package example:
+
+```dart
+await db.user.createMany(
+	data: const [
+		UserCreateInput(email: 'alice@example.com', name: 'Alice'),
+		UserCreateInput(email: 'alice@example.com', name: 'Alice duplicate'),
+		UserCreateInput(email: 'bob@example.com', name: 'Bob'),
+	],
+	skipDuplicates: true,
+);
+
+final firstPage = await db.user.findMany(
+	orderBy: const [UserOrderByInput(id: SortOrder.asc)],
+	take: 2,
+);
+
+final nextUser = await db.user.findFirst(
+	cursor: UserWhereUniqueInput(id: firstPage.last.id!),
+	orderBy: const [UserOrderByInput(id: SortOrder.asc)],
+);
+```
+
 ### 🧪 In-memory runtime
 
 - быстрые тесты без реальной базы
-- schema-driven runtime semantics при создании adapter-а со `schema:`
+- schema-driven runtime semantics при создании adapter-а из generated metadata или со `schema:`
 - удобно для проверки generated client поведения и query workflows
 
 ### 🧱 Общие building blocks

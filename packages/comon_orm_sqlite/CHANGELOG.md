@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.2-alpha
+
+- Added generated-metadata runtime opening through `openFromGeneratedSchema(...)` and generated SQLite client helpers.
+- Added runtime-metadata-backed adapter paths for embedded SQLite and in-memory workflows.
+- Updated adapter/runtime tests to validate generated metadata parity and runtime behavior.
+- Refreshed docs and examples to use the generated-runtime-first SQLite path.
+
 ## 0.0.1-alpha
 
 - First public alpha release.

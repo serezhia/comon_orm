@@ -15,7 +15,7 @@
 | `packages/comon_orm` | core: parser, validator, formatter, codegen, query models, in-memory adapter, migration metadata |
 | `packages/comon_orm_postgresql` | runtime adapter, introspection и migrations для PostgreSQL |
 | `packages/comon_orm_sqlite` | runtime adapter, introspection и rebuild-based migrations для SQLite |
-| `packages/comon_orm_sqlite_flutter` | Flutter-oriented SQLite runtime adapter на базе экосистемы `sqflite` |
+| `packages/comon_orm_sqlite_flutter` | Flutter-oriented SQLite runtime adapter на базе экосистемы `sqflite`, плюс легкие app-side local migration helper-ы |
 | `examples/postgres` | runnable пример приложения на PostgreSQL |
 | `examples/flutter_sqlite` | runnable Flutter пример с Flutter-oriented SQLite runtime |
 
@@ -34,18 +34,12 @@ dart run comon_orm generate schema.prisma
 Пример со `sqlite`, без ручной сборки query-моделей и без прямой работы с low-level API:
 
 ```dart
-import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
-
 import 'generated/comon_orm_client.dart';
 
 Future<void> main() async {
-	final adapter = await SqliteDatabaseAdapter.openFromSchemaPath(
-		schemaPath: 'schema.prisma',
-	);
+	final db = await GeneratedComonOrmClientSqlite.open();
 
 	try {
-		final db = GeneratedComonOrmClient(adapter: adapter);
-
 		final user = await db.user.create(
 			data: const UserCreateInput(
 				email: 'alice@example.com',
@@ -58,18 +52,23 @@ Future<void> main() async {
 		print(user.email);
 		print(users.length);
 	} finally {
-		adapter.dispose();
+		await db.close();
 	}
 }
 ```
 
-Для PostgreSQL сценарий такой же, меняется только adapter:
+Этот путь предполагает, что схема базы уже создана через migrations или отдельный local bootstrap. Для PostgreSQL сценарий такой же, меняется только adapter:
 
 ```dart
-final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
-	schemaPath: 'schema.prisma',
-);
+final db = await GeneratedComonOrmClientPostgresql.open();
 ```
+
+Сводка по runtime surface:
+
+- Runtime path: generated metadata через `GeneratedComonOrmClient.openInMemory()`, `GeneratedComonOrmClientSqlite.open(...)` и `GeneratedComonOrmClientPostgresql.open(...)`
+- Tooling path: schema-driven `generate`, `check`, `format`, `migrate`, `introspect` и schema-apply flow остаются на `schema.prisma`
+- Setup path: provider-specific bootstrap/setup helper-ы могут подготавливать локальную базу вне adapter runtime surfaces, когда одного runtime metadata пути недостаточно
+- Flutter local upgrade path: `SqliteFlutterMigrator` и `upgradeSqliteFlutterDatabase(...)` дают явный app-side путь для local SQLite upgrades до `GeneratedComonOrmClientFlutterSqlite.open(...)`
 
 ## 🎯 Ключевые фичи
 
@@ -78,6 +77,7 @@ final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
 - `schema.prisma` как источник истины
 - parsing, validation и canonical formatting
 - разрешение `generator client { output = ... }`
+- явный выбор SQLite helper-а через `generator client { sqliteHelper = "vm" | "flutter" }`
 - единый CLI для `check`, `format` и `generate`
 
 ### 🤖 Generated client
@@ -104,7 +104,7 @@ final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
 ### 🐘 PostgreSQL
 
 - runtime adapter на базе `package:postgres`
-- bootstrap из `schema.prisma` через `openFromSchemaPath(...)`
+- compiled-metadata runtime bootstrap через `openFromGeneratedSchema(...)`
 - schema introspection
 - DDL и migration workflow
 - `diff`, `apply`, `rollback`, `status`, история миграций
@@ -114,7 +114,7 @@ final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
 ### 🪶 SQLite
 
 - embedded runtime на базе `sqlite3`
-- bootstrap из `schema.prisma` через `openFromSchemaPath(...)`
+- compiled-metadata runtime bootstrap через `openFromGeneratedSchema(...)`
 - schema introspection
 - `diff`, `apply`, `rollback`, история миграций
 - rebuild-based migrations для изменений, которые SQLite не умеет выразить через `ALTER TABLE`
@@ -123,7 +123,7 @@ final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
 ### 🧪 Для тестов и локальной разработки
 
 - `InMemoryDatabaseAdapter` в core-пакете
-- schema-driven runtime semantics, включая `@updatedAt`, если adapter создается со schema metadata
+- schema-driven runtime semantics, включая `@updatedAt`, если adapter создается из generated metadata или parsed schema metadata
 - быстрые тестовые сценарии без поднятия реальной базы
 
 ## 🧭 Миграции
@@ -139,7 +139,9 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 Важно:
 
 - dispatcher читает `datasource.provider` и сам делегирует выполнение в `comon_orm_postgresql` или `comon_orm_sqlite`
-- `openAndApplyFromSchemaPath(...)` это удобный bootstrap для локальной разработки, а не рекомендуемая стратегия для shared/prod окружений
+- preferred application runtime path теперь это `GeneratedComonOrmClient.runtimeSchema` плюс `openFromGeneratedSchema(...)`
+- schema apply теперь относится к tooling/setup flow, а не к обычным runtime adapter entrypoint-ам
+- Flutter/local-first SQLite upgrades теперь также можно выражать как явные Dart-coded local migrations через `comon_orm_sqlite_flutter`, но этот путь относится к app-local базам, а не к shared reviewed rollout
 - destructive changes и warning-bearing migration plans требуют ручной проверки
 
 Подробности вынесены в [MIGRATIONS.md](MIGRATIONS.md).
@@ -156,6 +158,12 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 
 Если коротко: у репозитория теперь есть web-safe core layer, VM-ориентированные PostgreSQL/SQLite пакеты для server/tooling сценариев и отдельный Flutter-first SQLite пакет для mobile, desktop и web embedding.
 
+Для Flutter/local-first SQLite правильное разделение теперь такое:
+
+- reviewed CLI migrations для shared database и operational rollout
+- explicit app-side local upgrades для device-local SQLite файлов, когда данные нужно мигрировать in-place
+- reset или rebuild для disposable local cache, когда migration code не стоит своей сложности
+
 ## 📚 С чего начать
 
 - Нужны parser, validator, codegen или in-memory runtime: смотрите `packages/comon_orm/README.md`
@@ -166,6 +174,7 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 - Нужен Flutter SQLite пример приложения: смотрите `examples/flutter_sqlite/README.md`
 - Нужен migration workflow: смотрите [MIGRATIONS.md](MIGRATIONS.md)
 - Нужна схема и справка по DSL: смотрите [SCHEMA_REFERENCE.md](SCHEMA_REFERENCE.md)
+- Нужен текущий roadmap по refactor и Prisma-like DX: смотрите [REFACTOR_PLAN.md](REFACTOR_PLAN.md)
 - Нужен release flow: смотрите [RELEASING.md](RELEASING.md)
 
 ## 🧱 Текущие границы проекта
@@ -180,6 +189,82 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 - отдельные provider-specific edge cases все еще возможны
 
 Лучше воспринимать проект как прагматичный schema-first ORM для Dart с реальными migrations и generated client, а не как попытку повторить Prisma один в один.
+
+## 🧩 Prisma-like Compatibility Snapshot
+
+Уже сильная часть проекта:
+
+- типизированный generated client с delegate-ами, моделями, input-ами, `select` и `include`
+- CRUD flow с `findUnique`, `findFirst`, `findMany`, `count`, `create`, `update`, `updateMany`, `delete` и `deleteMany`, включая generated `distinct` для `findMany(...)` и `findFirst(...)`
+- transactions, aggregates и `groupBy`
+- compound id и compound unique selectors
+- nested create flow
+- generated-metadata-first runtime startup для in-memory, SQLite, PostgreSQL и Flutter SQLite путей
+- полноценный migration workflow для PostgreSQL и SQLite
+
+Реализовано, но еще частично или зависит от provider-а:
+
+- `upsert`, пока реализован через транзакции generated delegate поверх уже существующих `findUnique`, `create` и `update`
+- `createMany`, пока реализован как транзакционный generated bulk-write helper поверх повторяющихся `create`
+- `createMany(skipDuplicates: true)`, пока реализован через schema-derived unique selector checks плюс provider-aware duplicate-conflict handling на generated bulk path
+- scalar field update operators: generated `set` для scalar-like полей и `increment` / `decrement` для numeric полей поддерживаются в `update(...)`, `upsert(...)` и `updateMany(...)`; bulk computed updates разрешаются транзакционно по каждой подходящей записи, а не через adapter-native arithmetic
+- nested `connect`, `disconnect`, `set` и `connectOrCreate`: generated update flow поддерживает это для direct relations, включая compound direct foreign-key relations, implicit many-to-many relations и inverse one-to-one relations, когда replacement semantics валидны; `updateMany(...)` переиспользует тот же per-record relation-write path, а create-path relation writes теперь тоже откладывают эту же работу до момента, когда parent record уже создан внутри транзакции, там где это допускают semantics целевой relation
+- cursor pagination: generated `findMany(cursor: ...)` теперь поддерживает и forward, и backward pagination поверх текущего ordered/distinct result set через положительные и отрицательные `take`, а generated `findFirst(cursor: ...)` переиспользует тот же cursor-slicing path; оба сценария остаются фичами generated-client layer, корректно работают с generated `distinct`, при `include` или `select` перезагружают projected rows по primary key и все еще не добавляют adapter-native cursor pushdown
+- покрытие `@db.*` остается выборочным и зависит от конкретного provider-а
+- часть aggregate, predicate и relation edge cases все еще различается между provider-ами
+- Flutter и web поддержка намеренно уже, чем основной Dart VM/server path
+
+Замечания по bulk semantics и provider behavior:
+
+- `createMany(...)` и `updateMany(...)` сейчас в первую очередь держат одинаковую semantics между provider-ами, а не пытаются в adapter-native bulk SQL. Generated delegates выполняют эти сценарии транзакционно поверх уже существующих runtime primitives, поэтому PostgreSQL, SQLite, Flutter SQLite и in-memory проходят через один и тот же behavioral contract даже там, где конкретная база могла бы сделать более специальный shortcut.
+- `createMany(skipDuplicates: true)` сначала использует generated unique selectors, когда input их вообще может выразить, а затем все равно считает provider duplicate-conflict errors пропускаемыми на insert path. На практике это значит, что duplicate races подавляются консистентно между SQL provider-ами, а не просачиваются наружу как adapter-specific ошибки generated delegate surface.
+- cursor pagination пока остается generated-client feature. `findMany(cursor: ...)` и `findFirst(cursor: ...)` режут уже построенный ordered/distinct result set и при необходимости заново загружают projected rows по primary key; adapter-native cursor pushdown они по-прежнему не обещают.
+
+Пример advanced generated-client flow:
+
+```dart
+final user = await db.user.create(
+	data: const UserCreateInput(
+		name: 'Alice',
+		role: UserRole.manager,
+	),
+);
+
+await db.user.update(
+	where: UserWhereUniqueInput(id: user.id!),
+	data: UserUpdateInput(
+		todos: TodoUpdateNestedManyWithoutUserInput(
+			connectOrCreate: [
+				TodoConnectOrCreateWithoutUserInput(
+					where: const TodoWhereUniqueInput(id: 1001),
+					create: const TodoCreateWithoutUserInput(
+						id: 1001,
+						title: 'Ship docs',
+						status: TodoStatus.inProgress,
+					),
+				),
+			],
+		),
+	),
+);
+
+await db.todo.updateMany(
+	where: const TodoWhereInput(status: TodoStatus.pending),
+	data: const TodoUpdateInput(status: TodoStatus.done),
+);
+
+final nextTodo = await db.todo.findFirst(
+	cursor: const TodoWhereUniqueInput(id: 1001),
+	orderBy: const [TodoOrderByInput(id: SortOrder.asc)],
+	distinct: const [TodoScalarField.id],
+);
+```
+
+Еще не реализовано:
+
+- часть required-disconnect, required-set или required-replacement relation cases, где nested write orphan-ит уже привязанные required relation targets; при этом additive/reassign direct-list `set` и unrelated direct-list `disconnect` no-op cases уже разрешены
+
+Активный roadmap по этим пунктам вынесен в [REFACTOR_PLAN.md](REFACTOR_PLAN.md).
 
 ## 🛠️ Разработка monorepo
 

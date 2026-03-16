@@ -11,7 +11,7 @@ Use it when your schema declares `provider = "postgresql"` and you need a real a
 ## ✨ What This Package Gives You
 
 - runtime `DatabaseAdapter` built on `package:postgres`
-- bootstrap from connection config or directly from `schema.prisma`
+- generated-metadata-first runtime bootstrap from connection config
 - schema application and introspection for the supported PostgreSQL surface
 - migration planning, apply, rollback, history, and status helpers
 - the provider implementation behind `dart run comon_orm migrate ...`
@@ -22,25 +22,19 @@ Add dependencies:
 
 ```yaml
 dependencies:
-  comon_orm: ^0.0.1-alpha
-  comon_orm_postgresql: ^0.0.1-alpha
+	comon_orm: ^0.0.2-alpha
+	comon_orm_postgresql: ^0.0.2-alpha
 ```
 
 Generated-client-first example:
 
 ```dart
-import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
-
 import 'generated/comon_orm_client.dart';
 
 Future<void> main() async {
-	final adapter = await PostgresqlDatabaseAdapter.openFromSchemaPath(
-		schemaPath: 'schema.prisma',
-	);
+	final db = await GeneratedComonOrmClientPostgresql.open();
 
 	try {
-		final db = GeneratedComonOrmClient(adapter: adapter);
-
 		final user = await db.user.create(
 			data: const UserCreateInput(
 				email: 'alice@example.com',
@@ -53,25 +47,28 @@ Future<void> main() async {
 		print(user.email);
 		print(users.length);
 	} finally {
-		await adapter.close();
+		await db.close();
 	}
 }
 ```
 
-For disposable local bootstrap that also creates missing tables, you can use:
+That path is the preferred runtime flow once the database schema was already applied.
 
 ```dart
-final adapter = await PostgresqlDatabaseAdapter.openAndApplyFromSchemaPath(
-	schemaPath: 'schema.prisma',
-);
+final db = await GeneratedComonOrmClientPostgresql.open();
 ```
+
+## Runtime Paths
+
+- Runtime path: `GeneratedComonOrmClientPostgresql.open(...)`
+- Tooling/setup path: schema-driven migrate/apply flows through the CLI and schema tools
 
 ## 🎯 Key Features
 
 ### 🐘 PostgreSQL Runtime
 
 - pooled `package:postgres` sessions
-- adapter bootstrap via `openFromSchemaPath(...)`
+- compiled-metadata runtime bootstrap via `openFromGeneratedSchema(...)`
 - SQL-backed query execution for generated client operations
 - aggregate and group-by pushdown
 
@@ -101,7 +98,8 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 Important:
 
 - the dispatcher reads `datasource.provider` and forwards to this package automatically
-- `openAndApplyFromSchemaPath(...)` is for local development convenience, not the recommended shared or production migration strategy
+- the preferred application runtime path is `GeneratedComonOrmClient.runtimeSchema` plus `openFromGeneratedSchema(...)`
+- schema apply stays in tooling/setup flows instead of runtime adapter convenience APIs
 - destructive enum transitions and other risky changes still require manual review
 
 ## 📱 Platform Notes

@@ -39,6 +39,7 @@ class ResolvedGeneratorConfig {
     required this.name,
     required this.provider,
     required this.outputPath,
+    required this.sqliteHelper,
     required this.wasDeclared,
   });
 
@@ -50,6 +51,9 @@ class ResolvedGeneratorConfig {
 
   /// Absolute output path for the generated client.
   final String outputPath;
+
+  /// Explicit SQLite helper target from the generator block, if configured.
+  final String? sqliteHelper;
 
   /// Whether the generator came from an explicit schema block.
   final bool wasDeclared;
@@ -147,6 +151,7 @@ class SchemaWorkflow {
         name: generatorName ?? 'client',
         provider: expectedProvider,
         outputPath: _resolveRelativePath(loaded.filePath, fallbackOutputPath),
+        sqliteHelper: null,
         wasDeclared: false,
       );
     }
@@ -165,11 +170,16 @@ class SchemaWorkflow {
     final outputPath = rawOutput == null || rawOutput.trim().isEmpty
         ? _resolveRelativePath(loaded.filePath, fallbackOutputPath)
         : _resolveGeneratorOutputPath(loaded.filePath, rawOutput);
+    final sqliteHelper = _resolveOptionalSqliteHelper(
+      generator.properties['sqliteHelper'],
+      generatorName: generator.name,
+    );
 
     return ResolvedGeneratorConfig(
       name: generator.name,
       provider: provider,
       outputPath: outputPath,
+      sqliteHelper: sqliteHelper,
       wasDeclared: true,
     );
   }
@@ -391,6 +401,30 @@ class SchemaWorkflow {
     }
 
     return _stripQuotes(trimmed);
+  }
+
+  String? _resolveOptionalSqliteHelper(
+    String? rawValue, {
+    required String generatorName,
+  }) {
+    if (rawValue == null || rawValue.trim().isEmpty) {
+      return null;
+    }
+
+    final value = _resolveScalarValue(
+      rawValue,
+      propertyName: 'generator $generatorName.sqliteHelper',
+    );
+    switch (value) {
+      case 'vm':
+      case 'flutter':
+        return value;
+    }
+
+    throw FormatException(
+      'Generator "$generatorName" uses unsupported sqliteHelper "$value". '
+      'Expected one of: vm, flutter.',
+    );
   }
 
   String _resolveRelativePath(String schemaPath, String configuredPath) {

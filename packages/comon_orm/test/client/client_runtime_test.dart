@@ -2,9 +2,227 @@ import 'package:comon_orm/comon_orm.dart';
 import 'package:test/test.dart';
 
 import '../generated/comon_orm_client.dart';
+import '../generated/runtime_compound_direct_client.dart' as compound_generated;
+import '../generated/runtime_required_inverse_client.dart'
+    as required_inverse_generated;
+import '../generated/runtime_rich_parity_client.dart' as rich_generated;
+
+class _DuplicateOnCreateAdapter implements DatabaseAdapter {
+  final List<String> createdEmails = <String>[];
+
+  @override
+  Future<AggregateQueryResult> aggregate(AggregateQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> addImplicitManyToManyLink({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    required Map<String, Object?> targetKeyValues,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  void close() {}
+
+  @override
+  Future<int> count(CountQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Map<String, Object?>> create(CreateQuery query) async {
+    final email = query.data['email'] as String?;
+    if (email != null && createdEmails.contains(email)) {
+      throw const _FakeDuplicateServerException();
+    }
+    if (email != null) {
+      createdEmails.add(email);
+    }
+    return Map<String, Object?>.unmodifiable(query.data);
+  }
+
+  @override
+  Future<Map<String, Object?>> delete(DeleteQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<int> deleteMany(DeleteManyQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Map<String, Object?>?> findFirst(FindFirstQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> findMany(FindManyQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Map<String, Object?>?> findUnique(FindUniqueQuery query) async {
+    return null;
+  }
+
+  @override
+  Future<List<GroupByQueryResultRow>> groupBy(GroupByQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<int> removeImplicitManyToManyLinks({
+    required String sourceModel,
+    required QueryRelation relation,
+    required Map<String, Object?> sourceKeyValues,
+    Map<String, Object?>? targetKeyValues,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<T> transaction<T>(Future<T> Function(DatabaseAdapter tx) action) {
+    return action(this);
+  }
+
+  @override
+  Future<Map<String, Object?>> update(UpdateQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<int> updateMany(UpdateManyQuery query) {
+    throw UnimplementedError();
+  }
+}
+
+class _FakeDuplicateServerException implements Exception {
+  const _FakeDuplicateServerException();
+
+  String get code => '23505';
+
+  @override
+  String toString() {
+    return 'duplicate key value violates unique constraint';
+  }
+}
 
 void main() {
   group('ComonOrmClient', () {
+    test('exposes compiled runtime metadata from the generated client', () {
+      final schema = GeneratedComonOrmClient.runtimeSchema;
+      final view = runtimeSchemaViewFromGeneratedSchema(schema);
+
+      expect(view.findModel('User')?.findField('email')?.isUnique, isTrue);
+      expect(
+        view.findModel('Post')?.findField('user')?.relation?.targetModel,
+        'User',
+      );
+      expect(view.findModel('Membership')?.primaryKeyFields, const <String>[
+        'tenantId',
+        'slug',
+      ]);
+      expect(
+        GeneratedComonOrmClient.runtimeSchemaView.findModel('User'),
+        isNotNull,
+      );
+    });
+
+    test('opens generated client with in-memory adapter convenience', () async {
+      final client = GeneratedComonOrmClient.openInMemory();
+
+      final created = await client.user.create(
+        data: const UserCreateInput(email: 'alice@example.com', name: 'Alice'),
+      );
+
+      expect(created.email, 'alice@example.com');
+      final users = await client.user.findMany();
+      expect(users, hasLength(1));
+      await client.close();
+    });
+
+    test(
+      'drives in-memory updatedAt behavior from generated metadata',
+      () async {
+        const schema = GeneratedRuntimeSchema(
+          models: <GeneratedModelMetadata>[
+            GeneratedModelMetadata(
+              name: 'User',
+              databaseName: 'users',
+              primaryKeyFields: <String>['id'],
+              fields: <GeneratedFieldMetadata>[
+                GeneratedFieldMetadata(
+                  name: 'id',
+                  databaseName: 'id',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'Int',
+                  isNullable: false,
+                  isList: false,
+                  isId: true,
+                ),
+                GeneratedFieldMetadata(
+                  name: 'name',
+                  databaseName: 'name',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'String',
+                  isNullable: false,
+                  isList: false,
+                ),
+                GeneratedFieldMetadata(
+                  name: 'updatedAt',
+                  databaseName: 'updated_at',
+                  kind: GeneratedRuntimeFieldKind.scalar,
+                  type: 'DateTime',
+                  isNullable: false,
+                  isList: false,
+                  isUpdatedAt: true,
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final adapter = InMemoryDatabaseAdapter.fromGeneratedSchema(
+          schema: schema,
+        );
+        final client = ComonOrmClient(adapter: adapter);
+        final createdAt = DateTime.utc(2026, 3, 15, 13, 0, 0);
+        final updatedAt = DateTime.utc(2026, 3, 15, 13, 5, 0);
+
+        adapter.now = () => createdAt;
+        final created = await client
+            .model('User')
+            .create(
+              const CreateQuery(
+                model: 'User',
+                data: <String, Object?>{'id': 1, 'name': 'Alice'},
+              ),
+            );
+
+        expect(created['updatedAt'], createdAt);
+
+        adapter.now = () => updatedAt;
+        final changed = await client
+            .model('User')
+            .update(
+              const UpdateQuery(
+                model: 'User',
+                where: <QueryPredicate>[
+                  QueryPredicate(field: 'id', operator: 'equals', value: 1),
+                ],
+                data: <String, Object?>{'name': 'Alice Updated'},
+              ),
+            );
+
+        expect(changed['updatedAt'], updatedAt);
+      },
+    );
+
     test('creates and reads records through the in-memory adapter', () async {
       final client = ComonOrmClient(adapter: InMemoryDatabaseAdapter());
       final userDelegate = client.model('User');
@@ -169,6 +387,2153 @@ void main() {
         expect(remainingCount, 2);
       },
     );
+
+    test('supports generated upsert for create and update paths', () async {
+      final client = GeneratedComonOrmClient(
+        adapter: InMemoryDatabaseAdapter(),
+      );
+
+      final created = await client.user.upsert(
+        where: const UserWhereUniqueInput(email: 'alice@prisma.io'),
+        create: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        update: const UserUpdateInput(name: 'Alice Updated'),
+        select: const UserSelect(name: true, email: true),
+      );
+
+      expect(created.name, 'Alice');
+      expect(created.email, 'alice@prisma.io');
+      expect(created.id, isNull);
+
+      final updated = await client.user.upsert(
+        where: const UserWhereUniqueInput(email: 'alice@prisma.io'),
+        create: const UserCreateInput(name: 'Wrong', email: 'alice@prisma.io'),
+        update: const UserUpdateInput(name: 'Alice Updated'),
+        select: const UserSelect(name: true, email: true),
+      );
+
+      expect(updated.name, 'Alice Updated');
+      expect(updated.email, 'alice@prisma.io');
+      expect(updated.id, isNull);
+
+      final users = await client.user.findMany();
+      expect(users, hasLength(1));
+    });
+
+    test('supports generated createMany bulk writes', () async {
+      final client = GeneratedComonOrmClient(
+        adapter: InMemoryDatabaseAdapter(),
+      );
+
+      final createdCount = await client.user.createMany(
+        data: const <UserCreateInput>[
+          UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+          UserCreateInput(name: 'Bob', email: 'bob@prisma.io'),
+          UserCreateInput(name: 'Carol', email: 'carol@prisma.io'),
+        ],
+      );
+
+      expect(createdCount, 3);
+
+      final users = await client.user.findMany(
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(name: SortOrder.asc),
+        ],
+        select: const UserSelect(name: true, email: true),
+      );
+
+      expect(users, hasLength(3));
+      expect(
+        users.map((user) => user.name).toList(growable: false),
+        const <String?>['Alice', 'Bob', 'Carol'],
+      );
+    });
+
+    test('supports generated createMany skipDuplicates', () async {
+      final client = GeneratedComonOrmClient(
+        adapter: InMemoryDatabaseAdapter(),
+      );
+
+      final createdCount = await client.user.createMany(
+        skipDuplicates: true,
+        data: const <UserCreateInput>[
+          UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+          UserCreateInput(name: 'Alice Duplicate', email: 'alice@prisma.io'),
+          UserCreateInput(name: 'Bob', email: 'bob@prisma.io'),
+        ],
+      );
+
+      expect(createdCount, 2);
+
+      final users = await client.user.findMany(
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(email: SortOrder.asc),
+        ],
+        select: const UserSelect(name: true, email: true),
+      );
+
+      expect(users, hasLength(2));
+      expect(
+        users.map((user) => user.email).toList(growable: false),
+        const <String?>['alice@prisma.io', 'bob@prisma.io'],
+      );
+      expect(users.first.name, 'Alice');
+    });
+
+    test(
+      'supports generated createMany skipDuplicates on duplicate provider errors',
+      () async {
+        final adapter = _DuplicateOnCreateAdapter();
+        final client = GeneratedComonOrmClient(adapter: adapter);
+
+        final createdCount = await client.user.createMany(
+          skipDuplicates: true,
+          data: const <UserCreateInput>[
+            UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+            UserCreateInput(name: 'Alice Duplicate', email: 'alice@prisma.io'),
+            UserCreateInput(name: 'Bob', email: 'bob@prisma.io'),
+          ],
+        );
+
+        expect(createdCount, 2);
+        expect(adapter.createdEmails, const <String>[
+          'alice@prisma.io',
+          'bob@prisma.io',
+        ]);
+      },
+    );
+
+    test('supports scalar update operators in update and upsert', () async {
+      final client = GeneratedComonOrmClient(
+        adapter: InMemoryDatabaseAdapter(),
+      );
+
+      await client.user.create(
+        data: const UserCreateInput(
+          name: 'Alice',
+          email: 'alice@prisma.io',
+          country: 'US',
+          profileViews: 10,
+        ),
+      );
+
+      final updated = await client.user.update(
+        where: const UserWhereUniqueInput(email: 'alice@prisma.io'),
+        data: const UserUpdateInput(
+          countryOps: StringFieldUpdateOperationsInput(set: null),
+          profileViewsOps: IntFieldUpdateOperationsInput(increment: 5),
+        ),
+        select: const UserSelect(
+          country: true,
+          profileViews: true,
+          email: true,
+        ),
+      );
+
+      expect(updated.email, 'alice@prisma.io');
+      expect(updated.country, isNull);
+      expect(updated.profileViews, 15);
+
+      final upserted = await client.user.upsert(
+        where: const UserWhereUniqueInput(email: 'alice@prisma.io'),
+        create: const UserCreateInput(name: 'Wrong', email: 'alice@prisma.io'),
+        update: const UserUpdateInput(
+          profileViewsOps: IntFieldUpdateOperationsInput(decrement: 3),
+        ),
+        select: const UserSelect(profileViews: true, email: true),
+      );
+
+      expect(upserted.email, 'alice@prisma.io');
+      expect(upserted.profileViews, 12);
+    });
+
+    test('supports computed scalar update operators in updateMany', () async {
+      final client = GeneratedComonOrmClient(
+        adapter: InMemoryDatabaseAdapter(),
+      );
+
+      await client.user.create(
+        data: const UserCreateInput(
+          name: 'Alice',
+          email: 'alice@prisma.io',
+          profileViews: 10,
+          country: 'US',
+        ),
+      );
+      await client.user.create(
+        data: const UserCreateInput(
+          name: 'Bob',
+          email: 'bob@prisma.io',
+          profileViews: 3,
+          country: 'US',
+        ),
+      );
+
+      final updatedCount = await client.user.updateMany(
+        where: const UserWhereInput(email: 'alice@prisma.io'),
+        data: const UserUpdateInput(
+          profileViewsOps: IntFieldUpdateOperationsInput(increment: 1),
+        ),
+      );
+
+      expect(updatedCount, 1);
+
+      final updatedAlice = await client.user.findUnique(
+        where: const UserWhereUniqueInput(email: 'alice@prisma.io'),
+        select: const UserSelect(profileViews: true, email: true),
+      );
+
+      expect(updatedAlice, isNotNull);
+      expect(updatedAlice!.profileViews, 11);
+
+      final updatedUsCount = await client.user.updateMany(
+        where: const UserWhereInput(country: 'US'),
+        data: const UserUpdateInput(
+          profileViewsOps: IntFieldUpdateOperationsInput(increment: 2),
+        ),
+      );
+
+      expect(updatedUsCount, 2);
+
+      final updatedUsers = await client.user.findMany(
+        where: const UserWhereInput(country: 'US'),
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(email: SortOrder.asc),
+        ],
+        select: const UserSelect(email: true, profileViews: true),
+      );
+
+      expect(updatedUsers, hasLength(2));
+      expect(updatedUsers.first.email, 'alice@prisma.io');
+      expect(updatedUsers.first.profileViews, 13);
+      expect(updatedUsers.last.email, 'bob@prisma.io');
+      expect(updatedUsers.last.profileViews, 5);
+
+      await expectLater(
+        () => client.user.updateMany(
+          where: const UserWhereInput(email: 'alice@prisma.io'),
+          data: const UserUpdateInput(
+            profileViewsOps: IntFieldUpdateOperationsInput(
+              increment: 1,
+              decrement: 1,
+            ),
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('Only one scalar update operator may be provided'),
+          ),
+        ),
+      );
+    });
+
+    test('supports nested relation writes in updateMany', () async {
+      final client = GeneratedComonOrmClient(
+        adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+      );
+
+      final alice = await client.user.create(
+        data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+      );
+      final charlie = await client.user.create(
+        data: const UserCreateInput(
+          name: 'Charlie',
+          email: 'charlie@prisma.io',
+        ),
+      );
+
+      await client.post.create(
+        data: PostCreateInput(title: 'P1', userId: alice.id!),
+      );
+      await client.post.create(
+        data: PostCreateInput(title: 'P2', userId: alice.id!),
+      );
+
+      final updatedCount = await client.post.updateMany(
+        where: const PostWhereInput(userId: 1),
+        data: const PostUpdateInput(
+          user: UserUpdateNestedOneWithoutPostsInput(
+            connect: UserWhereUniqueInput(email: 'charlie@prisma.io'),
+          ),
+        ),
+      );
+
+      expect(updatedCount, 2);
+
+      final reassignedPosts = await client.post.findMany(
+        where: PostWhereInput(userId: charlie.id),
+        orderBy: const <PostOrderByInput>[PostOrderByInput(id: SortOrder.asc)],
+        select: const PostSelect(id: true, userId: true),
+      );
+
+      expect(reassignedPosts, hasLength(2));
+      expect(
+        reassignedPosts.every((post) => post.userId == charlie.id),
+        isTrue,
+      );
+    });
+
+    test(
+      'supports nested relation connect in update and upsert update branch',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        );
+        final bob = await client.user.create(
+          data: const UserCreateInput(name: 'Bob', email: 'bob@prisma.io'),
+        );
+        final charlie = await client.user.create(
+          data: const UserCreateInput(
+            name: 'Charlie',
+            email: 'charlie@prisma.io',
+          ),
+        );
+
+        final bobPost = await client.post.create(
+          data: PostCreateInput(title: 'Bob Post', userId: bob.id!),
+        );
+        final alicePost = await client.post.create(
+          data: PostCreateInput(title: 'Alice Post', userId: alice.id!),
+        );
+
+        final updatedAlice = await client.user.update(
+          where: const UserWhereUniqueInput(email: 'alice@prisma.io'),
+          data: UserUpdateInput(
+            posts: PostUpdateNestedManyWithoutUserInput(
+              connect: <PostWhereUniqueInput>[
+                PostWhereUniqueInput(id: bobPost.id),
+              ],
+            ),
+          ),
+          include: const UserInclude(posts: true),
+        );
+
+        expect(updatedAlice.posts, hasLength(2));
+        expect(
+          updatedAlice.posts!.map((post) => post.title).toSet(),
+          containsAll(<String>{'Alice Post', 'Bob Post'}),
+        );
+
+        final movedBobPost = await client.post.findUnique(
+          where: PostWhereUniqueInput(id: bobPost.id),
+          select: const PostSelect(userId: true),
+        );
+        expect(movedBobPost, isNotNull);
+        expect(movedBobPost!.userId, alice.id);
+
+        final reassignedPost = await client.post.upsert(
+          where: PostWhereUniqueInput(id: alicePost.id),
+          create: PostCreateInput(title: 'Unused', userId: alice.id!),
+          update: const PostUpdateInput(
+            user: UserUpdateNestedOneWithoutPostsInput(
+              connect: UserWhereUniqueInput(email: 'charlie@prisma.io'),
+            ),
+          ),
+          include: const PostInclude(user: true),
+        );
+
+        expect(reassignedPost.user, isNotNull);
+        expect(reassignedPost.user!.email, 'charlie@prisma.io');
+
+        final persistedPost = await client.post.findUnique(
+          where: PostWhereUniqueInput(id: alicePost.id),
+          select: const PostSelect(userId: true),
+        );
+        expect(persistedPost, isNotNull);
+        expect(persistedPost!.userId, charlie.id);
+      },
+    );
+
+    test(
+      'supports nested relation connect and connectOrCreate in create',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        );
+
+        final attachedPost = await client.post.create(
+          data: PostCreateInput(title: 'Attached Later', userId: alice.id!),
+        );
+
+        final charlie = await client.user.create(
+          data: UserCreateInput(
+            name: 'Charlie',
+            email: 'charlie@prisma.io',
+            posts: PostCreateNestedManyWithoutUserInput(
+              connect: <PostWhereUniqueInput>[
+                PostWhereUniqueInput(id: attachedPost.id),
+              ],
+              connectOrCreate: <PostConnectOrCreateWithoutUserInput>[
+                PostConnectOrCreateWithoutUserInput(
+                  where: const PostWhereUniqueInput(id: 999),
+                  create: const PostCreateWithoutUserInput(
+                    title: 'Created Inline',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          include: const UserInclude(posts: true),
+        );
+
+        expect(charlie.posts, hasLength(2));
+        expect(
+          charlie.posts!.map((post) => post.title).toSet(),
+          containsAll(<String>{'Attached Later', 'Created Inline'}),
+        );
+
+        final movedPost = await client.post.findUnique(
+          where: PostWhereUniqueInput(id: attachedPost.id),
+          select: const PostSelect(userId: true),
+        );
+        expect(movedPost, isNotNull);
+        expect(movedPost!.userId, charlie.id);
+
+        final createdInlinePost = await client.post.findMany(
+          where: PostWhereInput(userId: charlie.id),
+          orderBy: const <PostOrderByInput>[
+            PostOrderByInput(id: SortOrder.asc),
+          ],
+          select: const PostSelect(userId: true, title: true),
+        );
+        expect(createdInlinePost, hasLength(2));
+        expect(
+          createdInlinePost.map((post) => post.title).toSet(),
+          containsAll(<String?>{'Attached Later', 'Created Inline'}),
+        );
+      },
+    );
+
+    test(
+      'supports create-path nested set for required direct list relations',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        );
+
+        final attachedPost = await client.post.create(
+          data: PostCreateInput(title: 'Attached Later', userId: alice.id!),
+        );
+
+        final charlie = await client.user.create(
+          data: UserCreateInput(
+            name: 'Charlie',
+            email: 'charlie@prisma.io',
+            posts: PostCreateNestedManyWithoutUserInput(
+              set: <PostWhereUniqueInput>[
+                PostWhereUniqueInput(id: attachedPost.id),
+              ],
+            ),
+          ),
+          include: const UserInclude(posts: true),
+        );
+
+        expect(charlie.posts, hasLength(1));
+        expect(charlie.posts!.single.id, attachedPost.id);
+
+        final movedPost = await client.post.findUnique(
+          where: PostWhereUniqueInput(id: attachedPost.id),
+          select: const PostSelect(userId: true),
+        );
+        expect(movedPost, isNotNull);
+        expect(movedPost!.userId, charlie.id);
+      },
+    );
+
+    test(
+      'supports create-path nested set for nullable direct list relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final manager = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'manager@prisma.io',
+            role: rich_generated.UserRole.admin,
+          ),
+        );
+
+        final report = await client.user.create(
+          data: rich_generated.UserCreateInput(
+            email: 'report@prisma.io',
+            role: rich_generated.UserRole.member,
+            manager: rich_generated.UserCreateNestedOneWithoutReportsInput(
+              connect: rich_generated.UserWhereUniqueInput(id: manager.id),
+            ),
+          ),
+        );
+
+        final created = await client.user.create(
+          data: rich_generated.UserCreateInput(
+            email: 'set-list@prisma.io',
+            role: rich_generated.UserRole.member,
+            reports: rich_generated.UserCreateNestedManyWithoutManagerInput(
+              set: <rich_generated.UserWhereUniqueInput>[
+                rich_generated.UserWhereUniqueInput(id: report.id),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+
+        expect(created.reports, hasLength(1));
+        expect(created.reports!.single.id, report.id);
+
+        final movedReport = await client.user.findUnique(
+          where: rich_generated.UserWhereUniqueInput(id: report.id),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+
+        expect(movedReport, isNotNull);
+        expect(movedReport!.managerId, created.id);
+      },
+    );
+
+    test(
+      'supports create-path nested disconnect as a no-op for required direct list relations',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        );
+        final attachedPost = await client.post.create(
+          data: PostCreateInput(title: 'Alice Post', userId: alice.id!),
+        );
+
+        final bob = await client.user.create(
+          data: UserCreateInput(
+            name: 'Bob',
+            email: 'bob@prisma.io',
+            posts: PostCreateNestedManyWithoutUserInput(
+              disconnect: <PostWhereUniqueInput>[
+                PostWhereUniqueInput(id: attachedPost.id),
+              ],
+            ),
+          ),
+          include: const UserInclude(posts: true),
+        );
+
+        expect(bob.posts, isEmpty);
+
+        final persistedPost = await client.post.findUnique(
+          where: PostWhereUniqueInput(id: attachedPost.id),
+          select: const PostSelect(userId: true),
+        );
+        expect(persistedPost, isNotNull);
+        expect(persistedPost!.userId, alice.id);
+      },
+    );
+
+    test(
+      'supports create-path nested disconnect for nullable direct list relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final manager = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'manager@prisma.io',
+            role: rich_generated.UserRole.admin,
+          ),
+        );
+
+        final report = await client.user.create(
+          data: rich_generated.UserCreateInput(
+            email: 'report@prisma.io',
+            role: rich_generated.UserRole.member,
+            manager: rich_generated.UserCreateNestedOneWithoutReportsInput(
+              connect: rich_generated.UserWhereUniqueInput(id: manager.id),
+            ),
+          ),
+        );
+
+        final created = await client.user.create(
+          data: rich_generated.UserCreateInput(
+            email: 'disconnect-list@prisma.io',
+            role: rich_generated.UserRole.member,
+            reports: rich_generated.UserCreateNestedManyWithoutManagerInput(
+              disconnect: <rich_generated.UserWhereUniqueInput>[
+                rich_generated.UserWhereUniqueInput(id: report.id),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+
+        expect(created.reports, isEmpty);
+
+        final detachedReport = await client.user.findUnique(
+          where: rich_generated.UserWhereUniqueInput(id: report.id),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+
+        expect(detachedReport, isNotNull);
+        expect(detachedReport!.managerId, isNull);
+      },
+    );
+
+    test(
+      'supports create-path nested writes for implicit many-to-many relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        await client.group.create(
+          data: const rich_generated.GroupCreateInput(id: 1),
+        );
+
+        final createdUser = await client.user.create(
+          data: rich_generated.UserCreateInput(
+            email: 'alice@prisma.io',
+            role: rich_generated.UserRole.admin,
+            groups: const rich_generated.GroupCreateNestedManyWithoutUsersInput(
+              connect: <rich_generated.GroupWhereUniqueInput>[
+                rich_generated.GroupWhereUniqueInput(id: 1),
+              ],
+              connectOrCreate:
+                  <rich_generated.GroupConnectOrCreateWithoutUsersInput>[
+                    rich_generated.GroupConnectOrCreateWithoutUsersInput(
+                      where: rich_generated.GroupWhereUniqueInput(id: 2),
+                      create: rich_generated.GroupCreateWithoutUsersInput(
+                        id: 2,
+                      ),
+                    ),
+                  ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(groups: true),
+        );
+
+        expect(createdUser.groups, hasLength(2));
+        expect(
+          createdUser.groups!.map((group) => group.id).toSet(),
+          containsAll(<int>{1, 2}),
+        );
+
+        final group1 = await client.group.findUnique(
+          where: const rich_generated.GroupWhereUniqueInput(id: 1),
+          include: const rich_generated.GroupInclude(users: true),
+        );
+        final group2 = await client.group.findUnique(
+          where: const rich_generated.GroupWhereUniqueInput(id: 2),
+          include: const rich_generated.GroupInclude(users: true),
+        );
+
+        expect(group1, isNotNull);
+        expect(group1!.users, hasLength(1));
+        expect(group1.users!.single.email, 'alice@prisma.io');
+        expect(group2, isNotNull);
+        expect(group2!.users, hasLength(1));
+        expect(group2.users!.single.email, 'alice@prisma.io');
+
+        final createdWithSet = await client.user.create(
+          data: rich_generated.UserCreateInput(
+            email: 'set@prisma.io',
+            role: rich_generated.UserRole.member,
+            groups: const rich_generated.GroupCreateNestedManyWithoutUsersInput(
+              set: <rich_generated.GroupWhereUniqueInput>[
+                rich_generated.GroupWhereUniqueInput(id: 1),
+                rich_generated.GroupWhereUniqueInput(id: 2),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(groups: true),
+        );
+
+        expect(createdWithSet.groups, hasLength(2));
+        expect(
+          createdWithSet.groups!.map((group) => group.id).toSet(),
+          containsAll(<int>{1, 2}),
+        );
+
+        final createdWithDisconnect = await client.user.create(
+          data: rich_generated.UserCreateInput(
+            email: 'disconnect@prisma.io',
+            role: rich_generated.UserRole.member,
+            groups: const rich_generated.GroupCreateNestedManyWithoutUsersInput(
+              connect: <rich_generated.GroupWhereUniqueInput>[
+                rich_generated.GroupWhereUniqueInput(id: 1),
+              ],
+              disconnect: <rich_generated.GroupWhereUniqueInput>[
+                rich_generated.GroupWhereUniqueInput(id: 1),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(groups: true),
+        );
+
+        expect(createdWithDisconnect.groups, isEmpty);
+      },
+    );
+
+    test(
+      'supports create-path nested writes for inverse one-to-one relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        await client.profile.create(
+          data: const rich_generated.ProfileCreateInput(id: 1),
+        );
+
+        final connectedUser = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'alice@prisma.io',
+            role: rich_generated.UserRole.admin,
+            profile: rich_generated.ProfileCreateNestedOneWithoutUserInput(
+              connect: rich_generated.ProfileWhereUniqueInput(id: 1),
+            ),
+          ),
+          include: const rich_generated.UserInclude(profile: true),
+        );
+
+        expect(connectedUser.profile, isNotNull);
+        expect(connectedUser.profile!.id, 1);
+
+        final profile1 = await client.profile.findUnique(
+          where: const rich_generated.ProfileWhereUniqueInput(id: 1),
+          select: const rich_generated.ProfileSelect(userId: true),
+        );
+        expect(profile1, isNotNull);
+        expect(profile1!.userId, connectedUser.id);
+
+        final connectOrCreatedUser = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'bob@prisma.io',
+            role: rich_generated.UserRole.member,
+            profile: rich_generated.ProfileCreateNestedOneWithoutUserInput(
+              connectOrCreate:
+                  rich_generated.ProfileConnectOrCreateWithoutUserInput(
+                    where: rich_generated.ProfileWhereUniqueInput(id: 2),
+                    create: rich_generated.ProfileCreateWithoutUserInput(id: 2),
+                  ),
+            ),
+          ),
+          include: const rich_generated.UserInclude(profile: true),
+        );
+
+        expect(connectOrCreatedUser.profile, isNotNull);
+        expect(connectOrCreatedUser.profile!.id, 2);
+
+        final profile2 = await client.profile.findUnique(
+          where: const rich_generated.ProfileWhereUniqueInput(id: 2),
+          select: const rich_generated.ProfileSelect(userId: true),
+        );
+        expect(profile2, isNotNull);
+        expect(profile2!.userId, connectOrCreatedUser.id);
+
+        final disconnectedDirect = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'disconnect-direct@prisma.io',
+            role: rich_generated.UserRole.member,
+            manager: rich_generated.UserCreateNestedOneWithoutReportsInput(
+              disconnect: true,
+            ),
+          ),
+          include: const rich_generated.UserInclude(manager: true),
+        );
+
+        expect(disconnectedDirect.manager, isNull);
+
+        final disconnectedInverse = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'disconnect-inverse@prisma.io',
+            role: rich_generated.UserRole.member,
+            profile: rich_generated.ProfileCreateNestedOneWithoutUserInput(
+              disconnect: true,
+            ),
+          ),
+          include: const rich_generated.UserInclude(profile: true),
+        );
+
+        expect(disconnectedInverse.profile, isNull);
+      },
+    );
+
+    test('supports compound direct nested relation writes', () async {
+      final client = compound_generated.GeneratedComonOrmClient(
+        adapter:
+            compound_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+      );
+
+      await client.account.create(
+        data: const compound_generated.AccountCreateInput(
+          tenantId: 1,
+          slug: 'alpha',
+          name: 'Alpha',
+        ),
+      );
+      await client.account.create(
+        data: const compound_generated.AccountCreateInput(
+          tenantId: 1,
+          slug: 'beta',
+          name: 'Beta',
+        ),
+      );
+
+      final session = await client.session.create(
+        data: const compound_generated.SessionCreateInput(
+          tenantId: 1,
+          accountSlug: 'alpha',
+          label: 'Session A',
+        ),
+      );
+
+      final movedToBeta = await client.account.update(
+        where: const compound_generated.AccountWhereUniqueInput(
+          tenantId_slug:
+              compound_generated.AccountTenantIdSlugCompoundUniqueInput(
+                tenantId: 1,
+                slug: 'beta',
+              ),
+        ),
+        data: compound_generated.AccountUpdateInput(
+          sessions:
+              compound_generated.SessionUpdateNestedManyWithoutAccountInput(
+                connect: <compound_generated.SessionWhereUniqueInput>[
+                  compound_generated.SessionWhereUniqueInput(id: session.id),
+                ],
+              ),
+        ),
+        include: const compound_generated.AccountInclude(sessions: true),
+      );
+
+      expect(movedToBeta.sessions, hasLength(1));
+      expect(movedToBeta.sessions!.single.label, 'Session A');
+
+      final movedBackToAlpha = await client.session.update(
+        where: compound_generated.SessionWhereUniqueInput(id: session.id),
+        data: const compound_generated.SessionUpdateInput(
+          account:
+              compound_generated.AccountUpdateNestedOneWithoutSessionsInput(
+                connect: compound_generated.AccountWhereUniqueInput(
+                  tenantId_slug:
+                      compound_generated.AccountTenantIdSlugCompoundUniqueInput(
+                        tenantId: 1,
+                        slug: 'alpha',
+                      ),
+                ),
+              ),
+        ),
+        include: const compound_generated.SessionInclude(account: true),
+      );
+
+      expect(movedBackToAlpha.account, isNotNull);
+      expect(movedBackToAlpha.account!.tenantId, 1);
+      expect(movedBackToAlpha.account!.slug, 'alpha');
+
+      await client.profile.create(
+        data: const compound_generated.ProfileCreateInput(id: 1),
+      );
+
+      final connectedProfile = await client.account.update(
+        where: const compound_generated.AccountWhereUniqueInput(
+          tenantId_slug:
+              compound_generated.AccountTenantIdSlugCompoundUniqueInput(
+                tenantId: 1,
+                slug: 'alpha',
+              ),
+        ),
+        data: const compound_generated.AccountUpdateInput(
+          profile: compound_generated.ProfileUpdateNestedOneWithoutAccountInput(
+            connect: compound_generated.ProfileWhereUniqueInput(id: 1),
+          ),
+        ),
+        include: const compound_generated.AccountInclude(profile: true),
+      );
+
+      expect(connectedProfile.profile, isNotNull);
+      expect(connectedProfile.profile!.id, 1);
+
+      final createdWithConnectedSession = await client.account.create(
+        data: compound_generated.AccountCreateInput(
+          tenantId: 2,
+          slug: 'gamma',
+          name: 'Gamma',
+          sessions:
+              compound_generated.SessionCreateNestedManyWithoutAccountInput(
+                connect: <compound_generated.SessionWhereUniqueInput>[
+                  compound_generated.SessionWhereUniqueInput(id: session.id),
+                ],
+              ),
+        ),
+        include: const compound_generated.AccountInclude(sessions: true),
+      );
+
+      expect(createdWithConnectedSession.sessions, hasLength(1));
+      expect(createdWithConnectedSession.sessions!.single.id, session.id);
+
+      final createdWithSetSession = await client.account.create(
+        data: compound_generated.AccountCreateInput(
+          tenantId: 4,
+          slug: 'epsilon',
+          name: 'Epsilon',
+          sessions:
+              compound_generated.SessionCreateNestedManyWithoutAccountInput(
+                set: <compound_generated.SessionWhereUniqueInput>[
+                  compound_generated.SessionWhereUniqueInput(id: session.id),
+                ],
+              ),
+        ),
+        include: const compound_generated.AccountInclude(sessions: true),
+      );
+
+      expect(createdWithSetSession.sessions, hasLength(1));
+      expect(createdWithSetSession.sessions!.single.id, session.id);
+
+      await client.session.create(
+        data: const compound_generated.SessionCreateInput(
+          tenantId: 4,
+          accountSlug: 'epsilon',
+          label: 'Session E',
+        ),
+      );
+
+      await expectLater(
+        client.account.update(
+          where: const compound_generated.AccountWhereUniqueInput(
+            tenantId_slug:
+                compound_generated.AccountTenantIdSlugCompoundUniqueInput(
+                  tenantId: 4,
+                  slug: 'epsilon',
+                ),
+          ),
+          data: compound_generated.AccountUpdateInput(
+            sessions:
+                compound_generated.SessionUpdateNestedManyWithoutAccountInput(
+                  set: <compound_generated.SessionWhereUniqueInput>[
+                    compound_generated.SessionWhereUniqueInput(id: session.id),
+                  ],
+                ),
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains(
+              'Nested set is not supported for required relation Account.sessions when it would disconnect already attached required related records.',
+            ),
+          ),
+        ),
+      );
+
+      final createdWithProfile = await client.account.create(
+        data: const compound_generated.AccountCreateInput(
+          tenantId: 3,
+          slug: 'delta',
+          name: 'Delta',
+          profile: compound_generated.ProfileCreateNestedOneWithoutAccountInput(
+            connectOrCreate:
+                compound_generated.ProfileConnectOrCreateWithoutAccountInput(
+                  where: compound_generated.ProfileWhereUniqueInput(id: 2),
+                  create: compound_generated.ProfileCreateWithoutAccountInput(
+                    id: 2,
+                    bio: 'Created inline',
+                  ),
+                ),
+          ),
+        ),
+        include: const compound_generated.AccountInclude(profile: true),
+      );
+
+      expect(createdWithProfile.profile, isNotNull);
+      expect(createdWithProfile.profile!.id, 2);
+
+      final persistedProfile = await client.profile.findUnique(
+        where: const compound_generated.ProfileWhereUniqueInput(id: 2),
+        select: const compound_generated.ProfileSelect(
+          tenantId: true,
+          accountSlug: true,
+          bio: true,
+        ),
+      );
+
+      expect(persistedProfile, isNotNull);
+      expect(persistedProfile!.tenantId, 3);
+      expect(persistedProfile.accountSlug, 'delta');
+      expect(persistedProfile.bio, 'Created inline');
+    });
+
+    test(
+      'supports create-path nested writes for nullable direct singular relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final manager = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'manager@prisma.io',
+            role: rich_generated.UserRole.admin,
+          ),
+        );
+
+        final connectedReport = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'report1@prisma.io',
+            role: rich_generated.UserRole.member,
+            manager: rich_generated.UserCreateNestedOneWithoutReportsInput(
+              connect: rich_generated.UserWhereUniqueInput(
+                email: 'manager@prisma.io',
+              ),
+            ),
+          ),
+          include: const rich_generated.UserInclude(manager: true),
+        );
+
+        expect(connectedReport.manager, isNotNull);
+        expect(connectedReport.manager!.email, 'manager@prisma.io');
+
+        final persistedConnectedReport = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report1@prisma.io',
+          ),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+        expect(persistedConnectedReport, isNotNull);
+        expect(persistedConnectedReport!.managerId, manager.id);
+
+        final createdManagerReport = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'report2@prisma.io',
+            role: rich_generated.UserRole.member,
+            manager: rich_generated.UserCreateNestedOneWithoutReportsInput(
+              connectOrCreate:
+                  rich_generated.UserConnectOrCreateWithoutReportsInput(
+                    where: rich_generated.UserWhereUniqueInput(
+                      email: 'lead@prisma.io',
+                    ),
+                    create: rich_generated.UserCreateWithoutReportsInput(
+                      email: 'lead@prisma.io',
+                      role: rich_generated.UserRole.admin,
+                    ),
+                  ),
+            ),
+          ),
+          include: const rich_generated.UserInclude(manager: true),
+        );
+
+        expect(createdManagerReport.manager, isNotNull);
+        expect(createdManagerReport.manager!.email, 'lead@prisma.io');
+
+        final createdManager = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'lead@prisma.io',
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+        expect(createdManager, isNotNull);
+        expect(createdManager!.reports, hasLength(1));
+        expect(createdManager.reports!.single.email, 'report2@prisma.io');
+      },
+    );
+
+    test(
+      'supports nested relation connect and disconnect for nullable direct relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'manager@prisma.io',
+            role: rich_generated.UserRole.admin,
+          ),
+        );
+        await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'report1@prisma.io',
+            role: rich_generated.UserRole.member,
+          ),
+        );
+        await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'report2@prisma.io',
+            role: rich_generated.UserRole.member,
+          ),
+        );
+
+        final connectedManager = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'manager@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            reports: rich_generated.UserUpdateNestedManyWithoutManagerInput(
+              connect: <rich_generated.UserWhereUniqueInput>[
+                rich_generated.UserWhereUniqueInput(email: 'report1@prisma.io'),
+                rich_generated.UserWhereUniqueInput(email: 'report2@prisma.io'),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+
+        expect(connectedManager.reports, hasLength(2));
+
+        final disconnectedManager = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'manager@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            reports: rich_generated.UserUpdateNestedManyWithoutManagerInput(
+              disconnect: <rich_generated.UserWhereUniqueInput>[
+                rich_generated.UserWhereUniqueInput(email: 'report1@prisma.io'),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+
+        expect(disconnectedManager.reports, hasLength(1));
+        expect(disconnectedManager.reports!.single.email, 'report2@prisma.io');
+
+        final disconnectedReport = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report2@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            manager: rich_generated.UserUpdateNestedOneWithoutReportsInput(
+              disconnect: true,
+            ),
+          ),
+          include: const rich_generated.UserInclude(manager: true),
+        );
+
+        expect(disconnectedReport.manager, isNull);
+
+        final persistedReport = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report1@prisma.io',
+          ),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+        expect(persistedReport, isNotNull);
+        expect(persistedReport!.managerId, isNull);
+      },
+    );
+
+    test(
+      'supports nested relation connectOrCreate for nullable direct list relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final manager = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'manager@prisma.io',
+            role: rich_generated.UserRole.admin,
+          ),
+        );
+
+        final firstAttach = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'manager@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            reports: rich_generated.UserUpdateNestedManyWithoutManagerInput(
+              connectOrCreate:
+                  <rich_generated.UserConnectOrCreateWithoutManagerInput>[
+                    rich_generated.UserConnectOrCreateWithoutManagerInput(
+                      where: rich_generated.UserWhereUniqueInput(
+                        email: 'report@prisma.io',
+                      ),
+                      create: rich_generated.UserCreateWithoutManagerInput(
+                        email: 'report@prisma.io',
+                        role: rich_generated.UserRole.member,
+                      ),
+                    ),
+                  ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+
+        expect(firstAttach.reports, hasLength(1));
+        expect(firstAttach.reports!.single.email, 'report@prisma.io');
+
+        final secondAttach = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'manager@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            reports: rich_generated.UserUpdateNestedManyWithoutManagerInput(
+              connectOrCreate:
+                  <rich_generated.UserConnectOrCreateWithoutManagerInput>[
+                    rich_generated.UserConnectOrCreateWithoutManagerInput(
+                      where: rich_generated.UserWhereUniqueInput(
+                        email: 'report@prisma.io',
+                      ),
+                      create: rich_generated.UserCreateWithoutManagerInput(
+                        email: 'report@prisma.io',
+                        role: rich_generated.UserRole.member,
+                      ),
+                    ),
+                  ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+
+        expect(secondAttach.reports, hasLength(1));
+
+        final persistedReport = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report@prisma.io',
+          ),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+
+        expect(persistedReport, isNotNull);
+        expect(persistedReport!.managerId, manager.id);
+      },
+    );
+
+    test(
+      'supports nested relation connectOrCreate for nullable direct singular relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'report@prisma.io',
+            role: rich_generated.UserRole.member,
+          ),
+        );
+
+        final connectedReport = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            manager: rich_generated.UserUpdateNestedOneWithoutReportsInput(
+              connectOrCreate:
+                  rich_generated.UserConnectOrCreateWithoutReportsInput(
+                    where: rich_generated.UserWhereUniqueInput(
+                      email: 'manager@prisma.io',
+                    ),
+                    create: rich_generated.UserCreateWithoutReportsInput(
+                      email: 'manager@prisma.io',
+                      role: rich_generated.UserRole.admin,
+                    ),
+                  ),
+            ),
+          ),
+          include: const rich_generated.UserInclude(manager: true),
+        );
+
+        expect(connectedReport.manager, isNotNull);
+        expect(connectedReport.manager!.email, 'manager@prisma.io');
+
+        final allManagers = await client.user.findMany(
+          where: const rich_generated.UserWhereInput(
+            emailFilter: StringFilter(contains: 'manager@prisma.io'),
+          ),
+          select: const rich_generated.UserSelect(email: true),
+        );
+        expect(allManagers, hasLength(1));
+      },
+    );
+
+    test(
+      'supports nested relation set for nullable direct list relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final manager = await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'manager@prisma.io',
+            role: rich_generated.UserRole.admin,
+          ),
+        );
+        await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'report1@prisma.io',
+            role: rich_generated.UserRole.member,
+          ),
+        );
+        await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'report2@prisma.io',
+            role: rich_generated.UserRole.member,
+          ),
+        );
+        await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'report3@prisma.io',
+            role: rich_generated.UserRole.member,
+          ),
+        );
+
+        await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'manager@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            reports: rich_generated.UserUpdateNestedManyWithoutManagerInput(
+              connect: <rich_generated.UserWhereUniqueInput>[
+                rich_generated.UserWhereUniqueInput(email: 'report1@prisma.io'),
+                rich_generated.UserWhereUniqueInput(email: 'report2@prisma.io'),
+              ],
+            ),
+          ),
+        );
+
+        final replacedReports = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'manager@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            reports: rich_generated.UserUpdateNestedManyWithoutManagerInput(
+              set: <rich_generated.UserWhereUniqueInput>[
+                rich_generated.UserWhereUniqueInput(email: 'report2@prisma.io'),
+                rich_generated.UserWhereUniqueInput(email: 'report3@prisma.io'),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+
+        expect(replacedReports.reports, hasLength(2));
+        expect(
+          replacedReports.reports!.map((user) => user.email).toSet(),
+          containsAll(<String>{'report2@prisma.io', 'report3@prisma.io'}),
+        );
+
+        final report1 = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report1@prisma.io',
+          ),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+        final report2 = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report2@prisma.io',
+          ),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+        final report3 = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report3@prisma.io',
+          ),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+
+        expect(report1, isNotNull);
+        expect(report1!.managerId, isNull);
+        expect(report2, isNotNull);
+        expect(report2!.managerId, manager.id);
+        expect(report3, isNotNull);
+        expect(report3!.managerId, manager.id);
+
+        final clearedReports = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'manager@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            reports: rich_generated.UserUpdateNestedManyWithoutManagerInput(
+              set: <rich_generated.UserWhereUniqueInput>[],
+            ),
+          ),
+          include: const rich_generated.UserInclude(reports: true),
+        );
+
+        expect(clearedReports.reports, isEmpty);
+
+        final clearedReport2 = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report2@prisma.io',
+          ),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+        final clearedReport3 = await client.user.findUnique(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'report3@prisma.io',
+          ),
+          select: const rich_generated.UserSelect(managerId: true),
+        );
+
+        expect(clearedReport2, isNotNull);
+        expect(clearedReport2!.managerId, isNull);
+        expect(clearedReport3, isNotNull);
+        expect(clearedReport3!.managerId, isNull);
+      },
+    );
+
+    test(
+      'supports nested writes for implicit many-to-many relations',
+      () async {
+        final client = rich_generated.GeneratedComonOrmClient(
+          adapter:
+              rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        await client.user.create(
+          data: const rich_generated.UserCreateInput(
+            email: 'alice@prisma.io',
+            role: rich_generated.UserRole.admin,
+          ),
+        );
+        await client.group.create(
+          data: const rich_generated.GroupCreateInput(id: 1),
+        );
+        await client.group.create(
+          data: const rich_generated.GroupCreateInput(id: 3),
+        );
+
+        final afterConnect = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'alice@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            groups: rich_generated.GroupUpdateNestedManyWithoutUsersInput(
+              connect: <rich_generated.GroupWhereUniqueInput>[
+                rich_generated.GroupWhereUniqueInput(id: 1),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(groups: true),
+        );
+
+        expect(afterConnect.groups, hasLength(1));
+        expect(afterConnect.groups!.single.id, 1);
+
+        final afterConnectOrCreate = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'alice@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            groups: rich_generated.GroupUpdateNestedManyWithoutUsersInput(
+              connectOrCreate:
+                  <rich_generated.GroupConnectOrCreateWithoutUsersInput>[
+                    rich_generated.GroupConnectOrCreateWithoutUsersInput(
+                      where: rich_generated.GroupWhereUniqueInput(id: 2),
+                      create: rich_generated.GroupCreateWithoutUsersInput(
+                        id: 2,
+                      ),
+                    ),
+                  ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(groups: true),
+        );
+
+        expect(afterConnectOrCreate.groups, hasLength(2));
+        expect(
+          afterConnectOrCreate.groups!.map((group) => group.id).toSet(),
+          containsAll(<int>{1, 2}),
+        );
+
+        final group2 = await client.group.findUnique(
+          where: const rich_generated.GroupWhereUniqueInput(id: 2),
+          include: const rich_generated.GroupInclude(users: true),
+        );
+
+        expect(group2, isNotNull);
+        expect(group2!.users, hasLength(1));
+        expect(group2.users!.single.email, 'alice@prisma.io');
+
+        final afterDisconnect = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'alice@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            groups: rich_generated.GroupUpdateNestedManyWithoutUsersInput(
+              disconnect: <rich_generated.GroupWhereUniqueInput>[
+                rich_generated.GroupWhereUniqueInput(id: 1),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(groups: true),
+        );
+
+        expect(afterDisconnect.groups, hasLength(1));
+        expect(afterDisconnect.groups!.single.id, 2);
+
+        final afterSet = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'alice@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            groups: rich_generated.GroupUpdateNestedManyWithoutUsersInput(
+              set: <rich_generated.GroupWhereUniqueInput>[
+                rich_generated.GroupWhereUniqueInput(id: 2),
+                rich_generated.GroupWhereUniqueInput(id: 3),
+              ],
+            ),
+          ),
+          include: const rich_generated.UserInclude(groups: true),
+        );
+
+        expect(afterSet.groups, hasLength(2));
+        expect(
+          afterSet.groups!.map((group) => group.id).toSet(),
+          containsAll(<int>{2, 3}),
+        );
+
+        final afterClear = await client.user.update(
+          where: const rich_generated.UserWhereUniqueInput(
+            email: 'alice@prisma.io',
+          ),
+          data: const rich_generated.UserUpdateInput(
+            groups: rich_generated.GroupUpdateNestedManyWithoutUsersInput(
+              set: <rich_generated.GroupWhereUniqueInput>[],
+            ),
+          ),
+          include: const rich_generated.UserInclude(groups: true),
+        );
+
+        expect(afterClear.groups, isEmpty);
+      },
+    );
+
+    test('supports nested writes for inverse one-to-one relations', () async {
+      final client = rich_generated.GeneratedComonOrmClient(
+        adapter: rich_generated.GeneratedComonOrmClient.createInMemoryAdapter(),
+      );
+
+      final user = await client.user.create(
+        data: const rich_generated.UserCreateInput(
+          email: 'alice@prisma.io',
+          role: rich_generated.UserRole.admin,
+        ),
+      );
+      await client.profile.create(
+        data: const rich_generated.ProfileCreateInput(id: 1),
+      );
+      await client.profile.create(
+        data: const rich_generated.ProfileCreateInput(id: 3),
+      );
+
+      final afterConnect = await client.user.update(
+        where: const rich_generated.UserWhereUniqueInput(
+          email: 'alice@prisma.io',
+        ),
+        data: const rich_generated.UserUpdateInput(
+          profile: rich_generated.ProfileUpdateNestedOneWithoutUserInput(
+            connect: rich_generated.ProfileWhereUniqueInput(id: 1),
+          ),
+        ),
+        include: const rich_generated.UserInclude(profile: true),
+      );
+
+      expect(afterConnect.profile, isNotNull);
+      expect(afterConnect.profile!.id, 1);
+
+      final afterReconnect = await client.user.update(
+        where: const rich_generated.UserWhereUniqueInput(
+          email: 'alice@prisma.io',
+        ),
+        data: const rich_generated.UserUpdateInput(
+          profile: rich_generated.ProfileUpdateNestedOneWithoutUserInput(
+            connect: rich_generated.ProfileWhereUniqueInput(id: 3),
+          ),
+        ),
+        include: const rich_generated.UserInclude(profile: true),
+      );
+
+      expect(afterReconnect.profile, isNotNull);
+      expect(afterReconnect.profile!.id, 3);
+
+      final profile1 = await client.profile.findUnique(
+        where: const rich_generated.ProfileWhereUniqueInput(id: 1),
+        select: const rich_generated.ProfileSelect(userId: true),
+      );
+
+      expect(profile1, isNotNull);
+      expect(profile1!.userId, isNull);
+
+      final afterConnectOrCreate = await client.user.update(
+        where: const rich_generated.UserWhereUniqueInput(
+          email: 'alice@prisma.io',
+        ),
+        data: const rich_generated.UserUpdateInput(
+          profile: rich_generated.ProfileUpdateNestedOneWithoutUserInput(
+            connectOrCreate:
+                rich_generated.ProfileConnectOrCreateWithoutUserInput(
+                  where: rich_generated.ProfileWhereUniqueInput(id: 2),
+                  create: rich_generated.ProfileCreateWithoutUserInput(id: 2),
+                ),
+          ),
+        ),
+        include: const rich_generated.UserInclude(profile: true),
+      );
+
+      expect(afterConnectOrCreate.profile, isNotNull);
+      expect(afterConnectOrCreate.profile!.id, 2);
+
+      final profile2 = await client.profile.findUnique(
+        where: const rich_generated.ProfileWhereUniqueInput(id: 2),
+        select: const rich_generated.ProfileSelect(userId: true),
+      );
+      final profile3 = await client.profile.findUnique(
+        where: const rich_generated.ProfileWhereUniqueInput(id: 3),
+        select: const rich_generated.ProfileSelect(userId: true),
+      );
+
+      expect(profile2, isNotNull);
+      expect(profile2!.userId, user.id);
+      expect(profile3, isNotNull);
+      expect(profile3!.userId, isNull);
+
+      final afterDisconnect = await client.user.update(
+        where: const rich_generated.UserWhereUniqueInput(
+          email: 'alice@prisma.io',
+        ),
+        data: const rich_generated.UserUpdateInput(
+          profile: rich_generated.ProfileUpdateNestedOneWithoutUserInput(
+            disconnect: true,
+          ),
+        ),
+        include: const rich_generated.UserInclude(profile: true),
+      );
+
+      expect(afterDisconnect.profile, isNull);
+
+      final detachedProfile2 = await client.profile.findUnique(
+        where: const rich_generated.ProfileWhereUniqueInput(id: 2),
+        select: const rich_generated.ProfileSelect(userId: true),
+      );
+
+      expect(detachedProfile2, isNotNull);
+      expect(detachedProfile2!.userId, isNull);
+    });
+
+    test(
+      'rejects nested relation set for required direct list relations',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        );
+        final bob = await client.user.create(
+          data: const UserCreateInput(name: 'Bob', email: 'bob@prisma.io'),
+        );
+        final post = await client.post.create(
+          data: PostCreateInput(title: 'Alice Post', userId: alice.id!),
+        );
+        await client.post.create(
+          data: PostCreateInput(title: 'Bob Post', userId: bob.id!),
+        );
+
+        await expectLater(
+          client.user.update(
+            where: const UserWhereUniqueInput(email: 'bob@prisma.io'),
+            data: UserUpdateInput(
+              posts: PostUpdateNestedManyWithoutUserInput(
+                set: <PostWhereUniqueInput>[PostWhereUniqueInput(id: post.id)],
+              ),
+            ),
+          ),
+          throwsA(
+            isA<StateError>().having(
+              (error) => error.message,
+              'message',
+              contains(
+                'Nested set is not supported for required relation User.posts when it would disconnect already attached required related records.',
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'supports additive nested relation set for required direct list relations',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        );
+        final bob = await client.user.create(
+          data: const UserCreateInput(name: 'Bob', email: 'bob@prisma.io'),
+        );
+        final post = await client.post.create(
+          data: PostCreateInput(title: 'Alice Post', userId: alice.id!),
+        );
+        final bobPost = await client.post.create(
+          data: PostCreateInput(title: 'Bob Post', userId: bob.id!),
+        );
+
+        final updatedBob = await client.user.update(
+          where: const UserWhereUniqueInput(email: 'bob@prisma.io'),
+          data: UserUpdateInput(
+            posts: PostUpdateNestedManyWithoutUserInput(
+              set: <PostWhereUniqueInput>[
+                PostWhereUniqueInput(id: bobPost.id),
+                PostWhereUniqueInput(id: post.id),
+              ],
+            ),
+          ),
+          include: const UserInclude(posts: true),
+        );
+
+        expect(updatedBob.posts, hasLength(2));
+        expect(
+          updatedBob.posts!.map((item) => item.title).toSet(),
+          containsAll(<String?>{'Alice Post', 'Bob Post'}),
+        );
+      },
+    );
+
+    test(
+      'rejects nested disconnect for attached required direct list relations',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        );
+        final post = await client.post.create(
+          data: PostCreateInput(title: 'Alice Post', userId: alice.id!),
+        );
+
+        await expectLater(
+          client.user.update(
+            where: const UserWhereUniqueInput(email: 'alice@prisma.io'),
+            data: UserUpdateInput(
+              posts: PostUpdateNestedManyWithoutUserInput(
+                disconnect: <PostWhereUniqueInput>[
+                  PostWhereUniqueInput(id: post.id),
+                ],
+              ),
+            ),
+          ),
+          throwsA(
+            isA<StateError>().having(
+              (error) => error.message,
+              'message',
+              contains(
+                'Nested disconnect is not supported for required relation User.posts when it would disconnect already attached required related records.',
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'supports nested disconnect as a no-op for unrelated required direct list records',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
+        );
+        final bob = await client.user.create(
+          data: const UserCreateInput(name: 'Bob', email: 'bob@prisma.io'),
+        );
+        final alicePost = await client.post.create(
+          data: PostCreateInput(title: 'Alice Post', userId: alice.id!),
+        );
+        final bobPost = await client.post.create(
+          data: PostCreateInput(title: 'Bob Post', userId: bob.id!),
+        );
+
+        final updatedAlice = await client.user.update(
+          where: const UserWhereUniqueInput(email: 'alice@prisma.io'),
+          data: UserUpdateInput(
+            posts: PostUpdateNestedManyWithoutUserInput(
+              disconnect: <PostWhereUniqueInput>[
+                PostWhereUniqueInput(id: bobPost.id),
+              ],
+            ),
+          ),
+          include: const UserInclude(posts: true),
+        );
+
+        expect(updatedAlice.posts, hasLength(1));
+        expect(updatedAlice.posts!.single.id, alicePost.id);
+
+        final persistedBobPost = await client.post.findUnique(
+          where: PostWhereUniqueInput(id: bobPost.id),
+          select: const PostSelect(userId: true),
+        );
+        expect(persistedBobPost, isNotNull);
+        expect(persistedBobPost!.userId, bob.id);
+      },
+    );
+
+    test(
+      'treats required inverse one-to-one disconnect as a no-op when nothing is attached',
+      () async {
+        final client = required_inverse_generated.GeneratedComonOrmClient(
+          adapter: required_inverse_generated
+              .GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        final createdUser = await client.user.create(
+          data: const required_inverse_generated.UserCreateInput(
+            email: 'create-noop@prisma.io',
+            profile:
+                required_inverse_generated.ProfileCreateNestedOneWithoutUserInput(
+                  disconnect: true,
+                ),
+          ),
+          include: const required_inverse_generated.UserInclude(profile: true),
+        );
+
+        expect(createdUser.profile, isNull);
+
+        final updatedUser = await client.user.update(
+          where: required_inverse_generated.UserWhereUniqueInput(
+            id: createdUser.id,
+          ),
+          data: const required_inverse_generated.UserUpdateInput(
+            profile:
+                required_inverse_generated.ProfileUpdateNestedOneWithoutUserInput(
+                  disconnect: true,
+                ),
+          ),
+          include: const required_inverse_generated.UserInclude(profile: true),
+        );
+
+        expect(updatedUser.profile, isNull);
+      },
+    );
+
+    test('preserves required inverse one-to-one replacement guardrails', () async {
+      final client = required_inverse_generated.GeneratedComonOrmClient(
+        adapter: required_inverse_generated
+            .GeneratedComonOrmClient.createInMemoryAdapter(),
+      );
+
+      final alice = await client.user.create(
+        data: const required_inverse_generated.UserCreateInput(
+          email: 'alice@prisma.io',
+        ),
+      );
+      final bob = await client.user.create(
+        data: const required_inverse_generated.UserCreateInput(
+          email: 'bob@prisma.io',
+        ),
+      );
+      await client.profile.create(
+        data: required_inverse_generated.ProfileCreateInput(
+          id: 1,
+          userId: alice.id!,
+          bio: 'Alice profile',
+        ),
+      );
+      await client.profile.create(
+        data: required_inverse_generated.ProfileCreateInput(
+          id: 2,
+          userId: bob.id!,
+          bio: 'Bob profile',
+        ),
+      );
+
+      await expectLater(
+        client.user.update(
+          where: required_inverse_generated.UserWhereUniqueInput(id: alice.id),
+          data: const required_inverse_generated.UserUpdateInput(
+            profile:
+                required_inverse_generated.ProfileUpdateNestedOneWithoutUserInput(
+                  connect: required_inverse_generated.ProfileWhereUniqueInput(
+                    id: 2,
+                  ),
+                ),
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains(
+              'Nested connect cannot replace the existing inverse one-to-one relation User.profile because Profile.userId is required.',
+            ),
+          ),
+        ),
+      );
+
+      await expectLater(
+        client.user.update(
+          where: required_inverse_generated.UserWhereUniqueInput(id: alice.id),
+          data: const required_inverse_generated.UserUpdateInput(
+            profile: required_inverse_generated.ProfileUpdateNestedOneWithoutUserInput(
+              connectOrCreate:
+                  required_inverse_generated.ProfileConnectOrCreateWithoutUserInput(
+                    where: required_inverse_generated.ProfileWhereUniqueInput(
+                      id: 3,
+                    ),
+                    create:
+                        required_inverse_generated.ProfileCreateWithoutUserInput(
+                          id: 3,
+                          bio: 'Inline profile',
+                        ),
+                  ),
+            ),
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains(
+              'Nested connectOrCreate cannot create a new inverse one-to-one relation User.profile because Profile.userId is required and already attached.',
+            ),
+          ),
+        ),
+      );
+
+      await expectLater(
+        client.user.update(
+          where: required_inverse_generated.UserWhereUniqueInput(id: alice.id),
+          data: const required_inverse_generated.UserUpdateInput(
+            profile:
+                required_inverse_generated.ProfileUpdateNestedOneWithoutUserInput(
+                  disconnect: true,
+                ),
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains(
+              'Nested disconnect is not supported for required inverse one-to-one relation User.profile.',
+            ),
+          ),
+        ),
+      );
+    });
+
+    test(
+      'preserves compound required inverse one-to-one disconnect guardrails',
+      () async {
+        final client = required_inverse_generated.GeneratedComonOrmClient(
+          adapter: required_inverse_generated
+              .GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        await client.account.create(
+          data: const required_inverse_generated.AccountCreateInput(
+            tenantId: 1,
+            slug: 'alpha',
+          ),
+        );
+        await client.accountProfile.create(
+          data: const required_inverse_generated.AccountProfileCreateInput(
+            id: 1,
+            tenantId: 1,
+            accountSlug: 'alpha',
+            bio: 'Alpha profile',
+          ),
+        );
+
+        await expectLater(
+          client.account.update(
+            where: const required_inverse_generated.AccountWhereUniqueInput(
+              tenantId_slug:
+                  required_inverse_generated.AccountTenantIdSlugCompoundUniqueInput(
+                    tenantId: 1,
+                    slug: 'alpha',
+                  ),
+            ),
+            data: const required_inverse_generated.AccountUpdateInput(
+              profile:
+                  required_inverse_generated.AccountProfileUpdateNestedOneWithoutAccountInput(
+                    disconnect: true,
+                  ),
+            ),
+          ),
+          throwsA(
+            isA<StateError>().having(
+              (error) => error.message,
+              'message',
+              contains(
+                'Nested disconnect is not supported for required inverse one-to-one relation Account.profile.',
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    test('preserves compound required inverse one-to-one replacement guardrails', () async {
+      final client = required_inverse_generated.GeneratedComonOrmClient(
+        adapter: required_inverse_generated
+            .GeneratedComonOrmClient.createInMemoryAdapter(),
+      );
+
+      await client.account.create(
+        data: const required_inverse_generated.AccountCreateInput(
+          tenantId: 1,
+          slug: 'alpha',
+        ),
+      );
+      await client.account.create(
+        data: const required_inverse_generated.AccountCreateInput(
+          tenantId: 1,
+          slug: 'beta',
+        ),
+      );
+      await client.accountProfile.create(
+        data: const required_inverse_generated.AccountProfileCreateInput(
+          id: 1,
+          tenantId: 1,
+          accountSlug: 'alpha',
+          bio: 'Alpha profile',
+        ),
+      );
+      await client.accountProfile.create(
+        data: const required_inverse_generated.AccountProfileCreateInput(
+          id: 2,
+          tenantId: 1,
+          accountSlug: 'beta',
+          bio: 'Beta profile',
+        ),
+      );
+
+      await expectLater(
+        client.account.update(
+          where: const required_inverse_generated.AccountWhereUniqueInput(
+            tenantId_slug:
+                required_inverse_generated.AccountTenantIdSlugCompoundUniqueInput(
+                  tenantId: 1,
+                  slug: 'alpha',
+                ),
+          ),
+          data: const required_inverse_generated.AccountUpdateInput(
+            profile: required_inverse_generated.AccountProfileUpdateNestedOneWithoutAccountInput(
+              connectOrCreate:
+                  required_inverse_generated.AccountProfileConnectOrCreateWithoutAccountInput(
+                    where:
+                        required_inverse_generated.AccountProfileWhereUniqueInput(
+                          id: 2,
+                        ),
+                    create:
+                        required_inverse_generated.AccountProfileCreateWithoutAccountInput(
+                          id: 2,
+                          bio: 'Beta profile',
+                        ),
+                  ),
+            ),
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains(
+              'Nested connectOrCreate cannot replace the existing inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required.',
+            ),
+          ),
+        ),
+      );
+
+      await expectLater(
+        client.account.update(
+          where: const required_inverse_generated.AccountWhereUniqueInput(
+            tenantId_slug:
+                required_inverse_generated.AccountTenantIdSlugCompoundUniqueInput(
+                  tenantId: 1,
+                  slug: 'alpha',
+                ),
+          ),
+          data: const required_inverse_generated.AccountUpdateInput(
+            profile:
+                required_inverse_generated.AccountProfileUpdateNestedOneWithoutAccountInput(
+                  connect:
+                      required_inverse_generated.AccountProfileWhereUniqueInput(
+                        id: 2,
+                      ),
+                ),
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains(
+              'Nested connect cannot replace the existing inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required.',
+            ),
+          ),
+        ),
+      );
+
+      await expectLater(
+        client.account.update(
+          where: const required_inverse_generated.AccountWhereUniqueInput(
+            tenantId_slug:
+                required_inverse_generated.AccountTenantIdSlugCompoundUniqueInput(
+                  tenantId: 1,
+                  slug: 'alpha',
+                ),
+          ),
+          data: const required_inverse_generated.AccountUpdateInput(
+            profile: required_inverse_generated.AccountProfileUpdateNestedOneWithoutAccountInput(
+              connectOrCreate:
+                  required_inverse_generated.AccountProfileConnectOrCreateWithoutAccountInput(
+                    where:
+                        required_inverse_generated.AccountProfileWhereUniqueInput(
+                          id: 3,
+                        ),
+                    create:
+                        required_inverse_generated.AccountProfileCreateWithoutAccountInput(
+                          id: 3,
+                          bio: 'Gamma profile',
+                        ),
+                  ),
+            ),
+          ),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains(
+              'Nested connectOrCreate cannot create a new inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required and already attached.',
+            ),
+          ),
+        ),
+      );
+    });
 
     test('generated models support copyWith, json and deep equality', () {
       final original = User(
@@ -392,6 +2757,249 @@ void main() {
       expect(firstDescending!.name, 'Charlie');
     });
 
+    test('supports generated cursor pagination for findMany', () async {
+      final client = GeneratedComonOrmClient(
+        adapter: InMemoryDatabaseAdapter(),
+      );
+
+      await client.user.create(
+        data: const UserCreateInput(name: 'Alice', email: 'a@prisma.io'),
+      );
+      await client.user.create(
+        data: const UserCreateInput(name: 'Bob', email: 'b@prisma.io'),
+      );
+      await client.user.create(
+        data: const UserCreateInput(name: 'Charlie', email: 'c@prisma.io'),
+      );
+
+      final pageIncludingCursor = await client.user.findMany(
+        cursor: const UserWhereUniqueInput(email: 'b@prisma.io'),
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(name: SortOrder.asc),
+        ],
+        take: 2,
+        select: const UserSelect(name: true),
+      );
+
+      expect(
+        pageIncludingCursor.map((user) => user.name).toList(growable: false),
+        const <String?>['Bob', 'Charlie'],
+      );
+
+      final pageAfterCursor = await client.user.findMany(
+        cursor: const UserWhereUniqueInput(email: 'b@prisma.io'),
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(name: SortOrder.asc),
+        ],
+        skip: 1,
+        take: 1,
+        select: const UserSelect(name: true),
+      );
+
+      expect(
+        pageAfterCursor.map((user) => user.name).toList(growable: false),
+        const <String?>['Charlie'],
+      );
+
+      final backwardPageIncludingCursor = await client.user.findMany(
+        cursor: const UserWhereUniqueInput(email: 'b@prisma.io'),
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(name: SortOrder.asc),
+        ],
+        take: -2,
+        select: const UserSelect(name: true),
+      );
+
+      expect(
+        backwardPageIncludingCursor
+            .map((user) => user.name)
+            .toList(growable: false),
+        const <String?>['Alice', 'Bob'],
+      );
+
+      final backwardPageBeforeCursor = await client.user.findMany(
+        cursor: const UserWhereUniqueInput(email: 'b@prisma.io'),
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(name: SortOrder.asc),
+        ],
+        skip: 1,
+        take: -1,
+        select: const UserSelect(name: true),
+      );
+
+      expect(
+        backwardPageBeforeCursor
+            .map((user) => user.name)
+            .toList(growable: false),
+        const <String?>['Alice'],
+      );
+
+      final firstFromCursor = await client.user.findFirst(
+        cursor: const UserWhereUniqueInput(email: 'b@prisma.io'),
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(name: SortOrder.asc),
+        ],
+        select: const UserSelect(name: true),
+      );
+
+      expect(firstFromCursor, isNotNull);
+      expect(firstFromCursor!.name, 'Bob');
+
+      final firstAfterCursor = await client.user.findFirst(
+        cursor: const UserWhereUniqueInput(email: 'b@prisma.io'),
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(name: SortOrder.asc),
+        ],
+        skip: 1,
+        select: const UserSelect(name: true),
+      );
+
+      expect(firstAfterCursor, isNotNull);
+      expect(firstAfterCursor!.name, 'Charlie');
+
+      final missingFromCursor = await client.user.findFirst(
+        cursor: const UserWhereUniqueInput(email: 'missing@prisma.io'),
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(name: SortOrder.asc),
+        ],
+        select: const UserSelect(name: true),
+      );
+
+      expect(missingFromCursor, isNull);
+    });
+
+    test(
+      'supports generated cursor pagination with compound primary keys',
+      () async {
+        final client = GeneratedComonOrmClient(
+          adapter: GeneratedComonOrmClient.createInMemoryAdapter(),
+        );
+
+        await client.membership.create(
+          data: const MembershipCreateInput(
+            tenantId: 1,
+            slug: 'alpha',
+            role: 'owner',
+          ),
+        );
+        await client.membership.create(
+          data: const MembershipCreateInput(
+            tenantId: 1,
+            slug: 'beta',
+            role: 'editor',
+          ),
+        );
+        await client.membership.create(
+          data: const MembershipCreateInput(
+            tenantId: 2,
+            slug: 'gamma',
+            role: 'viewer',
+          ),
+        );
+
+        final memberships = await client.membership.findMany(
+          cursor: const MembershipWhereUniqueInput(
+            tenantId_slug: MembershipTenantIdSlugCompoundUniqueInput(
+              tenantId: 1,
+              slug: 'beta',
+            ),
+          ),
+          orderBy: const <MembershipOrderByInput>[
+            MembershipOrderByInput(tenantId: SortOrder.asc),
+            MembershipOrderByInput(slug: SortOrder.asc),
+          ],
+          take: 2,
+          select: const MembershipSelect(
+            tenantId: true,
+            slug: true,
+            role: true,
+          ),
+        );
+
+        expect(memberships, hasLength(2));
+        expect(memberships.first.tenantId, 1);
+        expect(memberships.first.slug, 'beta');
+        expect(memberships.first.role, 'editor');
+        expect(memberships.last.tenantId, 2);
+        expect(memberships.last.slug, 'gamma');
+        expect(memberships.last.role, 'viewer');
+
+        final backwardMemberships = await client.membership.findMany(
+          cursor: const MembershipWhereUniqueInput(
+            tenantId_slug: MembershipTenantIdSlugCompoundUniqueInput(
+              tenantId: 1,
+              slug: 'beta',
+            ),
+          ),
+          orderBy: const <MembershipOrderByInput>[
+            MembershipOrderByInput(tenantId: SortOrder.asc),
+            MembershipOrderByInput(slug: SortOrder.asc),
+          ],
+          take: -2,
+          select: const MembershipSelect(
+            tenantId: true,
+            slug: true,
+            role: true,
+          ),
+        );
+
+        expect(backwardMemberships, hasLength(2));
+        expect(backwardMemberships.first.tenantId, 1);
+        expect(backwardMemberships.first.slug, 'alpha');
+        expect(backwardMemberships.first.role, 'owner');
+        expect(backwardMemberships.last.tenantId, 1);
+        expect(backwardMemberships.last.slug, 'beta');
+        expect(backwardMemberships.last.role, 'editor');
+
+        final firstMembershipFromCursor = await client.membership.findFirst(
+          cursor: const MembershipWhereUniqueInput(
+            tenantId_slug: MembershipTenantIdSlugCompoundUniqueInput(
+              tenantId: 1,
+              slug: 'beta',
+            ),
+          ),
+          orderBy: const <MembershipOrderByInput>[
+            MembershipOrderByInput(tenantId: SortOrder.asc),
+            MembershipOrderByInput(slug: SortOrder.asc),
+          ],
+          select: const MembershipSelect(
+            tenantId: true,
+            slug: true,
+            role: true,
+          ),
+        );
+
+        expect(firstMembershipFromCursor, isNotNull);
+        expect(firstMembershipFromCursor!.tenantId, 1);
+        expect(firstMembershipFromCursor.slug, 'beta');
+        expect(firstMembershipFromCursor.role, 'editor');
+
+        final firstMembershipAfterCursor = await client.membership.findFirst(
+          cursor: const MembershipWhereUniqueInput(
+            tenantId_slug: MembershipTenantIdSlugCompoundUniqueInput(
+              tenantId: 1,
+              slug: 'beta',
+            ),
+          ),
+          orderBy: const <MembershipOrderByInput>[
+            MembershipOrderByInput(tenantId: SortOrder.asc),
+            MembershipOrderByInput(slug: SortOrder.asc),
+          ],
+          skip: 1,
+          select: const MembershipSelect(
+            tenantId: true,
+            slug: true,
+            role: true,
+          ),
+        );
+
+        expect(firstMembershipAfterCursor, isNotNull);
+        expect(firstMembershipAfterCursor!.tenantId, 2);
+        expect(firstMembershipAfterCursor.slug, 'gamma');
+        expect(firstMembershipAfterCursor.role, 'viewer');
+      },
+    );
+
     test('supports generated distinct, aggregate and groupBy', () async {
       final client = GeneratedComonOrmClient(
         adapter: InMemoryDatabaseAdapter(),
@@ -454,6 +3062,33 @@ void main() {
         distinctCountries.map((user) => user.name).toList(growable: false),
         const <String?>['Dan', 'Eve', 'Bob'],
       );
+
+      final firstDistinctCountry = await client.user.findFirst(
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(country: SortOrder.asc),
+          UserOrderByInput(profileViews: SortOrder.desc),
+        ],
+        distinct: const <UserScalarField>[UserScalarField.country],
+        select: const UserSelect(name: true, country: true, profileViews: true),
+      );
+
+      expect(firstDistinctCountry, isNotNull);
+      expect(firstDistinctCountry!.country, 'FR');
+      expect(firstDistinctCountry.name, 'Dan');
+
+      final secondDistinctCountry = await client.user.findFirst(
+        orderBy: const <UserOrderByInput>[
+          UserOrderByInput(country: SortOrder.asc),
+          UserOrderByInput(profileViews: SortOrder.desc),
+        ],
+        distinct: const <UserScalarField>[UserScalarField.country],
+        skip: 1,
+        select: const UserSelect(name: true, country: true, profileViews: true),
+      );
+
+      expect(secondDistinctCountry, isNotNull);
+      expect(secondDistinctCountry!.country, 'JP');
+      expect(secondDistinctCountry.name, 'Eve');
 
       final aggregate = await client.user.aggregate(
         where: const UserWhereInput(

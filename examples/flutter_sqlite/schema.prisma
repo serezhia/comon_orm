@@ -6,6 +6,7 @@ datasource db {
 generator client {
   provider = "comon_orm"
   output = "lib/generated"
+  sqliteHelper = "flutter"
 }
 
 model Todo {

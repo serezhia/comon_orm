@@ -14,7 +14,7 @@ Use it when your schema declares `provider = "sqlite"` and you want an embedded 
 - file-backed and in-memory SQLite workflows
 - schema application and introspection for the supported SQLite surface
 - migration planning, apply, rollback, history, and status helpers
-- adapter bootstrap directly from `schema.prisma`
+- generated-metadata-first runtime bootstrap for file-backed and in-memory adapters
 
 ## 🚀 Quick Start
 
@@ -22,25 +22,19 @@ Add dependencies:
 
 ```yaml
 dependencies:
-  comon_orm: ^0.0.1-alpha
-  comon_orm_sqlite: ^0.0.1-alpha
+	comon_orm: ^0.0.2-alpha
+	comon_orm_sqlite: ^0.0.2-alpha
 ```
 
 Generated-client-first example:
 
 ```dart
-import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
-
 import 'generated/comon_orm_client.dart';
 
 Future<void> main() async {
-	final adapter = await SqliteDatabaseAdapter.openFromSchemaPath(
-		schemaPath: 'schema.prisma',
-	);
+	final db = await GeneratedComonOrmClientSqlite.open();
 
 	try {
-		final db = GeneratedComonOrmClient(adapter: adapter);
-
 		final user = await db.user.create(
 			data: const UserCreateInput(
 				email: 'alice@example.com',
@@ -53,18 +47,21 @@ Future<void> main() async {
 		print(user.email);
 		print(users.length);
 	} finally {
-		adapter.dispose();
+		await db.close();
 	}
 }
 ```
 
-For local bootstrap that also creates missing tables, you can use:
+That path is the preferred runtime flow once the database has already been migrated or created.
 
 ```dart
-final adapter = await SqliteDatabaseAdapter.openAndApplyFromSchemaPath(
-	schemaPath: 'schema.prisma',
-);
+final db = await GeneratedComonOrmClientSqlite.open();
 ```
+
+## Runtime Paths
+
+- Runtime path: `GeneratedComonOrmClient.openInMemory()` or `GeneratedComonOrmClientSqlite.open(...)`
+- Tooling/setup path: schema-driven migrate/apply flows through the CLI and schema tools
 
 ## 🎯 Key Features
 
@@ -72,7 +69,7 @@ final adapter = await SqliteDatabaseAdapter.openAndApplyFromSchemaPath(
 
 - runtime adapter on top of `sqlite3`
 - file-backed and in-memory workflows
-- bootstrap through `openFromSchemaPath(...)`
+- compiled-metadata runtime bootstrap through `openFromGeneratedSchema(...)`
 - a natural fit for local tools, desktop utilities, tests, and lightweight applications
 
 ### 🧭 Migrations
@@ -101,7 +98,8 @@ dart run comon_orm migrate rollback --schema schema.prisma --from prisma/migrati
 Important:
 
 - the dispatcher reads `datasource.provider` and forwards to this package automatically
-- `openAndApplyFromSchemaPath(...)` is convenient for local development, but it is not the same thing as a reviewed migration workflow
+- the preferred application runtime path is `GeneratedComonOrmClient.runtimeSchema` plus `openFromGeneratedSchema(...)`
+- schema apply stays in tooling/setup flows instead of runtime adapter convenience APIs
 - some schema transitions require rebuilds because SQLite cannot express them with `ALTER TABLE`
 
 ## 📱 Platform Notes

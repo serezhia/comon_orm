@@ -14,7 +14,7 @@
 - file-backed и in-memory SQLite workflows
 - schema application и introspection для поддерживаемой SQLite-поверхности
 - migration planning, apply, rollback, history и status helpers
-- bootstrap adapter-а напрямую из `schema.prisma`
+- generated-metadata-first runtime bootstrap для file-backed и in-memory adapter-ов
 
 ## 🚀 Быстрый старт
 
@@ -22,25 +22,19 @@
 
 ```yaml
 dependencies:
-  comon_orm: ^0.0.1-alpha
-  comon_orm_sqlite: ^0.0.1-alpha
+	comon_orm: ^0.0.2-alpha
+	comon_orm_sqlite: ^0.0.2-alpha
 ```
 
 Пример с generated client:
 
 ```dart
-import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
-
 import 'generated/comon_orm_client.dart';
 
 Future<void> main() async {
-	final adapter = await SqliteDatabaseAdapter.openFromSchemaPath(
-		schemaPath: 'schema.prisma',
-	);
+	final db = await GeneratedComonOrmClientSqlite.open();
 
 	try {
-		final db = GeneratedComonOrmClient(adapter: adapter);
-
 		final user = await db.user.create(
 			data: const UserCreateInput(
 				email: 'alice@example.com',
@@ -53,18 +47,21 @@ Future<void> main() async {
 		print(user.email);
 		print(users.length);
 	} finally {
-		adapter.dispose();
+		await db.close();
 	}
 }
 ```
 
-Для local bootstrap, который еще и создает отсутствующие таблицы, можно использовать:
+Это preferred runtime path после того, как база уже создана или обновлена отдельно.
 
 ```dart
-final adapter = await SqliteDatabaseAdapter.openAndApplyFromSchemaPath(
-	schemaPath: 'schema.prisma',
-);
+final db = await GeneratedComonOrmClientSqlite.open();
 ```
+
+## Runtime Paths
+
+- Runtime path: `GeneratedComonOrmClient.openInMemory()` или `GeneratedComonOrmClientSqlite.open(...)`
+- Tooling/setup path: schema-driven migrate/apply flow через CLI и schema tools
 
 ## 🎯 Ключевые фичи
 
@@ -72,7 +69,7 @@ final adapter = await SqliteDatabaseAdapter.openAndApplyFromSchemaPath(
 
 - runtime adapter поверх `sqlite3`
 - file-backed и in-memory сценарии
-- bootstrap через `openFromSchemaPath(...)`
+- compiled-metadata runtime bootstrap через `openFromGeneratedSchema(...)`
 - хороший fit для local tools, desktop utilities, тестов и легковесных приложений
 
 ### 🧭 Миграции
@@ -101,7 +98,8 @@ dart run comon_orm migrate rollback --schema schema.prisma --from prisma/migrati
 Важно:
 
 - dispatcher читает `datasource.provider` и автоматически делегирует выполнение в этот пакет
-- `openAndApplyFromSchemaPath(...)` удобен для локальной разработки, но это не то же самое, что reviewable migration workflow
+- preferred application runtime path теперь это `GeneratedComonOrmClient.runtimeSchema` плюс `openFromGeneratedSchema(...)`
+- schema apply остается в tooling/setup flow, а не в runtime adapter convenience API
 - часть schema transitions требует rebuild, потому что SQLite не умеет выразить их через `ALTER TABLE`
 
 ## 📱 Платформы
