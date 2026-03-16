@@ -2,7 +2,7 @@
 
 # comon_orm
 
-[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/anomalyco/opencode)
 
 `comon_orm` это schema-first ORM toolkit для Dart, вдохновленный Prisma.
 
