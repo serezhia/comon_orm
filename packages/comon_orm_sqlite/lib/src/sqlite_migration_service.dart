@@ -195,6 +195,18 @@ class SqliteMigrationService {
         ),
       );
       localArtifacts = const <LocalMigrationArtifact>[];
+    } on UnsupportedError catch (error) {
+      issues.add(
+        SqliteMigrationStatusIssue(
+          code: 'local-artifacts-unavailable',
+          message: '$error',
+        ),
+      );
+      return SqliteMigrationStatus(
+        localMigrationCount: 0,
+        activeMigrationCount: activeHistory.length,
+        issues: List<SqliteMigrationStatusIssue>.unmodifiable(issues),
+      );
     }
 
     final localByName = {

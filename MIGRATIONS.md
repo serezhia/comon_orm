@@ -78,6 +78,7 @@ If the local SQLite file contains important user data, use explicit app-side upg
 
 - `SqliteFlutterMigration.sql(...)` for additive steps
 - `SqliteFlutterMigration.rebuildTable(...)` for common rebuild flows
+- `SqliteFlutterMigration.schemaDiff(...)` when the app already knows the previous and next schema snapshots and wants the package to choose between additive SQL and rebuild flow
 - `SqliteFlutterMigrator` for ordered versioned upgrades
 - `upgradeSqliteFlutterDatabase(...)` for explicit pre-runtime execution
 
@@ -145,6 +146,8 @@ Keep the order explicit:
 
 - upgrade first
 - runtime open second
+
+When browser-local SQLite is involved, this app-side path is the intended workflow. Do not try to run file-backed reviewed migration artifact loading inside the browser.
 
 This is still not the same thing as reviewed shared-database migration rollout.
 
@@ -243,6 +246,7 @@ Common issue codes:
 - `local-migration-not-applied`: the repo has a migration that is not active in the database
 - `missing-db-snapshot`: an older applied migration predates stored before/after schema snapshots
 - `invalid-local-artifacts`: local migration metadata is incomplete or malformed
+- `local-artifacts-unavailable`: the current platform cannot load file-backed migration directories, which is expected on browser targets
 
 If `status` is not clean, stop and resolve the mismatch before applying new changes.
 

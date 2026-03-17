@@ -179,8 +179,41 @@ Practical rules:
 - use CLI-reviewed migrations for shared, staging, and production databases
 - prefer reset over complex migration code when local data is disposable
 - use `SqliteFlutterMigration.sql(...)` for simple additive steps
+- use `SqliteFlutterMigration.schemaDiff(...)` when the app owns both schema snapshots and wants the package to choose additive SQL vs rebuild automatically
 - use `SqliteFlutterMigration.rebuildTable(...)` or a custom migration callback for rebuild-heavy local upgrades
 - keep upgrade first and runtime open second
+
+Schema-diff example:
+
+```dart
+final fromSchema = const SchemaParser().parse('''
+model User {
+  id Int @id
+  email String @unique
+}
+''');
+
+final toSchema = const SchemaParser().parse('''
+model User {
+  id Int @id
+  email String @unique
+  enabled Boolean @default(false)
+}
+''');
+
+final migrator = SqliteFlutterMigrator(
+  currentVersion: 2,
+  migrations: <SqliteFlutterMigration>[
+    SqliteFlutterMigration.schemaDiff(
+      fromVersion: 1,
+      toVersion: 2,
+      debugName: 'add_enabled_flag',
+      fromSchema: fromSchema,
+      toSchema: toSchema,
+    ),
+  ],
+);
+```
 
 ## Scope
 

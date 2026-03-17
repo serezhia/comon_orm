@@ -15,24 +15,30 @@ class PostgresqlSchemaApplier {
 
   /// Returns DDL needed to create the whole schema.
   List<String> createSchemaStatements(SchemaDocument schema) {
+    final effectiveSchema = schema.withoutIgnored();
     return <String>[
-      ...createEnumStatements(schema),
-      ...createTableStatements(schema),
-      ...createImplicitManyToManyTableStatements(schema),
+      ...createEnumStatements(effectiveSchema),
+      ...createTableStatements(effectiveSchema),
+      ...createImplicitManyToManyTableStatements(effectiveSchema),
     ];
   }
 
   /// Returns table creation statements for every model in [schema].
   List<String> createTableStatements(SchemaDocument schema) {
-    return schema.models
-        .map((model) => createTableStatementForModel(model, schema: schema))
+    final effectiveSchema = schema.withoutIgnored();
+    return effectiveSchema.models
+        .map(
+          (model) =>
+              createTableStatementForModel(model, schema: effectiveSchema),
+        )
         .toList(growable: false);
   }
 
   /// Returns creation statements for implicit many-to-many tables.
   List<String> createImplicitManyToManyTableStatements(SchemaDocument schema) {
+    final effectiveSchema = schema.withoutIgnored();
     return collectImplicitManyToManyStorages(
-      schema,
+      effectiveSchema,
     ).map(createImplicitManyToManyTableStatement).toList(growable: false);
   }
 
@@ -368,8 +374,16 @@ class PostgresqlSchemaApplier {
     final nativeType = field.nativeTypeAttribute;
     if (nativeType != null) {
       switch (nativeType.name) {
+        case 'db.SmallInt':
+          return 'SMALLINT';
+        case 'db.BigInt':
+          return 'BIGINT';
+        case 'db.DoublePrecision':
+          return 'DOUBLE PRECISION';
         case 'db.VarChar':
           return 'VARCHAR(${nativeType.arguments['value']!.trim()})';
+        case 'db.Char':
+          return 'CHAR(${nativeType.arguments['value']!.trim()})';
         case 'db.Text':
           return 'TEXT';
         case 'db.Json':
@@ -382,6 +396,8 @@ class PostgresqlSchemaApplier {
           return 'NUMERIC';
         case 'db.Uuid':
           return 'UUID';
+        case 'db.Xml':
+          return 'XML';
         case 'db.Timestamp':
           return 'TIMESTAMP';
         case 'db.Timestamptz':

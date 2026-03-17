@@ -57,6 +57,8 @@ class PostgresqlMigrationPlanner {
     required SchemaDocument from,
     required SchemaDocument to,
   }) {
+    from = from.withoutIgnored();
+    to = to.withoutIgnored();
     final statements = <String>[];
     final warnings = <String>[];
     var requiresRebuild = false;
@@ -146,16 +148,25 @@ class PostgresqlMigrationPlanner {
       );
     }
 
-    final fromModels = {for (final model in from.models) model.name: model};
+    final fromModelsByName = {
+      for (final model in from.models) model.name: model,
+    };
+    final fromModelsByDatabaseName = {
+      for (final model in from.models) model.databaseName: model,
+    };
 
     for (final targetModel in to.models) {
-      final sourceModel = fromModels.remove(targetModel.name);
+      final sourceModel =
+          fromModelsByName.remove(targetModel.name) ??
+          fromModelsByDatabaseName.remove(targetModel.databaseName);
       if (sourceModel == null) {
         statements.add(
           schemaApplier.createTableStatementForModel(targetModel, schema: to),
         );
         continue;
       }
+      fromModelsByName.remove(sourceModel.name);
+      fromModelsByDatabaseName.remove(sourceModel.databaseName);
 
       _planModelDiff(
         sourceSchema: from,
@@ -168,7 +179,11 @@ class PostgresqlMigrationPlanner {
       );
     }
 
-    for (final removedModel in fromModels.values) {
+    for (final removedModel in from.models.where(
+      (model) =>
+          fromModelsByName.containsKey(model.name) ||
+          fromModelsByDatabaseName.containsKey(model.databaseName),
+    )) {
       warnings.add(
         'Dropping model ${removedModel.name} requires manual migration.',
       );
@@ -235,12 +250,17 @@ class PostgresqlMigrationPlanner {
     required List<String> statements,
     required List<String> warnings,
   }) {
-    final sourceFields = {
+    final sourceFieldsByName = {
       for (final field in sourceModel.fields) field.name: field,
+    };
+    final sourceFieldsByDatabaseName = {
+      for (final field in sourceModel.fields) field.databaseName: field,
     };
 
     for (final targetField in targetModel.fields) {
-      final sourceField = sourceFields.remove(targetField.name);
+      final sourceField =
+          sourceFieldsByName.remove(targetField.name) ??
+          sourceFieldsByDatabaseName.remove(targetField.databaseName);
       if (sourceField == null) {
         _planAddedField(
           targetSchema: targetSchema,
@@ -251,6 +271,8 @@ class PostgresqlMigrationPlanner {
         );
         continue;
       }
+      sourceFieldsByName.remove(sourceField.name);
+      sourceFieldsByDatabaseName.remove(sourceField.databaseName);
 
       if (_isRelationField(targetSchema, targetField)) {
         continue;
@@ -270,13 +292,18 @@ class PostgresqlMigrationPlanner {
     }
 
     _planRelationConstraintDiffs(
+      sourceSchema: sourceSchema,
       targetSchema: targetSchema,
       sourceModel: sourceModel,
       targetModel: targetModel,
       statements: statements,
     );
 
-    for (final removedField in sourceFields.values) {
+    for (final removedField in sourceModel.fields.where(
+      (field) =>
+          sourceFieldsByName.containsKey(field.name) ||
+          sourceFieldsByDatabaseName.containsKey(field.databaseName),
+    )) {
       if (_isRelationField(sourceSchema, removedField)) {
         continue;
       }
@@ -339,19 +366,23 @@ class PostgresqlMigrationPlanner {
   }
 
   void _planRelationConstraintDiffs({
+    required SchemaDocument sourceSchema,
     required SchemaDocument targetSchema,
     required ModelDefinition sourceModel,
     required ModelDefinition targetModel,
     required List<String> statements,
   }) {
     final sourceRelations = {
-      for (final relation in _relationConstraints(sourceModel))
-        relation.name: relation,
+      for (final relation in _relationConstraints(sourceModel, sourceSchema))
+        relation.key: relation,
     };
     final targetRelations = {
-      for (final relation in _relationConstraints(targetModel))
-        relation.name: relation,
+      for (final relation in _relationConstraints(targetModel, targetSchema))
+        relation.key: relation,
     };
+
+    final dropStatements = <String>[];
+    final addStatements = <String>[];
 
     for (final entry in targetRelations.entries) {
       final sourceRelation = sourceRelations.remove(entry.key);
@@ -364,7 +395,7 @@ class PostgresqlMigrationPlanner {
               schema: targetSchema,
             );
         if (statement != null) {
-          statements.add(statement);
+          addStatements.add(statement);
         }
         continue;
       }
@@ -379,7 +410,7 @@ class PostgresqlMigrationPlanner {
             sourceRelation.field,
           );
       if (dropStatement != null) {
-        statements.add(dropStatement);
+        dropStatements.add(dropStatement);
       }
 
       final addStatement = schemaApplier
@@ -389,7 +420,7 @@ class PostgresqlMigrationPlanner {
             schema: targetSchema,
           );
       if (addStatement != null) {
-        statements.add(addStatement);
+        addStatements.add(addStatement);
       }
     }
 
@@ -400,9 +431,13 @@ class PostgresqlMigrationPlanner {
             sourceRelation.field,
           );
       if (dropStatement != null) {
-        statements.add(dropStatement);
+        dropStatements.add(dropStatement);
       }
     }
+
+    statements
+      ..addAll(dropStatements)
+      ..addAll(addStatements);
   }
 
   bool _isRelationField(SchemaDocument schema, FieldDefinition field) {
@@ -733,20 +768,23 @@ class PostgresqlMigrationPlanner {
     ModelDefinition source,
     ModelDefinition target,
   ) {
-    if (!_sameFieldSets(source.primaryKeyFields, target.primaryKeyFields)) {
+    if (!_sameFieldSets(
+      _canonicalFieldSet(source, source.primaryKeyFields),
+      _canonicalFieldSet(target, target.primaryKeyFields),
+    )) {
       return false;
     }
 
     final sourceUnique =
         source.compoundUniqueFieldSets
             .where((fields) => fields.length > 1)
-            .map((fields) => fields.join('|'))
+            .map((fields) => _canonicalFieldSet(source, fields).join('|'))
             .toList(growable: false)
           ..sort();
     final targetUnique =
         target.compoundUniqueFieldSets
             .where((fields) => fields.length > 1)
-            .map((fields) => fields.join('|'))
+            .map((fields) => _canonicalFieldSet(target, fields).join('|'))
             .toList(growable: false)
           ..sort();
 
@@ -763,7 +801,21 @@ class PostgresqlMigrationPlanner {
     return true;
   }
 
-  List<_RelationConstraint> _relationConstraints(ModelDefinition model) {
+  List<String> _canonicalFieldSet(ModelDefinition model, List<String> fields) {
+    return fields
+        .map(
+          (fieldName) =>
+              model.findField(fieldName)?.databaseName ??
+              model.findFieldByDatabaseName(fieldName)?.databaseName ??
+              fieldName,
+        )
+        .toList(growable: false);
+  }
+
+  List<_RelationConstraint> _relationConstraints(
+    ModelDefinition model,
+    SchemaDocument schema,
+  ) {
     final constraints =
         model.fields
             .where((field) => !field.isScalar)
@@ -782,16 +834,37 @@ class PostgresqlMigrationPlanner {
                 return null;
               }
 
+              final localDatabaseFields = _canonicalFieldSet(
+                model,
+                localFields,
+              );
+              final targetModel =
+                  schema.findModel(field.type) ??
+                  schema.findModelByDatabaseName(field.type);
+              final targetDatabaseName =
+                  targetModel?.databaseName ?? field.type;
+              final referenceDatabaseFields = references
+                  .map(
+                    (fieldName) =>
+                        targetModel?.findField(fieldName)?.databaseName ??
+                        targetModel
+                            ?.findFieldByDatabaseName(fieldName)
+                            ?.databaseName ??
+                        fieldName,
+                  )
+                  .toList(growable: false);
+
               return _RelationConstraint(
-                name: field.name,
+                key:
+                    '$targetDatabaseName|fields=${localDatabaseFields.join(',')}',
                 field: field,
                 signature:
-                    '${field.name}|${field.type}|fields=${localFields.join(',')}|refs=${references.join(',')}|onDelete=${_normalizedRelationArgument(relation.arguments['onDelete']) ?? ''}|onUpdate=${_normalizedRelationArgument(relation.arguments['onUpdate']) ?? ''}',
+                    '$targetDatabaseName|fields=${localDatabaseFields.join(',')}|refs=${referenceDatabaseFields.join(',')}|onDelete=${_normalizedRelationArgument(relation.arguments['onDelete']) ?? ''}|onUpdate=${_normalizedRelationArgument(relation.arguments['onUpdate']) ?? ''}',
               );
             })
             .whereType<_RelationConstraint>()
             .toList(growable: false)
-          ..sort((left, right) => left.name.compareTo(right.name));
+          ..sort((left, right) => left.key.compareTo(right.key));
 
     return constraints;
   }
@@ -832,7 +905,7 @@ class PostgresqlMigrationPlanner {
       }
     }
 
-    return trimmed;
+    return trimmed == 'NoAction' ? null : trimmed;
   }
 
   bool _sameFieldSets(List<String> left, List<String> right) {
@@ -850,12 +923,12 @@ class PostgresqlMigrationPlanner {
 
 class _RelationConstraint {
   const _RelationConstraint({
-    required this.name,
+    required this.key,
     required this.field,
     required this.signature,
   });
 
-  final String name;
+  final String key;
   final FieldDefinition field;
   final String signature;
 }

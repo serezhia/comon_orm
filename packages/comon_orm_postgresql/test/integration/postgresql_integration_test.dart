@@ -158,17 +158,20 @@ WHERE datname = current_database()
 
           final scalarSchema = const SchemaParser().parse('''
 model ScalarSample {
-  id        Int      @id
-  createdAt DateTime @default(now()) @db.Timestamp
-  rating    Float
-  amount    Decimal  @db.Numeric
-  payload   Json     @db.JsonB
-  metadata  Json?    @db.Json
-  blob      Bytes    @db.ByteA
-  big       BigInt
-  enabled   Boolean @default(false)
+  id         Int      @id
+  rank       Int      @db.SmallInt
+  createdAt  DateTime @default(now()) @db.Timestamp
+  rating     Float    @db.DoublePrecision
+  amount     Decimal  @db.Numeric
+  payload    Json     @db.JsonB
+  metadata   Json?    @db.Json
+  blob       Bytes    @db.ByteA
+  big        BigInt   @db.BigInt
+  code       String   @db.Char(4)
+  document   String?  @db.Xml
+  enabled    Boolean  @default(false)
   externalId String? @db.Uuid
-  nickname String? @db.VarChar(64)
+  nickname   String?  @db.VarChar(64)
 }
 ''');
           final scalarConnection = await harness!.openConnection();
@@ -192,6 +195,7 @@ model ScalarSample {
                     model: 'ScalarSample',
                     data: <String, Object?>{
                       'id': 1,
+                      'rank': 7,
                       'createdAt': createdAt,
                       'rating': 4.5,
                       'amount': 12.75,
@@ -199,6 +203,8 @@ model ScalarSample {
                       'metadata': <String, Object?>{'kind': 'sample'},
                       'blob': <int>[1, 2, 3],
                       'big': BigInt.parse('9223372036854775806'),
+                      'code': 'ABCD',
+                      'document': '<root kind="sample"/>',
                       'enabled': true,
                       'externalId': 'd290f1ee-6c54-4b01-90e6-d701748f0851',
                       'nickname': 'alpha',
@@ -218,36 +224,59 @@ model ScalarSample {
                 );
 
             expect(fetched, isNotNull);
-            expect(fetched!['createdAt'], createdAt);
-            expect(fetched['amount'], 12.75);
-            expect(fetched['payload'], <String, Object?>{'name': 'alpha'});
-            expect(fetched['metadata'], <String, Object?>{'kind': 'sample'});
-            expect(fetched['blob'], <int>[1, 2, 3]);
-            expect(fetched['big'], BigInt.parse('9223372036854775806'));
+            final fetchedRow = fetched!;
+            expect(fetchedRow['rank'], 7);
+            expect(fetchedRow['createdAt'], createdAt);
+            expect(fetchedRow['amount'], 12.75);
+            expect(fetchedRow['payload'], <String, Object?>{'name': 'alpha'});
+            expect(fetchedRow['metadata'], <String, Object?>{'kind': 'sample'});
+            expect(fetchedRow['blob'], <int>[1, 2, 3]);
+            expect(fetchedRow['big'], BigInt.parse('9223372036854775806'));
+            expect(fetchedRow['code'], 'ABCD');
+            expect(fetchedRow['document'], '<root kind="sample"/>');
             expect(
-              fetched['externalId'],
+              fetchedRow['externalId'],
               'd290f1ee-6c54-4b01-90e6-d701748f0851',
             );
-            expect(fetched['nickname'], 'alpha');
+            expect(fetchedRow['nickname'], 'alpha');
 
             final introspected = await const PostgresqlSchemaIntrospector()
                 .introspect(scalarConnection);
             final scalarModel = introspected.findModel('ScalarSample');
             expect(scalarModel, isNotNull);
+            final scalar = scalarModel!;
             expect(
-              scalarModel!.findField('payload')?.attribute('db.JsonB'),
+              scalar.findField('rank')?.attribute('db.SmallInt'),
               isNotNull,
             );
             expect(
-              scalarModel.findField('metadata')?.attribute('db.Json'),
+              scalar.findField('rating')?.attribute('db.DoublePrecision'),
               isNotNull,
             );
             expect(
-              scalarModel.findField('blob')?.attribute('db.ByteA'),
+              scalar.findField('payload')?.attribute('db.JsonB'),
               isNotNull,
             );
             expect(
-              scalarModel.findField('amount')?.attribute('db.Numeric'),
+              scalar.findField('metadata')?.attribute('db.Json'),
+              isNotNull,
+            );
+            expect(scalar.findField('blob')?.attribute('db.ByteA'), isNotNull);
+            expect(scalar.findField('big')?.attribute('db.BigInt'), isNotNull);
+            expect(scalar.findField('code')?.attribute('db.Char'), isNotNull);
+            expect(
+              scalar
+                  .findField('code')
+                  ?.attribute('db.Char')
+                  ?.arguments['value'],
+              '4',
+            );
+            expect(
+              scalar.findField('document')?.attribute('db.Xml'),
+              isNotNull,
+            );
+            expect(
+              scalar.findField('amount')?.attribute('db.Numeric'),
               isNotNull,
             );
           } finally {
@@ -526,6 +555,119 @@ model User {
     );
 
     test(
+      'produces empty live diff after apply for the same mapped schema',
+      () async {
+        if (!dockerAvailable) {
+          return;
+        }
+
+        final target = const SchemaParser().parse('''
+model User {
+  id          Int      @id @default(autoincrement()) @map("user_id")
+  email       String   @unique @map("email_address")
+  displayName String   @map("display_name")
+  createdAt   DateTime @default(now()) @db.Timestamptz @map("created_at")
+  posts       Post[]
+
+  @@map("users")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement()) @map("post_id")
+  title     String   @map("post_title")
+  ownerId   Int      @map("owner_id")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@map("posts")
+}
+''');
+
+        final connection = await harness!.openConnection();
+        try {
+          const service = PostgresqlMigrationService();
+
+          final initialDraft = await service.draftFromDatabase(
+            executor: connection,
+            target: target,
+            migrationName: '20260317_init_mapped_schema',
+          );
+          expect(initialDraft.plan.statements, isNotEmpty);
+
+          final applyResult = await service.applySchema(
+            executor: connection,
+            target: target,
+            migrationName: '20260317_init_mapped_schema',
+          );
+          expect(applyResult.applied, isTrue);
+          expect(applyResult.plan.warnings, isEmpty);
+
+          final repeatedDraft = await service.draftFromDatabase(
+            executor: connection,
+            target: target,
+            migrationName: '20260317_repeat_mapped_schema',
+          );
+
+          expect(
+            repeatedDraft.plan.statements,
+            isEmpty,
+            reason: repeatedDraft.plan.statements.join(' | '),
+          );
+          expect(
+            repeatedDraft.plan.warnings,
+            isEmpty,
+            reason: repeatedDraft.plan.warnings.join(' | '),
+          );
+          expect(repeatedDraft.plan.isEmpty, isTrue);
+        } finally {
+          await connection.close();
+        }
+      },
+      timeout: const Timeout(Duration(minutes: 3)),
+    );
+
+    test(
+      'produces empty live diff after apply for the same simple schema',
+      () async {
+        if (!dockerAvailable) {
+          return;
+        }
+
+        final target = const SchemaParser().parse('''
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  name String
+  createdAt DateTime @default(now())
+}
+''');
+
+        final connection = await harness!.openConnection();
+        try {
+          const service = PostgresqlMigrationService();
+          await service.applySchema(
+            executor: connection,
+            target: target,
+            migrationName: '20260317_simple_init',
+          );
+
+          final repeatedDraft = await service.draftFromDatabase(
+            executor: connection,
+            target: target,
+            migrationName: '20260317_simple_repeat',
+          );
+
+          expect(repeatedDraft.plan.isEmpty, isTrue);
+          expect(repeatedDraft.plan.statements, isEmpty);
+          expect(repeatedDraft.plan.warnings, isEmpty);
+        } finally {
+          await connection.close();
+        }
+      },
+      timeout: const Timeout(Duration(minutes: 3)),
+    );
+
+    test(
       'blocks destructive rollback without override and falls back to DB snapshots',
       () async {
         if (!dockerAvailable) {
@@ -713,6 +855,74 @@ model Todo {
                 ?.arguments['value'],
             'pending',
           );
+        } finally {
+          await connection.close();
+        }
+      },
+      timeout: const Timeout(Duration(minutes: 2)),
+    );
+
+    test(
+      'round-trips mapped PostgreSQL enums back to the original target without extra migration statements',
+      () async {
+        if (!dockerAvailable) {
+          return;
+        }
+
+        final target = const SchemaParser().parse('''
+enum TodoStatus {
+  pending
+  done
+  @@map("task_status")
+}
+
+model Todo {
+  id Int @id @default(autoincrement())
+  title String
+  status TodoStatus @default(pending)
+}
+''');
+
+        final connection = await harness!.openConnection();
+        try {
+          final service = const PostgresqlMigrationService();
+          final applyResult = await service.applySchema(
+            executor: connection,
+            target: target,
+            migrationName: '20260318_mapped_enum_roundtrip_bootstrap',
+          );
+
+          expect(applyResult.applied, isTrue);
+          expect(applyResult.plan.warnings, isEmpty);
+
+          final introspected = filterSchemaForUserModels(
+            await const PostgresqlSchemaIntrospector().introspect(connection),
+            historyTableName: PostgresqlMigrationRunner.historyTableName,
+          );
+          final introspectedEnum = introspected.findEnumByDatabaseName(
+            'task_status',
+          );
+          expect(introspectedEnum, isNotNull);
+          expect(introspectedEnum!.name, 'TaskStatus');
+          expect(
+            introspectedEnum.attribute('map')?.arguments['value'],
+            '"task_status"',
+          );
+
+          final planner = const PostgresqlMigrationPlanner();
+          final directPlan = planner.plan(from: introspected, to: target);
+          expect(directPlan.statements, isEmpty);
+          expect(directPlan.warnings, isEmpty);
+          expect(directPlan.requiresRebuild, isFalse);
+
+          final draft = await service.draftFromDatabase(
+            executor: connection,
+            target: target,
+            migrationName: '20260318_mapped_enum_roundtrip_noop',
+          );
+          expect(draft.plan.statements, isEmpty);
+          expect(draft.plan.warnings, isEmpty);
+          expect(draft.plan.requiresRebuild, isFalse);
         } finally {
           await connection.close();
         }
@@ -1147,6 +1357,65 @@ model Tag {
             introspected.findModel('Tag')?.findField('users')?.isList,
             isTrue,
           );
+        } finally {
+          await connection.close();
+        }
+      },
+      timeout: const Timeout(Duration(minutes: 2)),
+    );
+
+    test(
+      'introspects compound-id implicit many-to-many storage back into list relations',
+      () async {
+        if (!dockerAvailable) {
+          return;
+        }
+
+        final relationSchema = const SchemaParser().parse('''
+model User {
+  tenantId Int
+  slug     String
+  name     String
+  tags     Tag[]
+
+  @@id([tenantId, slug])
+}
+
+model Tag {
+  scope String
+  code  String
+  label String
+  users User[]
+
+  @@id([scope, code])
+}
+''');
+
+        final connection = await harness!.openConnection();
+        try {
+          await const PostgresqlSchemaApplier().apply(
+            connection,
+            relationSchema,
+          );
+
+          final introspected = await const PostgresqlSchemaIntrospector()
+              .introspect(connection);
+          expect(
+            introspected.findModel('User')?.findField('tags')?.isList,
+            isTrue,
+          );
+          expect(
+            introspected.findModel('Tag')?.findField('users')?.isList,
+            isTrue,
+          );
+          expect(introspected.findModel('User')?.primaryKeyFields, <String>[
+            'tenantId',
+            'slug',
+          ]);
+          expect(introspected.findModel('Tag')?.primaryKeyFields, <String>[
+            'scope',
+            'code',
+          ]);
         } finally {
           await connection.close();
         }

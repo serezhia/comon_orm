@@ -378,6 +378,59 @@ model User {
       expect(executor.queries.last.parameters, <Object?>['%ice']);
     });
 
+    test('pushes cursor pagination into SQL for findMany', () async {
+      executor.queryResponses.add(const <Map<String, Object?>>[
+        <String, Object?>{
+          '__ctid__': '(0,2)',
+          'id': 2,
+          'name': 'Bob',
+          'email': 'b@x.dev',
+          'role': 'developer',
+        },
+      ]);
+      executor.queryResponses.add(const <Map<String, Object?>>[
+        <String, Object?>{
+          '__ctid__': '(0,3)',
+          'id': 3,
+          'name': 'Charlie',
+          'email': 'c@x.dev',
+          'role': 'manager',
+        },
+      ]);
+
+      final rows = await adapter.findMany(
+        const FindManyQuery(
+          model: 'User',
+          cursor: QueryCursor(
+            where: <QueryPredicate>[
+              QueryPredicate(
+                field: 'email',
+                operator: 'equals',
+                value: 'b@x.dev',
+              ),
+            ],
+          ),
+          orderBy: <QueryOrderBy>[
+            QueryOrderBy(field: 'name', direction: SortOrder.asc),
+          ],
+          skip: 1,
+          take: 1,
+        ),
+      );
+
+      expect(rows, hasLength(1));
+      expect(rows.single['name'], 'Charlie');
+      expect(executor.queries, hasLength(2));
+      expect(executor.queries.first.sql, contains('WHERE ("t0"."email" = \$1)'));
+      expect(executor.queries.first.sql, contains('LIMIT \$2'));
+      expect(executor.queries.first.parameters, <Object?>['b@x.dev', 1]);
+      expect(executor.queries.last.sql, contains('ORDER BY "t0"."name" ASC'));
+      expect(executor.queries.last.sql, contains('("t0"."name" > \$1)'));
+      expect(executor.queries.last.sql, contains('LIMIT \$3'));
+      expect(executor.queries.last.sql, contains('OFFSET \$4'));
+      expect(executor.queries.last.parameters, <Object?>['Bob', 'Bob', 1, 1]);
+    });
+
     test('materializes include by issuing relation query', () async {
       executor.queryResponses.add(const <Map<String, Object?>>[
         <String, Object?>{

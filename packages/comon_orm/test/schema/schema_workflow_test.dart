@@ -285,10 +285,15 @@ model Post {
                 final issue = error.issues.singleWhere(
                   (value) => value.message.contains('Unknown relation target'),
                 );
-                return (issue.filePath, issue.line, issue.fieldName);
+                return (
+                  issue.filePath,
+                  issue.line,
+                  issue.column,
+                  issue.fieldName,
+                );
               },
               'issue tuple',
-              (File(schemaPath).absolute.path, 3, 'author'),
+              (File(schemaPath).absolute.path, 3, 3, 'author'),
             ),
           ),
         );

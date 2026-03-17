@@ -59,6 +59,38 @@ abstract interface class DatabaseAdapter {
   /// Deletes every record matched by [query].
   Future<int> deleteMany(DeleteManyQuery query);
 
+  /// Creates or updates a single record described by [query].
+  ///
+  /// If a record matching [UpsertQuery.where] exists, it is updated with
+  /// [UpsertQuery.update]. Otherwise a new record is created using
+  /// [UpsertQuery.create].
+  Future<Map<String, Object?>> upsert(UpsertQuery query);
+
+  /// Inserts multiple records described by [query].
+  ///
+  /// Returns the number of records actually inserted.
+  Future<int> createMany(CreateManyQuery query);
+
+  /// Executes a raw SQL query and returns the result rows.
+  ///
+  /// [sql] must use the adapter's native parameter placeholder syntax and
+  /// [parameters] must be passed separately — never interpolate user data
+  /// directly into the SQL string.
+  Future<List<Map<String, Object?>>> rawQuery(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]);
+
+  /// Executes a raw SQL statement and returns the number of affected rows.
+  ///
+  /// [sql] must use the adapter's native parameter placeholder syntax and
+  /// [parameters] must be passed separately — never interpolate user data
+  /// directly into the SQL string.
+  Future<int> rawExecute(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]);
+
   /// Runs [action] inside a backend transaction.
   Future<T> transaction<T>(Future<T> Function(DatabaseAdapter tx) action);
 
@@ -226,10 +258,45 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
   @override
   Future<List<Map<String, Object?>>> findMany(FindManyQuery query) async {
     final records = _store[query.model] ?? const <Map<String, Object?>>[];
-    final ordered = _applyWhereAndOrderBy(records, query.where, query.orderBy);
-    final distinct = applyDistinctRecords(ordered, query.distinct);
-    final skipped = query.skip == null ? distinct : distinct.skip(query.skip!);
-    final taken = query.take == null ? skipped : skipped.take(query.take!);
+    final orderBy = _cursorOrderBy(query.model, query.orderBy, query.cursor);
+    final ordered = _applyWhereAndOrderBy(records, query.where, orderBy);
+    final distinct = applyDistinctRecords(
+      ordered,
+      query.distinct,
+    ).toList(growable: false);
+
+    late final Iterable<Map<String, Object?>> taken;
+    if (query.cursor == null) {
+      final skipped = query.skip == null
+          ? distinct
+          : distinct.skip(query.skip!);
+      taken = query.take == null ? skipped : skipped.take(query.take!);
+    } else {
+      final cursorIndex = distinct.indexWhere(
+        (record) => _matchesWhere(record, query.cursor!.where),
+      );
+      if (cursorIndex < 0) {
+        return const <Map<String, Object?>>[];
+      }
+      final effectiveSkip = query.skip ?? 0;
+      if (query.take == null) {
+        final startIndex = cursorIndex + effectiveSkip;
+        taken = distinct.skip(startIndex < 0 ? 0 : startIndex);
+      } else if (query.take! >= 0) {
+        final startIndex = cursorIndex + effectiveSkip;
+        taken = distinct
+            .skip(startIndex < 0 ? 0 : startIndex)
+            .take(query.take!);
+      } else {
+        final endExclusive = cursorIndex + 1 - effectiveSkip;
+        final boundedEndExclusive = endExclusive <= 0
+            ? 0
+            : (endExclusive > distinct.length ? distinct.length : endExclusive);
+        final startInclusive = boundedEndExclusive + query.take!;
+        final boundedStart = startInclusive < 0 ? 0 : startInclusive;
+        taken = distinct.sublist(boundedStart, boundedEndExclusive);
+      }
+    }
 
     return taken
         .map(
@@ -266,6 +333,26 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
 
   @override
   Future<Map<String, Object?>?> findFirst(FindFirstQuery query) async {
+    if (query.cursor != null) {
+      final records = await findMany(
+        FindManyQuery(
+          model: query.model,
+          where: query.where,
+          cursor: query.cursor,
+          orderBy: query.orderBy,
+          distinct: query.distinct,
+          include: query.include,
+          select: query.select,
+          skip: query.skip,
+          take: 1,
+        ),
+      );
+      if (records.isEmpty) {
+        return null;
+      }
+      return records.first;
+    }
+
     final records = _store[query.model] ?? const <Map<String, Object?>>[];
     final ordered = _applyWhereAndOrderBy(records, query.where, query.orderBy);
     final distinct = applyDistinctRecords(ordered, query.distinct);
@@ -421,6 +508,72 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
   }
 
   @override
+  Future<Map<String, Object?>> upsert(UpsertQuery query) async {
+    return transaction((tx) async {
+      final adapter = tx as InMemoryDatabaseAdapter;
+      final existing = await adapter.findUnique(
+        FindUniqueQuery(model: query.model, where: query.where),
+      );
+      if (existing != null) {
+        return adapter.update(
+          UpdateQuery(
+            model: query.model,
+            where: query.where,
+            data: query.update,
+            include: query.include,
+            select: query.select,
+          ),
+        );
+      }
+      return adapter.create(
+        CreateQuery(
+          model: query.model,
+          data: query.create,
+          include: query.include,
+        ),
+      );
+    });
+  }
+
+  @override
+  Future<int> createMany(CreateManyQuery query) async {
+    if (query.data.isEmpty) {
+      return 0;
+    }
+    return transaction((tx) async {
+      final adapter = tx as InMemoryDatabaseAdapter;
+      var count = 0;
+      for (final row in query.data) {
+        await adapter.create(CreateQuery(model: query.model, data: row));
+        count++;
+      }
+      return count;
+    });
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> rawQuery(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) {
+    throw UnsupportedError(
+      'rawQuery is not supported by InMemoryDatabaseAdapter. '
+      'Use a real database adapter for raw SQL queries.',
+    );
+  }
+
+  @override
+  Future<int> rawExecute(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) {
+    throw UnsupportedError(
+      'rawExecute is not supported by InMemoryDatabaseAdapter. '
+      'Use a real database adapter for raw SQL statements.',
+    );
+  }
+
+  @override
   Future<T> transaction<T>(Future<T> Function(DatabaseAdapter tx) action) {
     final snapshot = <String, List<Map<String, Object?>>>{
       for (final entry in _store.entries)
@@ -516,6 +669,24 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
 
     filtered.sort((left, right) => _compareRecords(left, right, orderBy));
     return filtered;
+  }
+
+  List<QueryOrderBy> _cursorOrderBy(
+    String model,
+    List<QueryOrderBy> orderBy,
+    QueryCursor? cursor,
+  ) {
+    if (cursor == null || orderBy.isNotEmpty) {
+      return orderBy;
+    }
+    final primaryKeyFields =
+        _schema?.findModel(model)?.primaryKeyFields ?? const <String>[];
+    if (primaryKeyFields.isEmpty) {
+      return orderBy;
+    }
+    return primaryKeyFields
+        .map((field) => QueryOrderBy(field: field, direction: SortOrder.asc))
+        .toList(growable: false);
   }
 
   int _compareRecords(

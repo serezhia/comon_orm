@@ -11,16 +11,18 @@ extension on ClientGenerator {
     final comparableFields = _comparableAggregateFields(schema, model);
 
     _writeCountAggregateInputClass(buffer, model, scalarFields);
-    _writeFieldSelectionInputClass(
-      buffer,
-      className: '${model.name}AvgAggregateInput',
-      fields: numericFields,
-    );
-    _writeFieldSelectionInputClass(
-      buffer,
-      className: '${model.name}SumAggregateInput',
-      fields: numericFields,
-    );
+    if (numericFields.isNotEmpty) {
+      _writeFieldSelectionInputClass(
+        buffer,
+        className: '${model.name}AvgAggregateInput',
+        fields: numericFields,
+      );
+      _writeFieldSelectionInputClass(
+        buffer,
+        className: '${model.name}SumAggregateInput',
+        fields: numericFields,
+      );
+    }
     _writeFieldSelectionInputClass(
       buffer,
       className: '${model.name}MinAggregateInput',
@@ -128,32 +130,34 @@ extension on ClientGenerator {
     final comparableFields = _comparableAggregateFields(schema, model);
 
     _writeCountAggregateResultClass(buffer, model, scalarFields);
-    _writeAggregateValueResultClass(
-      buffer,
-      schema,
-      className: '${model.name}AvgAggregateResult',
-      fields: numericFields,
-      mapType: 'Map<String, double?>',
-      valueExpression: (field, access) => _aggregateValueExpression(
+    if (numericFields.isNotEmpty) {
+      _writeAggregateValueResultClass(
+        buffer,
         schema,
-        field,
-        access,
-        aggregateKind: 'avg',
-      ),
-    );
-    _writeAggregateValueResultClass(
-      buffer,
-      schema,
-      className: '${model.name}SumAggregateResult',
-      fields: numericFields,
-      mapType: 'Map<String, num?>',
-      valueExpression: (field, access) => _aggregateValueExpression(
+        className: '${model.name}AvgAggregateResult',
+        fields: numericFields,
+        mapType: 'Map<String, double?>',
+        valueExpression: (field, access) => _aggregateValueExpression(
+          schema,
+          field,
+          access,
+          aggregateKind: 'avg',
+        ),
+      );
+      _writeAggregateValueResultClass(
+        buffer,
         schema,
-        field,
-        access,
-        aggregateKind: 'sum',
-      ),
-    );
+        className: '${model.name}SumAggregateResult',
+        fields: numericFields,
+        mapType: 'Map<String, num?>',
+        valueExpression: (field, access) => _aggregateValueExpression(
+          schema,
+          field,
+          access,
+          aggregateKind: 'sum',
+        ),
+      );
+    }
     _writeAggregateValueResultClass(
       buffer,
       schema,
@@ -185,16 +189,24 @@ extension on ClientGenerator {
     buffer
       ..writeln('class $aggregateClassName {')
       ..writeln('  const $aggregateClassName({')
-      ..writeln('    this.count,')
-      ..writeln('    this.avg,')
-      ..writeln('    this.sum,')
+      ..writeln('    this.count,');
+    if (numericFields.isNotEmpty) {
+      buffer
+        ..writeln('    this.avg,')
+        ..writeln('    this.sum,');
+    }
+    buffer
       ..writeln('    this.min,')
       ..writeln('    this.max,')
       ..writeln('  });')
       ..writeln()
-      ..writeln('  final ${model.name}CountAggregateResult? count;')
-      ..writeln('  final ${model.name}AvgAggregateResult? avg;')
-      ..writeln('  final ${model.name}SumAggregateResult? sum;')
+      ..writeln('  final ${model.name}CountAggregateResult? count;');
+    if (numericFields.isNotEmpty) {
+      buffer
+        ..writeln('  final ${model.name}AvgAggregateResult? avg;')
+        ..writeln('  final ${model.name}SumAggregateResult? sum;');
+    }
+    buffer
       ..writeln('  final ${model.name}MinAggregateResult? min;')
       ..writeln('  final ${model.name}MaxAggregateResult? max;')
       ..writeln()
@@ -204,13 +216,17 @@ extension on ClientGenerator {
       ..writeln('    return $aggregateClassName(')
       ..writeln(
         '      count: result.count == null ? null : ${model.name}CountAggregateResult.fromQueryCountResult(result.count!),',
-      )
-      ..writeln(
-        '      avg: result.avg == null ? null : ${model.name}AvgAggregateResult.fromMap(result.avg!),',
-      )
-      ..writeln(
-        '      sum: result.sum == null ? null : ${model.name}SumAggregateResult.fromMap(result.sum!),',
-      )
+      );
+    if (numericFields.isNotEmpty) {
+      buffer
+        ..writeln(
+          '      avg: result.avg == null ? null : ${model.name}AvgAggregateResult.fromMap(result.avg!),',
+        )
+        ..writeln(
+          '      sum: result.sum == null ? null : ${model.name}SumAggregateResult.fromMap(result.sum!),',
+        );
+    }
+    buffer
       ..writeln(
         '      min: result.min == null ? null : ${model.name}MinAggregateResult.fromMap(result.min!),',
       )
@@ -319,26 +335,33 @@ extension on ClientGenerator {
     ModelDefinition model,
   ) {
     final scalarFields = _scalarFields(schema, model);
+    if (scalarFields.length <= 1) return;
+
     final numericFields = _numericAggregateFields(schema, model);
     final comparableFields = _comparableAggregateFields(schema, model);
+    final hasNumeric = numericFields.isNotEmpty;
 
-    _writeGroupByHavingInputClass(buffer, model, numericFields);
+    if (hasNumeric) {
+      _writeGroupByHavingInputClass(buffer, model, numericFields);
+    }
     _writeAggregateOrderByInputClass(
       buffer,
       className: '${model.name}CountAggregateOrderByInput',
       fields: scalarFields,
       includeAll: true,
     );
-    _writeAggregateOrderByInputClass(
-      buffer,
-      className: '${model.name}AvgAggregateOrderByInput',
-      fields: numericFields,
-    );
-    _writeAggregateOrderByInputClass(
-      buffer,
-      className: '${model.name}SumAggregateOrderByInput',
-      fields: numericFields,
-    );
+    if (hasNumeric) {
+      _writeAggregateOrderByInputClass(
+        buffer,
+        className: '${model.name}AvgAggregateOrderByInput',
+        fields: numericFields,
+      );
+      _writeAggregateOrderByInputClass(
+        buffer,
+        className: '${model.name}SumAggregateOrderByInput',
+        fields: numericFields,
+      );
+    }
     _writeAggregateOrderByInputClass(
       buffer,
       className: '${model.name}MinAggregateOrderByInput',
@@ -349,8 +372,8 @@ extension on ClientGenerator {
       className: '${model.name}MaxAggregateOrderByInput',
       fields: comparableFields,
     );
-    _writeGroupByOrderByInputClass(buffer, schema, model);
-    _writeGroupByRowClass(buffer, schema, model);
+    _writeGroupByOrderByInputClass(buffer, schema, model, hasNumeric: hasNumeric);
+    _writeGroupByRowClass(buffer, schema, model, hasNumeric: hasNumeric);
   }
 
   void _writeGroupByHavingInputClass(
@@ -462,8 +485,9 @@ extension on ClientGenerator {
   void _writeGroupByOrderByInputClass(
     StringBuffer buffer,
     SchemaDocument schema,
-    ModelDefinition model,
-  ) {
+    ModelDefinition model, {
+    bool hasNumeric = true,
+  }) {
     final className = '${model.name}GroupByOrderByInput';
     final scalarFields = _scalarFields(schema, model);
 
@@ -475,7 +499,11 @@ extension on ClientGenerator {
       buffer.write('this.${field.name}, ');
     }
 
-    buffer.write('this.count, this.avg, this.sum, this.min, this.max');
+    buffer.write('this.count, ');
+    if (hasNumeric) {
+      buffer.write('this.avg, this.sum, ');
+    }
+    buffer.write('this.min, this.max');
     buffer
       ..writeln('});')
       ..writeln();
@@ -483,10 +511,13 @@ extension on ClientGenerator {
     for (final field in scalarFields) {
       buffer.writeln('  final SortOrder? ${field.name};');
     }
+    buffer.writeln('  final ${model.name}CountAggregateOrderByInput? count;');
+    if (hasNumeric) {
+      buffer
+        ..writeln('  final ${model.name}AvgAggregateOrderByInput? avg;')
+        ..writeln('  final ${model.name}SumAggregateOrderByInput? sum;');
+    }
     buffer
-      ..writeln('  final ${model.name}CountAggregateOrderByInput? count;')
-      ..writeln('  final ${model.name}AvgAggregateOrderByInput? avg;')
-      ..writeln('  final ${model.name}SumAggregateOrderByInput? sum;')
       ..writeln('  final ${model.name}MinAggregateOrderByInput? min;')
       ..writeln('  final ${model.name}MaxAggregateOrderByInput? max;')
       ..writeln()
@@ -507,17 +538,21 @@ extension on ClientGenerator {
       ..writeln(
         '      orderings.addAll(count!.toGroupByOrderBy(QueryAggregateFunction.count));',
       )
-      ..writeln('    }')
-      ..writeln('    if (avg != null) {')
-      ..writeln(
-        '      orderings.addAll(avg!.toGroupByOrderBy(QueryAggregateFunction.avg));',
-      )
-      ..writeln('    }')
-      ..writeln('    if (sum != null) {')
-      ..writeln(
-        '      orderings.addAll(sum!.toGroupByOrderBy(QueryAggregateFunction.sum));',
-      )
-      ..writeln('    }')
+      ..writeln('    }');
+    if (hasNumeric) {
+      buffer
+        ..writeln('    if (avg != null) {')
+        ..writeln(
+          '      orderings.addAll(avg!.toGroupByOrderBy(QueryAggregateFunction.avg));',
+        )
+        ..writeln('    }')
+        ..writeln('    if (sum != null) {')
+        ..writeln(
+          '      orderings.addAll(sum!.toGroupByOrderBy(QueryAggregateFunction.sum));',
+        )
+        ..writeln('    }');
+    }
+    buffer
       ..writeln('    if (min != null) {')
       ..writeln(
         '      orderings.addAll(min!.toGroupByOrderBy(QueryAggregateFunction.min));',
@@ -537,8 +572,9 @@ extension on ClientGenerator {
   void _writeGroupByRowClass(
     StringBuffer buffer,
     SchemaDocument schema,
-    ModelDefinition model,
-  ) {
+    ModelDefinition model, {
+    bool hasNumeric = true,
+  }) {
     final className = '${model.name}GroupByRow';
     final scalarFields = _scalarFields(schema, model);
 
@@ -550,8 +586,12 @@ extension on ClientGenerator {
       buffer.write('this.${field.name}, ');
     }
 
+    buffer.write('this.count, ');
+    if (hasNumeric) {
+      buffer.write('this.avg, this.sum, ');
+    }
     buffer
-      ..writeln('this.count, this.avg, this.sum, this.min, this.max});')
+      ..writeln('this.min, this.max});')
       ..writeln();
 
     for (final field in scalarFields) {
@@ -559,10 +599,13 @@ extension on ClientGenerator {
         '  final ${_dartFieldType(schema, field, optional: true)} ${field.name};',
       );
     }
+    buffer.writeln('  final ${model.name}CountAggregateResult? count;');
+    if (hasNumeric) {
+      buffer
+        ..writeln('  final ${model.name}AvgAggregateResult? avg;')
+        ..writeln('  final ${model.name}SumAggregateResult? sum;');
+    }
     buffer
-      ..writeln('  final ${model.name}CountAggregateResult? count;')
-      ..writeln('  final ${model.name}AvgAggregateResult? avg;')
-      ..writeln('  final ${model.name}SumAggregateResult? sum;')
       ..writeln('  final ${model.name}MinAggregateResult? min;')
       ..writeln('  final ${model.name}MaxAggregateResult? max;')
       ..writeln()
@@ -577,16 +620,19 @@ extension on ClientGenerator {
       );
     }
 
+    buffer.writeln(
+      '      count: row.aggregates.count == null ? null : ${model.name}CountAggregateResult.fromQueryCountResult(row.aggregates.count!),',
+    );
+    if (hasNumeric) {
+      buffer
+        ..writeln(
+          '      avg: row.aggregates.avg == null ? null : ${model.name}AvgAggregateResult.fromMap(row.aggregates.avg!),',
+        )
+        ..writeln(
+          '      sum: row.aggregates.sum == null ? null : ${model.name}SumAggregateResult.fromMap(row.aggregates.sum!),',
+        );
+    }
     buffer
-      ..writeln(
-        '      count: row.aggregates.count == null ? null : ${model.name}CountAggregateResult.fromQueryCountResult(row.aggregates.count!),',
-      )
-      ..writeln(
-        '      avg: row.aggregates.avg == null ? null : ${model.name}AvgAggregateResult.fromMap(row.aggregates.avg!),',
-      )
-      ..writeln(
-        '      sum: row.aggregates.sum == null ? null : ${model.name}SumAggregateResult.fromMap(row.aggregates.sum!),',
-      )
       ..writeln(
         '      min: row.aggregates.min == null ? null : ${model.name}MinAggregateResult.fromMap(row.aggregates.min!),',
       )
@@ -598,4 +644,50 @@ extension on ClientGenerator {
       ..writeln('}')
       ..writeln();
   }
+}
+
+/// Builds aggregate-input IR classes for [model] without rendering to a string.
+///
+/// Returns a [CodeUnit] whose [CodeUnit.classes] list contains exactly the
+/// `Count`, `Avg` (if numeric fields exist), `Sum` (if numeric fields exist),
+/// `Min`, and `Max` aggregate-input classes in that order. The result can be
+/// used in tests to verify structure independently of rendered source.
+CodeUnit buildAggregateInputIr(
+  SchemaDocument schema,
+  ModelDefinition model,
+) {
+  final generator = const ClientGenerator();
+  final scalarFields = generator._scalarFields(schema, model);
+  final numericFields = generator._numericAggregateFields(schema, model);
+  final comparableFields = generator._comparableAggregateFields(schema, model);
+
+  CodeClass inputClass(String className, List<FieldDefinition> fields) =>
+      CodeClass(
+        name: className,
+        constructors: [
+          CodeConstructor(
+            className: className,
+            parameters: [
+              for (final f in fields)
+                CodeParameter(name: f.name, isThis: true, defaultValue: 'false'),
+            ],
+          ),
+        ],
+        fields: [
+          for (final f in fields)
+            CodeField(name: f.name, type: 'bool', defaultValue: 'false'),
+        ],
+      );
+
+  return CodeUnit(
+    classes: [
+      inputClass('${model.name}CountAggregateInput', scalarFields),
+      if (numericFields.isNotEmpty) ...[
+        inputClass('${model.name}AvgAggregateInput', numericFields),
+        inputClass('${model.name}SumAggregateInput', numericFields),
+      ],
+      inputClass('${model.name}MinAggregateInput', comparableFields),
+      inputClass('${model.name}MaxAggregateInput', comparableFields),
+    ],
+  );
 }

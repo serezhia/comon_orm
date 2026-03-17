@@ -6,6 +6,8 @@ List<String> detectPotentialDataLossWarnings({
   required SchemaDocument from,
   required SchemaDocument to,
 }) {
+  from = from.withoutIgnored();
+  to = to.withoutIgnored();
   final warnings = <String>[];
   final matchedSourceEnumNames = <String>{};
   final matchedEnumPairs = <String>{};
@@ -49,32 +51,40 @@ List<String> detectPotentialDataLossWarnings({
     );
   }
 
-  final sourceModels = {for (final model in from.models) model.name: model};
+  final sourceModelsByName = {
+    for (final model in from.models) model.name: model,
+  };
+  final sourceModelsByDatabaseName = {
+    for (final model in from.models) model.databaseName: model,
+  };
   final targetModels = {for (final model in to.models) model.name: model};
 
-  for (final removedModel in sourceModels.keys.where(
-    (name) => !targetModels.containsKey(name),
-  )) {
-    warnings.add(
-      'Potential data loss: model $removedModel is removed from the target schema.',
-    );
-  }
-
   for (final entry in targetModels.entries) {
-    final sourceModel = sourceModels[entry.key];
     final targetModel = entry.value;
+    final sourceModel =
+        sourceModelsByName.remove(entry.key) ??
+        sourceModelsByDatabaseName.remove(targetModel.databaseName);
     if (sourceModel == null) {
       continue;
     }
+    sourceModelsByName.remove(sourceModel.name);
+    sourceModelsByDatabaseName.remove(sourceModel.databaseName);
 
-    final sourceFields = {
+    final sourceFieldsByName = {
       for (final field in sourceModel.fields) field.name: field,
     };
+    final sourceFieldsByDatabaseName = {
+      for (final field in sourceModel.fields) field.databaseName: field,
+    };
     for (final targetField in targetModel.fields) {
-      final sourceField = sourceFields.remove(targetField.name);
+      final sourceField =
+          sourceFieldsByName.remove(targetField.name) ??
+          sourceFieldsByDatabaseName.remove(targetField.databaseName);
       if (sourceField == null) {
         continue;
       }
+      sourceFieldsByName.remove(sourceField.name);
+      sourceFieldsByDatabaseName.remove(sourceField.databaseName);
       final warning = _fieldRiskWarning(
         modelName: targetModel.name,
         sourceField: sourceField,
@@ -88,14 +98,28 @@ List<String> detectPotentialDataLossWarnings({
       }
     }
 
-    for (final removedField in sourceFields.values) {
-      if (!removedField.isScalar && removedField.isList) {
+    for (final removedField in sourceModel.fields.where(
+      (field) =>
+          sourceFieldsByName.containsKey(field.name) ||
+          sourceFieldsByDatabaseName.containsKey(field.databaseName),
+    )) {
+      if (_isRelationField(from, removedField)) {
         continue;
       }
       warnings.add(
         'Potential data loss: field ${sourceModel.name}.${removedField.name} is removed from the target schema.',
       );
     }
+  }
+
+  for (final removedModel in from.models.where(
+    (model) =>
+        sourceModelsByName.containsKey(model.name) ||
+        sourceModelsByDatabaseName.containsKey(model.databaseName),
+  )) {
+    warnings.add(
+      'Potential data loss: model ${removedModel.name} is removed from the target schema.',
+    );
   }
 
   final sourceStorages = {
@@ -147,6 +171,12 @@ String? _fieldRiskWarning({
     return 'Potential data loss: field $modelName.${targetField.name} changes from optional to required.';
   }
   return null;
+}
+
+bool _isRelationField(SchemaDocument schema, FieldDefinition field) {
+  return !field.isScalar &&
+      schema.findEnum(field.type) == null &&
+      schema.findEnumByDatabaseName(field.type) == null;
 }
 
 EnumDefinition? _inferRenamedSourceEnum({

@@ -57,6 +57,8 @@ class SqliteMigrationPlanner {
     required SchemaDocument from,
     required SchemaDocument to,
   }) {
+    from = from.withoutIgnored();
+    to = to.withoutIgnored();
     final statements = <String>[];
     final warnings = <String>[];
     var requiresRebuild = false;

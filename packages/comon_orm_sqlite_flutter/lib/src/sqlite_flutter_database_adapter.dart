@@ -461,6 +461,74 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
   }
 
   @override
+  Future<Map<String, Object?>> upsert(UpsertQuery query) async {
+    return transaction((tx) async {
+      final txAdapter = tx as SqliteFlutterDatabaseAdapter;
+      final existing = await txAdapter.findUnique(
+        FindUniqueQuery(model: query.model, where: query.where),
+      );
+      if (existing != null) {
+        return txAdapter.update(
+          UpdateQuery(
+            model: query.model,
+            where: query.where,
+            data: query.update,
+            include: query.include,
+            select: query.select,
+          ),
+        );
+      }
+      return txAdapter.create(
+        CreateQuery(
+          model: query.model,
+          data: query.create,
+          include: query.include,
+        ),
+      );
+    });
+  }
+
+  @override
+  Future<int> createMany(CreateManyQuery query) async {
+    if (query.data.isEmpty) {
+      return 0;
+    }
+    return transaction((tx) async {
+      final txAdapter = tx as SqliteFlutterDatabaseAdapter;
+      var count = 0;
+      for (final row in query.data) {
+        await txAdapter._insertRecord(
+          query.model,
+          txAdapter._applyAutomaticFieldValues(
+            query.model,
+            row,
+            isCreate: true,
+          ),
+        );
+        count++;
+      }
+      return count;
+    });
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> rawQuery(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) async {
+    final result = await _executor.rawQuery(sql, parameters);
+    return List<Map<String, Object?>>.unmodifiable(result);
+  }
+
+  @override
+  Future<int> rawExecute(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) {
+    return _executor.rawUpdate(sql, parameters);
+  }
+
+  @override
   Future<Map<String, Object?>?> findFirst(FindFirstQuery query) async {
     if (query.distinct.isNotEmpty) {
       final records = await findMany(
@@ -511,36 +579,32 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
       offset: query.distinct.isEmpty ? query.skip : null,
     );
 
-    final records = query.distinct.isEmpty
-        ? rows.map((row) => row.record).toList(growable: false)
-        : () {
-            final distinct = applyDistinctRecords(
-              rows.map((row) => row.record),
-              query.distinct,
-            );
-            final skipped = query.skip == null
-                ? distinct
-                : distinct.skip(query.skip!).toList(growable: false);
-            final taken = query.take == null
-                ? skipped
-                : skipped.take(query.take!).toList(growable: false);
-            return List<Map<String, Object?>>.unmodifiable(taken);
-          }();
-
-    final materialized = <Map<String, Object?>>[];
-    for (final record in records) {
-      materialized.add(
-        Map<String, Object?>.unmodifiable(
-          await _materializeRecord(
-            query.model,
-            record,
-            include: query.include,
-            select: query.select,
-          ),
-        ),
+    final List<Map<String, Object?>> rawRecords;
+    if (query.distinct.isEmpty) {
+      rawRecords = rows.map((row) => row.record).toList(growable: false);
+    } else {
+      final distinct = applyDistinctRecords(
+        rows.map((row) => row.record),
+        query.distinct,
       );
+      final skipped = query.skip == null
+          ? distinct
+          : distinct.skip(query.skip!).toList(growable: false);
+      final taken = query.take == null
+          ? skipped
+          : skipped.take(query.take!).toList(growable: false);
+      rawRecords = List<Map<String, Object?>>.unmodifiable(taken);
     }
-    return List<Map<String, Object?>>.unmodifiable(materialized);
+
+    final materialized = await _materializeRecordsBatch(
+      query.model,
+      rawRecords,
+      include: query.include,
+      select: query.select,
+    );
+    return List<Map<String, Object?>>.unmodifiable(
+      materialized.map(Map<String, Object?>.unmodifiable),
+    );
   }
 
   @override
@@ -788,6 +852,126 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
     }
 
     return base;
+  }
+
+  /// Materializes a batch of records, resolving includes with a single query
+  /// per relation level instead of one query per parent row (N+1 avoidance).
+  Future<List<Map<String, Object?>>> _materializeRecordsBatch(
+    String model,
+    List<Map<String, Object?>> rawRecords, {
+    required QueryInclude? include,
+    required QuerySelect? select,
+  }) async {
+    if (rawRecords.isEmpty) return const <Map<String, Object?>>[];
+
+    final results = rawRecords
+        .map(
+          (raw) => SqliteQuerySupport.selectMaterializedRecordFields(
+            record: raw,
+            select: select,
+          ),
+        )
+        .toList(growable: false);
+
+    if (include == null) return results;
+
+    for (final entry in include.relations.entries) {
+      await _applyBatchInclude(
+        model: model,
+        rawRecords: rawRecords,
+        results: results,
+        includeKey: entry.key,
+        entry: entry.value,
+      );
+    }
+
+    return results;
+  }
+
+  /// Resolves a single include relation across all parent records at once.
+  /// Falls back to per-row resolution for M2M and compound FK relations.
+  Future<void> _applyBatchInclude({
+    required String model,
+    required List<Map<String, Object?>> rawRecords,
+    required List<Map<String, Object?>> results,
+    required String includeKey,
+    required QueryIncludeEntry entry,
+  }) async {
+    final relation = entry.relation;
+
+    if (relation.storageKind == QueryRelationStorageKind.implicitManyToMany ||
+        relation.localKeyFields.length > 1) {
+      // Fall back to per-row resolution for M2M and compound FKs.
+      for (var i = 0; i < rawRecords.length; i++) {
+        results[i][includeKey] = await _resolveInclude(
+          model,
+          rawRecords[i],
+          entry,
+        );
+      }
+      return;
+    }
+
+    final localField = relation.localKeyField;
+    final targetField = relation.targetKeyField;
+
+    final fkValues = rawRecords
+        .map((r) => r[localField])
+        .where((v) => v != null)
+        .toSet()
+        .toList(growable: false);
+
+    if (fkValues.isEmpty) {
+      final defaultValue = relation.cardinality == QueryRelationCardinality.many
+          ? const <Map<String, Object?>>[]
+          : null;
+      for (final result in results) {
+        result[includeKey] = defaultValue;
+      }
+      return;
+    }
+
+    // Single batch query for all parent rows.
+    final targetRows = await _selectRows(
+      model: relation.targetModel,
+      where: [
+        QueryPredicate(field: targetField, operator: 'in', value: fkValues),
+      ],
+      orderBy: const <QueryOrderBy>[],
+    );
+
+    // Recursively materialize related rows in batch.
+    final rawTargets = targetRows.map((r) => r.record).toList(growable: false);
+    final materializedTargets = await _materializeRecordsBatch(
+      relation.targetModel,
+      rawTargets,
+      include: entry.include,
+      select: entry.select,
+    );
+
+    // Build lookup: targetField value → list of materialized records.
+    final lookup = <Object?, List<Map<String, Object?>>>{};
+    for (var i = 0; i < targetRows.length; i++) {
+      final key = targetRows[i].record[targetField];
+      (lookup[key] ??= []).add(materializedTargets[i]);
+    }
+
+    // Attach results to parent records.
+    for (var i = 0; i < rawRecords.length; i++) {
+      final fkValue = rawRecords[i][localField];
+      final matches = fkValue != null
+          ? lookup[fkValue] ?? const <Map<String, Object?>>[]
+          : const <Map<String, Object?>>[];
+      if (relation.cardinality == QueryRelationCardinality.one) {
+        results[i][includeKey] = matches.isEmpty
+            ? null
+            : Map<String, Object?>.unmodifiable(matches.first);
+      } else {
+        results[i][includeKey] = List<Map<String, Object?>>.unmodifiable(
+          matches,
+        );
+      }
+    }
   }
 
   Future<Object?> _resolveInclude(

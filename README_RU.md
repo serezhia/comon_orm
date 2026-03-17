@@ -174,10 +174,13 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 - Нужен Flutter SQLite пример приложения: смотрите `examples/flutter_sqlite/README.md`
 - Нужен migration workflow: смотрите [MIGRATIONS.md](MIGRATIONS.md)
 - Нужна схема и справка по DSL: смотрите [SCHEMA_REFERENCE.md](SCHEMA_REFERENCE.md)
+- Нужны примеры relations: смотрите [RELATION_EXAMPLES.md](RELATION_EXAMPLES.md)
+- Нужен troubleshooting: смотрите [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- Нужна архитектурная схема: смотрите [ARCHITECTURE.md](ARCHITECTURE.md)
 - Нужен текущий roadmap по refactor и Prisma-like DX: смотрите [REFACTOR_PLAN.md](REFACTOR_PLAN.md)
 - Нужен release flow: смотрите [RELEASING.md](RELEASING.md)
 
-## 🧱 Текущие границы проекта
+## 🧱 Ограничения И Scope
 
 `comon_orm` вдохновлен Prisma, но не заявляет full Prisma parity.
 
@@ -187,8 +190,25 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 - часть advanced Prisma features еще не реализована
 - покрытие `@db.*` сейчас выборочное и зависит от provider-а
 - отдельные provider-specific edge cases все еще возможны
+- PostgreSQL не является browser runtime target
+- reviewed shared migrations и app-side local SQLite upgrades намеренно остаются разными workflow
 
 Лучше воспринимать проект как прагматичный schema-first ORM для Dart с реальными migrations и generated client, а не как попытку повторить Prisma один в один.
+
+### Feature Matrix: `comon_orm` vs Prisma
+
+| Возможность | `comon_orm` | Prisma |
+| --- | --- | --- |
+| Schema-first client generation | ✅ | ✅ |
+| Typed generated Dart client | ✅ | ❌ Dart не является нативным Prisma client target |
+| PostgreSQL runtime | ✅ | ✅ |
+| SQLite runtime | ✅ | ✅ |
+| Flutter/mobile/desktop/web SQLite runtime | ✅ через `comon_orm_sqlite_flutter` | ❌ не относится к стандартному Prisma runtime path |
+| Reviewed CLI migration workflow | ✅ | ✅ |
+| App-side local SQLite migrations на Dart | ✅ | ❌ не является типичным Prisma workflow |
+| Provider-native `@db.*` coverage | Частично | Шире |
+| Полная parity по advanced edge cases | Частично | ✅ |
+| Browser PostgreSQL runtime | ❌ | ❌ |
 
 ## 🧩 Prisma-like Compatibility Snapshot
 
@@ -209,7 +229,7 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 - `createMany(skipDuplicates: true)`, пока реализован через schema-derived unique selector checks плюс provider-aware duplicate-conflict handling на generated bulk path
 - scalar field update operators: generated `set` для scalar-like полей и `increment` / `decrement` для numeric полей поддерживаются в `update(...)`, `upsert(...)` и `updateMany(...)`; bulk computed updates разрешаются транзакционно по каждой подходящей записи, а не через adapter-native arithmetic
 - nested `connect`, `disconnect`, `set` и `connectOrCreate`: generated update flow поддерживает это для direct relations, включая compound direct foreign-key relations, implicit many-to-many relations и inverse one-to-one relations, когда replacement semantics валидны; `updateMany(...)` переиспользует тот же per-record relation-write path, а create-path relation writes теперь тоже откладывают эту же работу до момента, когда parent record уже создан внутри транзакции, там где это допускают semantics целевой relation
-- cursor pagination: generated `findMany(cursor: ...)` теперь поддерживает и forward, и backward pagination поверх текущего ordered/distinct result set через положительные и отрицательные `take`, а generated `findFirst(cursor: ...)` переиспользует тот же cursor-slicing path; оба сценария остаются фичами generated-client layer, корректно работают с generated `distinct`, при `include` или `select` перезагружают projected rows по primary key и все еще не добавляют adapter-native cursor pushdown
+- cursor pagination: generated `findMany(cursor: ...)` и `findFirst(cursor: ...)` теперь проходят через neutral query layer, а SQLite и PostgreSQL adapters исполняют cursor window напрямую для обычного ordered path; комбинация `distinct + cursor` пока остается на fallback path
 - покрытие `@db.*` остается выборочным и зависит от конкретного provider-а
 - часть aggregate, predicate и relation edge cases все еще различается между provider-ами
 - Flutter и web поддержка намеренно уже, чем основной Dart VM/server path
@@ -218,7 +238,20 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 
 - `createMany(...)` и `updateMany(...)` сейчас в первую очередь держат одинаковую semantics между provider-ами, а не пытаются в adapter-native bulk SQL. Generated delegates выполняют эти сценарии транзакционно поверх уже существующих runtime primitives, поэтому PostgreSQL, SQLite, Flutter SQLite и in-memory проходят через один и тот же behavioral contract даже там, где конкретная база могла бы сделать более специальный shortcut.
 - `createMany(skipDuplicates: true)` сначала использует generated unique selectors, когда input их вообще может выразить, а затем все равно считает provider duplicate-conflict errors пропускаемыми на insert path. На практике это значит, что duplicate races подавляются консистентно между SQL provider-ами, а не просачиваются наружу как adapter-specific ошибки generated delegate surface.
-- cursor pagination пока остается generated-client feature. `findMany(cursor: ...)` и `findFirst(cursor: ...)` режут уже построенный ordered/distinct result set и при необходимости заново загружают projected rows по primary key; adapter-native cursor pushdown они по-прежнему не обещают.
+- cursor pagination теперь имеет adapter-native pushdown для обычного ordered path в SQLite и PostgreSQL; `distinct + cursor` пока остается на fallback path.
+
+## 🧯 Troubleshooting
+
+Частые проблемы:
+
+- `checksum-mismatch`: локальный migration artifact изменили после применения
+- warning-bearing migrations: planner обнаружил рискованный переход, часто destructive change или SQLite rebuild
+- missing tables в runtime: client сгенерирован, но база не была подготовлена через migrations или setup
+- путаница с browser-local SQLite: reviewed CLI migrations и app-side local upgrades это разные workflow
+
+Если после migration изменилась схема и пропали данные, сначала проверьте warnings. SQLite rebuild-required планы сохраняют только совместимые scalar columns при пересоздании таблиц.
+
+Полный гайд: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 Пример advanced generated-client flow:
 

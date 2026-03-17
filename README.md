@@ -174,10 +174,13 @@ For Flutter/local-first SQLite specifically, the intended split is:
 - Need a Flutter SQLite example application: see `examples/flutter_sqlite/README.md`
 - Need the migration workflow: see [MIGRATIONS.md](MIGRATIONS.md)
 - Need the schema DSL reference: see [SCHEMA_REFERENCE.md](SCHEMA_REFERENCE.md)
+- Need relation examples: see [RELATION_EXAMPLES.md](RELATION_EXAMPLES.md)
+- Need troubleshooting: see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- Need the architecture overview: see [ARCHITECTURE.md](ARCHITECTURE.md)
 - Need the current refactor and Prisma-like roadmap: see [REFACTOR_PLAN.md](REFACTOR_PLAN.md)
 - Need the release flow: see [RELEASING.md](RELEASING.md)
 
-## 🧱 Current Boundaries
+## 🧱 Limitations And Scope
 
 `comon_orm` is inspired by Prisma, but it does not claim full Prisma parity.
 
@@ -187,8 +190,25 @@ In practice, that means:
 - some advanced Prisma features are not implemented yet
 - `@db.*` coverage is currently selective and provider-specific
 - some provider-specific edge cases are still possible
+- PostgreSQL is not a browser runtime target
+- shared reviewed migrations and app-side local SQLite upgrades are intentionally different workflows
 
 It is best understood as a pragmatic schema-first ORM for Dart with real migrations and a generated client, not as a line-by-line Prisma clone.
+
+### Feature Matrix: `comon_orm` vs Prisma
+
+| Capability | `comon_orm` | Prisma |
+| --- | --- | --- |
+| Schema-first client generation | ✅ | ✅ |
+| Typed generated Dart client | ✅ | ❌ Dart is not the native Prisma client target |
+| PostgreSQL runtime | ✅ | ✅ |
+| SQLite runtime | ✅ | ✅ |
+| Flutter/mobile/desktop/web SQLite runtime | ✅ via `comon_orm_sqlite_flutter` | ❌ not a native Prisma runtime path |
+| Reviewed CLI migration workflow | ✅ | ✅ |
+| App-side local SQLite migrations in Dart | ✅ | ❌ not Prisma's normal workflow |
+| Provider-native `@db.*` coverage | Partial | Broader |
+| Advanced Prisma parity across every edge case | Partial | ✅ |
+| Browser PostgreSQL runtime | ❌ | ❌ |
 
 ## 🧩 Prisma-like Compatibility Snapshot
 
@@ -209,7 +229,7 @@ Implemented, but still partial or provider-sensitive:
 - `createMany(skipDuplicates: true)`, currently implemented through schema-derived unique selector checks plus provider-aware duplicate-conflict handling on the generated bulk path
 - scalar field update operators: generated `set` for scalar-like fields and `increment` / `decrement` for numeric fields are supported in `update(...)`, `upsert(...)`, and `updateMany(...)`; bulk computed updates are resolved transactionally per matching record instead of using adapter-native arithmetic
 - nested `connect`, `disconnect`, `set`, and `connectOrCreate`: generated update flows support these across direct relations, including compound direct foreign-key relations, implicit many-to-many relations, and inverse one-to-one relations when replacement semantics are valid; `updateMany(...)` reuses the same per-record relation-write path, and create-path relation writes now defer to that same machinery once the parent record exists inside the transaction where the target relation semantics allow it
-- cursor pagination: generated `findMany(cursor: ...)` now supports forward and backward pagination over the current ordered/distinct result set through positive and negative `take` values, and generated `findFirst(cursor: ...)` now reuses the same cursor-slicing path for first-record semantics; both remain generated-client-layer features, interact correctly with generated `distinct`, reload projected rows by primary key when `include` or `select` is requested, and still do not add adapter-native cursor pushdown
+- cursor pagination: generated `findMany(cursor: ...)` and `findFirst(cursor: ...)` now flow through the neutral query layer, while SQLite and PostgreSQL adapters execute cursor windows directly for the normal ordered path; `distinct + cursor` still uses the fallback path today
 - `@db.*` coverage remains selective and provider-specific
 - some aggregate, predicate, and relation edge cases still differ by provider
 - Flutter and web support is intentionally narrower than the main Dart VM/server path
@@ -218,46 +238,56 @@ Bulk and provider-behavior notes:
 
 - `createMany(...)` and `updateMany(...)` currently prioritize cross-provider semantic parity over adapter-native bulk SQL. Generated delegates execute these flows transactionally on top of the existing runtime primitives, so PostgreSQL, SQLite, Flutter SQLite, and in-memory keep the same behavioral contract even when the underlying database could support a more specialized shortcut.
 - `createMany(skipDuplicates: true)` first uses generated unique selectors when the input exposes them, then still treats provider duplicate-conflict errors as skippable on the insert path. In practice this means duplicate races are swallowed consistently across the SQL providers instead of leaking adapter-specific errors back through the generated delegate surface.
-- cursor pagination remains a generated-client feature today. `findMany(cursor: ...)` and `findFirst(cursor: ...)` slice the already ordered/distinct result set and then reload projected rows by primary key when needed; they do not currently claim adapter-native cursor pushdown.
+- cursor pagination now has adapter-native pushdown for the normal SQLite and PostgreSQL ordered path; `distinct + cursor` still stays on the fallback path.
+
+## 🧯 Troubleshooting
+
+Common failure modes:
+
+- `checksum-mismatch`: a local migration artifact changed after it had already been applied
+- warning-bearing migrations: the planner detected a risky transition, often a destructive change or a SQLite rebuild
+- missing tables at runtime: the client was generated, but the target database was never prepared through migrations or setup
+- browser-local SQLite confusion: reviewed CLI migrations and app-side local upgrades are different workflows
+
+If a migration changed schema shape and data disappeared, inspect warnings first. Rebuild-required SQLite plans only preserve compatible scalar columns when recreating tables.
+
+Full guide: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 Advanced generated-client example:
 
 ```dart
 final user = await db.user.create(
-	data: const UserCreateInput(
-		name: 'Alice',
-		role: UserRole.manager,
-	),
-);
+    data: const UserCreateInput(name: 'Alice', role: UserRole.manager),
+  );
 
-await db.user.update(
-	where: UserWhereUniqueInput(id: user.id!),
-	data: UserUpdateInput(
-		todos: TodoUpdateNestedManyWithoutUserInput(
-			connectOrCreate: [
-				TodoConnectOrCreateWithoutUserInput(
-					where: const TodoWhereUniqueInput(id: 1001),
-					create: const TodoCreateWithoutUserInput(
-						id: 1001,
-						title: 'Ship docs',
-						status: TodoStatus.inProgress,
-					),
-				),
-			],
-		),
-	),
-);
+  await db.user.update(
+    where: UserWhereUniqueInput(id: user.id!),
+    data: UserUpdateInput(
+      todos: TodoUpdateNestedManyWithoutUserInput(
+        connectOrCreate: [
+          TodoConnectOrCreateWithoutUserInput(
+            where: const TodoWhereUniqueInput(id: 1001),
+            create: const TodoCreateWithoutUserInput(
+              id: 1001,
+              title: 'Ship docs',
+              status: TodoStatus.inProgress,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
-await db.todo.updateMany(
-	where: const TodoWhereInput(status: TodoStatus.pending),
-	data: const TodoUpdateInput(status: TodoStatus.done),
-);
+  await db.todo.updateMany(
+    where: const TodoWhereInput(status: TodoStatus.pending),
+    data: const TodoUpdateInput(status: TodoStatus.done),
+  );
 
-final nextTodo = await db.todo.findFirst(
-	cursor: const TodoWhereUniqueInput(id: 1001),
-	orderBy: const [TodoOrderByInput(id: SortOrder.asc)],
-	distinct: const [TodoScalarField.id],
-);
+  final nextTodo = await db.todo.findFirst(
+    cursor: const TodoWhereUniqueInput(id: 1001),
+    orderBy: const [TodoOrderByInput(id: SortOrder.asc)],
+    distinct: const [TodoScalarField.id],
+  );
 ```
 
 Not implemented yet:

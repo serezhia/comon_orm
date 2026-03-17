@@ -1,5 +1,6 @@
 import '../schema/schema_ast.dart';
-import 'migration_artifacts.dart';
+import 'migration_artifacts_web.dart'
+    if (dart.library.io) 'migration_artifacts.dart';
 
 /// Contract implemented by relational migration plans.
 abstract interface class PlannedMigration {

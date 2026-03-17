@@ -191,6 +191,18 @@ class PostgresqlMigrationService {
         ),
       );
       localArtifacts = const <LocalMigrationArtifact>[];
+    } on UnsupportedError catch (error) {
+      issues.add(
+        PostgresqlMigrationStatusIssue(
+          code: 'local-artifacts-unavailable',
+          message: '$error',
+        ),
+      );
+      return PostgresqlMigrationStatus(
+        localMigrationCount: 0,
+        activeMigrationCount: activeHistory.length,
+        issues: List<PostgresqlMigrationStatusIssue>.unmodifiable(issues),
+      );
     }
 
     final localByName = {

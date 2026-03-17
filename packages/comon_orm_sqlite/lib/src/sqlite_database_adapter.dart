@@ -39,10 +39,9 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
 
   /// Opens an in-memory adapter for tests and ephemeral workflows.
   factory SqliteDatabaseAdapter.openInMemory({required SchemaDocument schema}) {
-    return SqliteDatabaseAdapter(
-      database: sqlite.sqlite3.openInMemory(),
-      schema: schema,
-    );
+    final database = sqlite.sqlite3.openInMemory();
+    _enableForeignKeys(database);
+    return SqliteDatabaseAdapter(database: database, schema: schema);
   }
 
   /// Resolves datasource metadata and opens an adapter from a runtime schema.
@@ -68,10 +67,12 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
     final SqliteRuntimeAdapterFactory factory =
         adapterFactory ??
         ({required String databasePath, required RuntimeSchemaView schema}) {
+          final database = databasePath == ':memory:'
+              ? sqlite.sqlite3.openInMemory()
+              : sqlite.sqlite3.open(databasePath);
+          _enableForeignKeys(database);
           return SqliteDatabaseAdapter.fromRuntimeSchema(
-            database: databasePath == ':memory:'
-                ? sqlite.sqlite3.openInMemory()
-                : sqlite.sqlite3.open(databasePath),
+            database: database,
             schema: schema,
           );
         };
@@ -102,6 +103,10 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
   final RuntimeSchemaView _schema;
   int _transactionDepth = 0;
   int _savepointCounter = 0;
+
+  static void _enableForeignKeys(sqlite.Database database) {
+    database.execute('PRAGMA foreign_keys = ON');
+  }
 
   /// Clock used for automatic field values such as `@updatedAt`.
   DateTime Function() now = () => DateTime.now().toUtc();
@@ -439,12 +444,80 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
   }
 
   @override
+  Future<Map<String, Object?>> upsert(UpsertQuery query) async {
+    return transaction((_) async {
+      final existing = _selectSingleRow(
+        model: query.model,
+        where: query.where,
+        orderBy: const <QueryOrderBy>[],
+      );
+      if (existing != null) {
+        return update(
+          UpdateQuery(
+            model: query.model,
+            where: query.where,
+            data: query.update,
+            include: query.include,
+            select: query.select,
+          ),
+        );
+      }
+      return create(
+        CreateQuery(
+          model: query.model,
+          data: query.create,
+          include: query.include,
+        ),
+      );
+    });
+  }
+
+  @override
+  Future<int> createMany(CreateManyQuery query) async {
+    if (query.data.isEmpty) {
+      return 0;
+    }
+    return transaction((_) async {
+      var count = 0;
+      for (final row in query.data) {
+        _insertRecord(
+          query.model,
+          _applyAutomaticFieldValues(query.model, row, isCreate: true),
+        );
+        count++;
+      }
+      return count;
+    });
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> rawQuery(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) async {
+    final result = _database.select(sql, parameters);
+    return result
+        .map((row) => Map<String, Object?>.unmodifiable(row))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<int> rawExecute(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) async {
+    _database.execute(sql, parameters);
+    return _database.updatedRows;
+  }
+
+  @override
   Future<Map<String, Object?>?> findFirst(FindFirstQuery query) async {
-    if (query.distinct.isNotEmpty) {
+    if (query.cursor != null || query.distinct.isNotEmpty) {
       final records = await findMany(
         FindManyQuery(
           model: query.model,
           where: query.where,
+          cursor: query.cursor,
           orderBy: query.orderBy,
           distinct: query.distinct,
           include: query.include,
@@ -481,6 +554,10 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
 
   @override
   Future<List<Map<String, Object?>>> findMany(FindManyQuery query) async {
+    if (query.cursor != null && query.distinct.isEmpty) {
+      return _findManyWithCursor(query);
+    }
+
     final rows = _selectRows(
       model: query.model,
       where: query.where,
@@ -489,34 +566,86 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
       offset: query.distinct.isEmpty ? query.skip : null,
     );
 
-    final records = query.distinct.isEmpty
-        ? rows.map((row) => row.record).toList(growable: false)
-        : () {
-            final distinct = applyDistinctRecords(
-              rows.map((row) => row.record),
-              query.distinct,
-            );
-            final skipped = query.skip == null
-                ? distinct
-                : distinct.skip(query.skip!).toList(growable: false);
-            final taken = query.take == null
-                ? skipped
-                : skipped.take(query.take!).toList(growable: false);
-            return List<Map<String, Object?>>.unmodifiable(taken);
-          }();
+    final List<Map<String, Object?>> rawRecords;
+    if (query.distinct.isEmpty) {
+      rawRecords = rows.map((row) => row.record).toList(growable: false);
+    } else {
+      final distinct = applyDistinctRecords(
+        rows.map((row) => row.record),
+        query.distinct,
+      );
+      final skipped = query.skip == null
+          ? distinct
+          : distinct.skip(query.skip!).toList(growable: false);
+      final taken = query.take == null
+          ? skipped
+          : skipped.take(query.take!).toList(growable: false);
+      rawRecords = List<Map<String, Object?>>.unmodifiable(taken);
+    }
 
-    return records
-        .map(
-          (record) => Map<String, Object?>.unmodifiable(
-            _materializeRecord(
-              query.model,
-              record,
-              include: query.include,
-              select: query.select,
-            ),
-          ),
-        )
-        .toList(growable: false);
+    return _materializeRecordsBatch(
+      query.model,
+      rawRecords,
+      include: query.include,
+      select: query.select,
+    ).map(Map<String, Object?>.unmodifiable).toList(growable: false);
+  }
+
+  Future<List<Map<String, Object?>>> _findManyWithCursor(
+    FindManyQuery query,
+  ) async {
+    final cursor = query.cursor;
+    if (cursor == null) {
+      return findMany(
+        FindManyQuery(
+          model: query.model,
+          where: query.where,
+          orderBy: query.orderBy,
+          distinct: query.distinct,
+          include: query.include,
+          select: query.select,
+          skip: query.skip,
+          take: query.take,
+        ),
+      );
+    }
+
+    final cursorRow = _selectSingleRow(
+      model: query.model,
+      where: cursor.where,
+      orderBy: const <QueryOrderBy>[],
+    );
+    if (cursorRow == null) {
+      return const <Map<String, Object?>>[];
+    }
+
+    final orderBy = _cursorOrderBy(query.model, query.orderBy);
+    final forward = query.take == null || query.take! >= 0;
+    final rows = _selectRows(
+      model: query.model,
+      where: query.where,
+      additionalWhere: _buildCursorWindowClause(
+        query.model,
+        orderBy,
+        cursorRow.record,
+        forward: forward,
+      ),
+      orderBy: forward ? orderBy : _reverseOrderBy(orderBy),
+      limit: query.take?.abs(),
+      offset: query.skip,
+    );
+
+    var rawRecords = rows.map((row) => row.record).toList(growable: false);
+    if (!forward) {
+      rawRecords = rawRecords.reversed.toList(growable: false);
+    }
+
+    return _materializeRecordsBatch(
+      query.model,
+      rawRecords,
+      include: query.include,
+      select: query.select,
+    ).map(Map<String, Object?>.unmodifiable).toList(growable: false);
   }
 
   @override
@@ -699,34 +828,37 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
     required String model,
     required List<QueryPredicate> where,
     required List<QueryOrderBy> orderBy,
+    _SqlClause? additionalWhere,
     int? limit,
     int? offset,
   }) {
     final context = _SqlBuildContext();
     final alias = context.nextAlias();
-    final query = SqliteQuerySupport.buildSelectRowsQuery(
-      model: model,
-      alias: alias,
-      where: where,
-      orderBy: orderBy,
-      limit: limit,
-      offset: offset,
-      rowIdColumn: _rowIdColumn,
-      buildWhereClause: (innerModel, innerAlias, predicates) {
-        final built = _buildWhereClause(
-          context,
-          innerModel,
-          innerAlias,
-          predicates,
-        );
-        return (sql: built.sql, parameters: built.parameters);
-      },
-      buildOrderByClause: _buildOrderByClause,
-      tableReference: _tableReference,
-      quoteIdentifier: _quoteIdentifier,
-    );
+    final whereClause = _buildWhereClause(context, model, alias, where);
+    final combinedWhere = additionalWhere == null
+        ? whereClause
+        : _combineSqlClauses(<_SqlClause>[whereClause, additionalWhere], 'AND');
+    final orderClause = _buildOrderByClause(alias, model, orderBy);
+    final sql = StringBuffer()
+      ..write(
+        'SELECT ${_quoteIdentifier(alias)}.rowid AS ${_quoteIdentifier(_rowIdColumn)}, ${_quoteIdentifier(alias)}.* '
+        'FROM ${_tableReference(model, alias)} '
+        'WHERE ${combinedWhere.sql}',
+      );
+    final parameters = <Object?>[...combinedWhere.parameters];
+    if (orderClause.isNotEmpty) {
+      sql.write(' ORDER BY $orderClause');
+    }
+    if (limit != null) {
+      sql.write(' LIMIT ?');
+      parameters.add(limit);
+    }
+    if (offset != null) {
+      sql.write(' OFFSET ?');
+      parameters.add(offset);
+    }
 
-    final result = _database.select(query.sql, query.parameters);
+    final result = _database.select(sql.toString(), parameters);
     return result
         .map((row) => _resultRowToSelectedRow(model, result, row))
         .toList(growable: false);
@@ -749,6 +881,148 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
       return null;
     }
     return rows.single;
+  }
+
+  List<QueryOrderBy> _cursorOrderBy(String model, List<QueryOrderBy> orderBy) {
+    if (orderBy.isNotEmpty) {
+      return orderBy;
+    }
+    final primaryKeyFields =
+        _schema.findModel(model)?.primaryKeyFields ?? const <String>[];
+    return primaryKeyFields
+        .map((field) => QueryOrderBy(field: field, direction: SortOrder.asc))
+        .toList(growable: false);
+  }
+
+  List<QueryOrderBy> _reverseOrderBy(List<QueryOrderBy> orderBy) {
+    return orderBy
+        .map(
+          (entry) => QueryOrderBy(
+            field: entry.field,
+            direction: entry.direction == SortOrder.asc
+                ? SortOrder.desc
+                : SortOrder.asc,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  _SqlClause _buildCursorWindowClause(
+    String model,
+    List<QueryOrderBy> orderBy,
+    Map<String, Object?> cursorRecord, {
+    required bool forward,
+  }) {
+    if (orderBy.isEmpty) {
+      return const _SqlClause(sql: '1 = 1', parameters: <Object?>[]);
+    }
+
+    final alias = 't0';
+    final branches = <_SqlClause>[];
+    for (var index = 0; index < orderBy.length; index++) {
+      final branchParts = <String>[];
+      final branchParameters = <Object?>[];
+      for (var prefixIndex = 0; prefixIndex < index; prefixIndex++) {
+        final equality = _cursorEqualityClause(
+          alias,
+          model,
+          orderBy[prefixIndex].field,
+          cursorRecord[orderBy[prefixIndex].field],
+        );
+        branchParts.add(equality.sql);
+        branchParameters.addAll(equality.parameters);
+      }
+      final comparison = _cursorComparisonClause(
+        alias,
+        model,
+        orderBy[index],
+        cursorRecord[orderBy[index].field],
+        forward: forward,
+      );
+      branchParts.add(comparison.sql);
+      branchParameters.addAll(comparison.parameters);
+      branches.add(
+        _SqlClause(
+          sql: branchParts.map((part) => '($part)').join(' AND '),
+          parameters: branchParameters,
+        ),
+      );
+    }
+
+    final equalityParts = <String>[];
+    final equalityParameters = <Object?>[];
+    for (final entry in orderBy) {
+      final equality = _cursorEqualityClause(
+        alias,
+        model,
+        entry.field,
+        cursorRecord[entry.field],
+      );
+      equalityParts.add(equality.sql);
+      equalityParameters.addAll(equality.parameters);
+    }
+    branches.add(
+      _SqlClause(
+        sql: equalityParts.map((part) => '($part)').join(' AND '),
+        parameters: equalityParameters,
+      ),
+    );
+
+    return _combineSqlClauses(branches, 'OR');
+  }
+
+  _SqlClause _cursorEqualityClause(
+    String alias,
+    String model,
+    String field,
+    Object? value,
+  ) {
+    final qualifiedField = _qualifiedField(alias, model, field);
+    if (value == null) {
+      return _SqlClause(sql: '$qualifiedField IS NULL', parameters: const []);
+    }
+    return _SqlClause(
+      sql: '$qualifiedField = ?',
+      parameters: <Object?>[_normalizeValueForStorage(model, field, value)],
+    );
+  }
+
+  _SqlClause _cursorComparisonClause(
+    String alias,
+    String model,
+    QueryOrderBy orderBy,
+    Object? value, {
+    required bool forward,
+  }) {
+    final qualifiedField = _qualifiedField(alias, model, orderBy.field);
+    if (value == null) {
+      return const _SqlClause(sql: '1 = 0', parameters: <Object?>[]);
+    }
+    final ascending = orderBy.direction == SortOrder.asc;
+    final operator = forward
+        ? (ascending ? '>' : '<')
+        : (ascending ? '<' : '>');
+    return _SqlClause(
+      sql: '$qualifiedField $operator ?',
+      parameters: <Object?>[
+        _normalizeValueForStorage(model, orderBy.field, value),
+      ],
+    );
+  }
+
+  _SqlClause _combineSqlClauses(List<_SqlClause> clauses, String operator) {
+    if (clauses.isEmpty) {
+      return const _SqlClause(sql: '1 = 1', parameters: <Object?>[]);
+    }
+    if (clauses.length == 1) {
+      return clauses.single;
+    }
+    return _SqlClause(
+      sql: clauses.map((clause) => '(${clause.sql})').join(' $operator '),
+      parameters: clauses
+          .expand((clause) => clause.parameters)
+          .toList(growable: false),
+    );
   }
 
   _SelectedRow _insertRecord(String model, Map<String, Object?> data) {
@@ -781,6 +1055,122 @@ class SqliteDatabaseAdapter implements DatabaseAdapter {
     }
 
     return base;
+  }
+
+  /// Materializes a batch of records, resolving includes with a single query
+  /// per relation level instead of one query per parent row (N+1 avoidance).
+  List<Map<String, Object?>> _materializeRecordsBatch(
+    String model,
+    List<Map<String, Object?>> rawRecords, {
+    required QueryInclude? include,
+    required QuerySelect? select,
+  }) {
+    if (rawRecords.isEmpty) return const <Map<String, Object?>>[];
+
+    final results = rawRecords
+        .map(
+          (raw) => SqliteQuerySupport.selectMaterializedRecordFields(
+            record: raw,
+            select: select,
+          ),
+        )
+        .toList(growable: false);
+
+    if (include == null) return results;
+
+    for (final entry in include.relations.entries) {
+      _applyBatchInclude(
+        model: model,
+        rawRecords: rawRecords,
+        results: results,
+        includeKey: entry.key,
+        entry: entry.value,
+      );
+    }
+
+    return results;
+  }
+
+  /// Resolves a single include relation across all parent records at once.
+  /// Falls back to per-row resolution for M2M and compound FK relations.
+  void _applyBatchInclude({
+    required String model,
+    required List<Map<String, Object?>> rawRecords,
+    required List<Map<String, Object?>> results,
+    required String includeKey,
+    required QueryIncludeEntry entry,
+  }) {
+    final relation = entry.relation;
+
+    if (relation.storageKind == QueryRelationStorageKind.implicitManyToMany ||
+        relation.localKeyFields.length > 1) {
+      // Fall back to per-row resolution for M2M and compound FKs.
+      for (var i = 0; i < rawRecords.length; i++) {
+        results[i][includeKey] = _resolveInclude(model, rawRecords[i], entry);
+      }
+      return;
+    }
+
+    final localField = relation.localKeyField;
+    final targetField = relation.targetKeyField;
+
+    final fkValues = rawRecords
+        .map((r) => r[localField])
+        .where((v) => v != null)
+        .toSet()
+        .toList(growable: false);
+
+    if (fkValues.isEmpty) {
+      final defaultValue = relation.cardinality == QueryRelationCardinality.many
+          ? const <Map<String, Object?>>[]
+          : null;
+      for (final result in results) {
+        result[includeKey] = defaultValue;
+      }
+      return;
+    }
+
+    // Single batch query for all parent rows.
+    final targetRows = _selectRows(
+      model: relation.targetModel,
+      where: [
+        QueryPredicate(field: targetField, operator: 'in', value: fkValues),
+      ],
+      orderBy: const <QueryOrderBy>[],
+    );
+
+    // Recursively materialize related rows in batch.
+    final rawTargets = targetRows.map((r) => r.record).toList(growable: false);
+    final materializedTargets = _materializeRecordsBatch(
+      relation.targetModel,
+      rawTargets,
+      include: entry.include,
+      select: entry.select,
+    );
+
+    // Build lookup: targetField value → list of materialized records.
+    final lookup = <Object?, List<Map<String, Object?>>>{};
+    for (var i = 0; i < targetRows.length; i++) {
+      final key = targetRows[i].record[targetField];
+      (lookup[key] ??= []).add(materializedTargets[i]);
+    }
+
+    // Attach results to parent records.
+    for (var i = 0; i < rawRecords.length; i++) {
+      final fkValue = rawRecords[i][localField];
+      final matches = fkValue != null
+          ? lookup[fkValue] ?? const <Map<String, Object?>>[]
+          : const <Map<String, Object?>>[];
+      if (relation.cardinality == QueryRelationCardinality.one) {
+        results[i][includeKey] = matches.isEmpty
+            ? null
+            : Map<String, Object?>.unmodifiable(matches.first);
+      } else {
+        results[i][includeKey] = List<Map<String, Object?>>.unmodifiable(
+          matches,
+        );
+      }
+    }
   }
 
   Object? _resolveInclude(

@@ -946,5 +946,192 @@ model Membership {
 
       compoundAdapter.close();
     });
+
+    test('upsert creates a record when none exists', () async {
+      final created = await adapter.upsert(
+        const UpsertQuery(
+          model: 'User',
+          where: <QueryPredicate>[
+            QueryPredicate(
+              field: 'email',
+              operator: 'equals',
+              value: 'new@example.com',
+            ),
+          ],
+          create: <String, Object?>{
+            'name': 'New User',
+            'email': 'new@example.com',
+          },
+          update: <String, Object?>{'name': 'Updated User'},
+        ),
+      );
+      expect(created['name'], 'New User');
+      expect(created['email'], 'new@example.com');
+    });
+
+    test('upsert updates a record when one exists', () async {
+      await adapter.create(
+        const CreateQuery(
+          model: 'User',
+          data: <String, Object?>{
+            'name': 'Alice',
+            'email': 'alice@example.com',
+          },
+        ),
+      );
+      final updated = await adapter.upsert(
+        const UpsertQuery(
+          model: 'User',
+          where: <QueryPredicate>[
+            QueryPredicate(
+              field: 'email',
+              operator: 'equals',
+              value: 'alice@example.com',
+            ),
+          ],
+          create: <String, Object?>{
+            'name': 'Alice Created',
+            'email': 'alice@example.com',
+          },
+          update: <String, Object?>{'name': 'Alice Updated'},
+        ),
+      );
+      expect(updated['name'], 'Alice Updated');
+      expect(updated['email'], 'alice@example.com');
+    });
+
+    test('createMany inserts multiple records', () async {
+      final count = await adapter.createMany(
+        const CreateManyQuery(
+          model: 'User',
+          data: <Map<String, Object?>>[
+            <String, Object?>{'name': 'User A', 'email': 'a@example.com'},
+            <String, Object?>{'name': 'User B', 'email': 'b@example.com'},
+            <String, Object?>{'name': 'User C', 'email': 'c@example.com'},
+          ],
+        ),
+      );
+      expect(count, 3);
+      final all = await adapter.findMany(const FindManyQuery(model: 'User'));
+      expect(all, hasLength(3));
+    });
+
+    test('createMany returns 0 for empty list', () async {
+      final count = await adapter.createMany(
+        const CreateManyQuery(model: 'User', data: <Map<String, Object?>>[]),
+      );
+      expect(count, 0);
+    });
+
+    test('rawQuery returns rows', () async {
+      await adapter.create(
+        const CreateQuery(
+          model: 'User',
+          data: <String, Object?>{
+            'name': 'Alice',
+            'email': 'alice@example.com',
+          },
+        ),
+      );
+      final rows = await adapter.rawQuery(
+        'SELECT name FROM "User" WHERE email = ?',
+        ['alice@example.com'],
+      );
+      expect(rows, hasLength(1));
+      expect(rows.first['name'], 'Alice');
+    });
+
+    test('rawExecute runs a statement and returns affected count', () async {
+      await adapter.create(
+        const CreateQuery(
+          model: 'User',
+          data: <String, Object?>{'name': 'Bob', 'email': 'bob@example.com'},
+        ),
+      );
+      final affected = await adapter.rawExecute(
+        'UPDATE "User" SET name = ? WHERE email = ?',
+        ['Bobby', 'bob@example.com'],
+      );
+      expect(affected, 1);
+      final row = await adapter.findUnique(
+        const FindUniqueQuery(
+          model: 'User',
+          where: <QueryPredicate>[
+            QueryPredicate(
+              field: 'email',
+              operator: 'equals',
+              value: 'bob@example.com',
+            ),
+          ],
+        ),
+      );
+      expect(row!['name'], 'Bobby');
+    });
+
+    test(
+      'findMany with one-to-many include returns related records for all parents',
+      () async {
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice@batch.io'),
+        );
+        final bob = await client.user.create(
+          data: const UserCreateInput(name: 'Bob', email: 'bob@batch.io'),
+        );
+        await client.post.create(
+          data: PostCreateInput(title: 'Post 1', userId: alice.id!),
+        );
+        await client.post.create(
+          data: PostCreateInput(title: 'Post 2', userId: alice.id!),
+        );
+        await client.post.create(
+          data: PostCreateInput(title: 'Post 3', userId: bob.id!),
+        );
+
+        final users = await client.user.findMany(
+          orderBy: const <UserOrderByInput>[
+            UserOrderByInput(name: SortOrder.asc),
+          ],
+          include: const UserInclude(posts: true),
+        );
+
+        expect(users, hasLength(2));
+        expect(users[0].posts!, hasLength(2));
+        expect(
+          users[0].posts!.map((p) => p.title),
+          containsAll(['Post 1', 'Post 2']),
+        );
+        expect(users[1].posts!, hasLength(1));
+        expect(users[1].posts!.single.title, 'Post 3');
+      },
+    );
+
+    test(
+      'findMany with many-to-one include returns correct related record per row',
+      () async {
+        final alice = await client.user.create(
+          data: const UserCreateInput(name: 'Alice', email: 'alice2@batch.io'),
+        );
+        final bob = await client.user.create(
+          data: const UserCreateInput(name: 'Bob', email: 'bob2@batch.io'),
+        );
+        await client.post.create(
+          data: PostCreateInput(title: 'Alice Post', userId: alice.id!),
+        );
+        await client.post.create(
+          data: PostCreateInput(title: 'Bob Post', userId: bob.id!),
+        );
+
+        final posts = await client.post.findMany(
+          orderBy: const <PostOrderByInput>[
+            PostOrderByInput(title: SortOrder.asc),
+          ],
+          include: const PostInclude(user: true),
+        );
+
+        expect(posts, hasLength(2));
+        expect(posts[0].user!.name, 'Alice');
+        expect(posts[1].user!.name, 'Bob');
+      },
+    );
   });
 }

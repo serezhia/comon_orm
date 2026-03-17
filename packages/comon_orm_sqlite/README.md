@@ -62,6 +62,7 @@ final db = await GeneratedComonOrmClientSqlite.open();
 
 - Runtime path: `GeneratedComonOrmClient.openInMemory()` or `GeneratedComonOrmClientSqlite.open(...)`
 - Tooling/setup path: schema-driven migrate/apply flows through the CLI and schema tools
+- runtime opens performed by this package enable SQLite foreign key enforcement with `PRAGMA foreign_keys = ON` by default
 
 ## 🎯 Key Features
 

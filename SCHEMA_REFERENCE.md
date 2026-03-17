@@ -230,12 +230,17 @@ Provider-specific native types.
 
 PostgreSQL currently supports:
 
+- `@db.SmallInt`
+- `@db.BigInt`
+- `@db.DoublePrecision`
 - `@db.VarChar(n)`
+- `@db.Char(n)`
 - `@db.Text`
 - `@db.Json`
 - `@db.JsonB`
 - `@db.ByteA`
 - `@db.Numeric`
+- `@db.Xml`
 - `@db.Timestamp`
 - `@db.Timestamptz`
 - `@db.Uuid`

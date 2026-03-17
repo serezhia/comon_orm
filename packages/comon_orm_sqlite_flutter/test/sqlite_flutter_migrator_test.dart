@@ -1,3 +1,4 @@
+import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_sqlite_flutter/comon_orm_sqlite_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -6,6 +7,123 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('SqliteFlutterMigrator', () {
+    test('runs schema-diff migrations for additive changes', () async {
+      sqfliteFfiInit();
+
+      final database = await databaseFactoryFfi.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(singleInstance: false),
+      );
+
+      try {
+        final fromSchema = const SchemaParser().parse('''
+model User {
+  id Int @id
+  email String @unique
+}
+''');
+        final toSchema = const SchemaParser().parse('''
+model User {
+  id Int @id
+  email String @unique
+  enabled Boolean @default(false)
+}
+''');
+
+        await const SqliteFlutterSchemaApplier().apply(database, fromSchema);
+        await database.insert('User', <String, Object?>{
+          'id': 1,
+          'email': 'alice@example.com',
+        });
+        await database.execute('PRAGMA user_version = 1;');
+
+        final migrator = SqliteFlutterMigrator(
+          currentVersion: 2,
+          migrations: <SqliteFlutterMigration>[
+            SqliteFlutterMigration.schemaDiff(
+              fromVersion: 1,
+              toVersion: 2,
+              debugName: 'add_enabled_flag',
+              fromSchema: fromSchema,
+              toSchema: toSchema,
+            ),
+          ],
+        );
+
+        await migrator.upgradeDatabase(database);
+
+        final rows = await database.rawQuery(
+          'SELECT email, enabled FROM User WHERE id = 1;',
+        );
+        expect(rows.single['email'], 'alice@example.com');
+        expect(rows.single['enabled'], 0);
+        expect(await migrator.readVersion(database), 2);
+      } finally {
+        await database.close();
+      }
+    });
+
+    test('runs schema-diff migrations for rebuild changes', () async {
+      sqfliteFfiInit();
+
+      final database = await databaseFactoryFfi.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(singleInstance: false),
+      );
+
+      try {
+        final fromSchema = const SchemaParser().parse('''
+model Todo {
+  id Int @id
+  title String
+}
+''');
+        final toSchema = const SchemaParser().parse('''
+model Todo {
+  id Int @id
+  title String
+
+  @@map("todos")
+}
+''');
+
+        await const SqliteFlutterSchemaApplier().apply(database, fromSchema);
+        await database.insert('Todo', <String, Object?>{
+          'id': 1,
+          'title': 'Ship web migrations',
+        });
+        await database.execute('PRAGMA user_version = 2;');
+
+        final migrator = SqliteFlutterMigrator(
+          currentVersion: 3,
+          migrations: <SqliteFlutterMigration>[
+            SqliteFlutterMigration.schemaDiff(
+              fromVersion: 2,
+              toVersion: 3,
+              debugName: 'rename_todo_table',
+              fromSchema: fromSchema,
+              toSchema: toSchema,
+            ),
+          ],
+        );
+
+        await migrator.upgradeDatabase(database);
+
+        final rows = await database.rawQuery(
+          'SELECT title FROM todos WHERE id = 1;',
+        );
+        expect(rows.single['title'], 'Ship web migrations');
+
+        final oldTable = await database.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Todo';",
+        );
+        expect(oldTable, isEmpty);
+        expect(await migrator.readVersion(database), 3);
+      } finally {
+        await database.close();
+      }
+    });
+
     test('runs SQL-first migrations and updates user_version', () async {
       sqfliteFfiInit();
 

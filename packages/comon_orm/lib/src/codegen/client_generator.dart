@@ -1,5 +1,10 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+
 import '../schema/implicit_many_to_many.dart';
 import '../schema/schema_ast.dart';
+import 'codegen_ir.dart';
 
 part 'client_generator_provider_helpers.dart';
 part 'client_generator_runtime_metadata.dart';
@@ -40,8 +45,13 @@ class ClientGenerator {
   final ClientGeneratorOptions options;
 
   /// Returns the generated client source for [schema].
-  String generateClient(SchemaDocument schema) {
-    final datasourceProviders = schema.datasources
+  ///
+  /// If [schemaSource] is provided, a `// schema-hash:` comment is embedded in
+  /// the file header. The CLI uses this to skip re-writing the output file when
+  /// the schema hasn't changed (incremental generation, see 5.3).
+  String generateClient(SchemaDocument schema, {String? schemaSource}) {
+    final effectiveSchema = schema.withoutIgnored();
+    final datasourceProviders = effectiveSchema.datasources
         .map(_datasourceProvider)
         .whereType<String>()
         .toSet();
@@ -51,31 +61,34 @@ class ClientGenerator {
     final emitsSqliteFlutterHelper =
         datasourceProviders.contains('sqlite') &&
         options.sqliteHelperKind == SqliteClientHelperKind.flutter;
+    final imports = <String>[
+      "import 'package:comon_orm/comon_orm.dart';",
+      if (emitsSqliteVmHelper)
+        "import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';",
+      if (emitsSqliteFlutterHelper)
+        "import 'package:comon_orm_sqlite_flutter/comon_orm_sqlite_flutter.dart';",
+      if (datasourceProviders.contains('postgresql'))
+        "import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';",
+      if (datasourceProviders.contains('postgresql'))
+        "import 'package:postgres/postgres.dart' as pg;",
+    ];
     final buffer = StringBuffer()
       ..writeln('// Generated code. Do not edit by hand.')
       ..writeln(
         '// ignore_for_file: unused_element, non_constant_identifier_names',
-      )
-      ..writeln("import 'package:comon_orm/comon_orm.dart';")
-      ..writeln(
-        emitsSqliteVmHelper
-            ? "import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';"
-            : '',
-      )
-      ..writeln(
-        emitsSqliteFlutterHelper
-            ? "import 'package:comon_orm_sqlite_flutter/comon_orm_sqlite_flutter.dart';"
-            : '',
-      )
-      ..writeln(
-        datasourceProviders.contains('postgresql')
-            ? "import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';"
-            : '',
-      )
+      );
+    if (schemaSource != null) {
+      final hash = sha256.convert(utf8.encode(schemaSource)).toString();
+      buffer.writeln('// schema-hash: $hash');
+    }
+    buffer
+      ..writeln(imports.join('\n'))
       ..writeln()
       ..writeln('class GeneratedComonOrmClient {')
       ..writeln('  GeneratedComonOrmClient({required DatabaseAdapter adapter})')
-      ..writeln('    : _client = ComonOrmClient(adapter: adapter);')
+      ..writeln(
+        '    : _client = ComonOrmClient(adapter: adapter, schemaView: runtimeSchemaView);',
+      )
       ..writeln()
       ..writeln('  GeneratedComonOrmClient._fromClient(this._client);')
       ..writeln()
@@ -100,7 +113,7 @@ class ClientGenerator {
       ..writeln()
       ..writeln('  final ComonOrmClient _client;');
 
-    for (final model in schema.models) {
+    for (final model in effectiveSchema.models) {
       final delegateName = '${model.name}Delegate';
       final propertyName = _lowercaseFirst(model.name);
       buffer.writeln(
@@ -130,35 +143,35 @@ class ClientGenerator {
       sqliteHelperKind: options.sqliteHelperKind,
     );
 
-    _writeGeneratedRuntimeMetadata(buffer, schema);
+    _writeGeneratedRuntimeMetadata(buffer, effectiveSchema);
 
-    for (final definition in schema.enums) {
+    for (final definition in effectiveSchema.enums) {
       _writeEnumClass(buffer, definition);
     }
 
     _writeScalarUpdateOperationHelpers(buffer);
 
-    for (final model in schema.models) {
-      _writeModelClass(buffer, schema, model);
+    for (final model in effectiveSchema.models) {
+      _writeModelClass(buffer, effectiveSchema, model);
     }
 
-    for (final model in schema.models) {
-      _writeDelegate(buffer, schema, model);
-      _writeWhereInput(buffer, schema, model);
-      _writeWhereUniqueInput(buffer, schema, model);
-      _writeOrderByInput(buffer, schema, model);
-      _writeScalarFieldEnum(buffer, schema, model);
-      _writeAggregateInputClasses(buffer, schema, model);
-      _writeAggregateResultClasses(buffer, schema, model);
-      _writeGroupBySupportClasses(buffer, schema, model);
-      _writeInclude(buffer, schema, model);
-      _writeSelect(buffer, schema, model);
-      _writeCreateInput(buffer, schema, model);
-      _writeUpdateInput(buffer, schema, model);
-      _writeCreateWithoutInputs(buffer, schema, model);
-      _writeConnectOrCreateInputs(buffer, schema, model);
-      _writeNestedCreateInputs(buffer, schema, model);
-      _writeNestedUpdateInputs(buffer, schema, model);
+    for (final model in effectiveSchema.models) {
+      _writeDelegate(buffer, effectiveSchema, model);
+      _writeWhereInput(buffer, effectiveSchema, model);
+      _writeWhereUniqueInput(buffer, effectiveSchema, model);
+      _writeOrderByInput(buffer, effectiveSchema, model);
+      _writeScalarFieldEnum(buffer, effectiveSchema, model);
+      _writeAggregateInputClasses(buffer, effectiveSchema, model);
+      _writeAggregateResultClasses(buffer, effectiveSchema, model);
+      _writeGroupBySupportClasses(buffer, effectiveSchema, model);
+      _writeInclude(buffer, effectiveSchema, model);
+      _writeSelect(buffer, effectiveSchema, model);
+      _writeCreateInput(buffer, effectiveSchema, model);
+      _writeUpdateInput(buffer, effectiveSchema, model);
+      _writeCreateWithoutInputs(buffer, effectiveSchema, model);
+      _writeConnectOrCreateInputs(buffer, effectiveSchema, model);
+      _writeNestedCreateInputs(buffer, effectiveSchema, model);
+      _writeNestedUpdateInputs(buffer, effectiveSchema, model);
     }
 
     buffer

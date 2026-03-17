@@ -508,6 +508,24 @@ class PostgresqlSchemaIntrospector {
     }
 
     return switch (dataType.toLowerCase()) {
+      'smallint' => const FieldAttribute(
+        name: 'db.SmallInt',
+        arguments: <String, String>{},
+      ),
+      'bigint' => const FieldAttribute(
+        name: 'db.BigInt',
+        arguments: <String, String>{},
+      ),
+      'double precision' => const FieldAttribute(
+        name: 'db.DoublePrecision',
+        arguments: <String, String>{},
+      ),
+      'character' => FieldAttribute(
+        name: 'db.Char',
+        arguments: Map<String, String>.unmodifiable(<String, String>{
+          'value': '${_asInt(characterMaximumLength)}',
+        }),
+      ),
       'character varying' => FieldAttribute(
         name: 'db.VarChar',
         arguments: Map<String, String>.unmodifiable(<String, String>{
@@ -528,6 +546,10 @@ class PostgresqlSchemaIntrospector {
       ),
       'numeric' => const FieldAttribute(
         name: 'db.Numeric',
+        arguments: <String, String>{},
+      ),
+      'xml' => const FieldAttribute(
+        name: 'db.Xml',
         arguments: <String, String>{},
       ),
       'timestamp without time zone' => const FieldAttribute(
