@@ -1,6 +1,6 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
-// schema-hash: d13a34febe3f8ec087b18ac8262c6ae7a834fdeee4b339a47c43a0f2823b21e9
+// schema-hash: 5a8e675010fe6d6c5d7dfe957e7bb84e8acd28862cd1b9e2fa429049813aa766
 import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
 import 'package:postgres/postgres.dart' as pg;
@@ -29,6 +29,7 @@ class GeneratedComonOrmClient {
   final ComonOrmClient _client;
   late final UserDelegate user = UserDelegate._(_client);
   late final TodoDelegate todo = TodoDelegate._(_client);
+  late final ProfilesDelegate profiles = ProfilesDelegate._(_client);
 
   Future<T> transaction<T>(
     Future<T> Function(GeneratedComonOrmClient tx) action,
@@ -83,7 +84,7 @@ class GeneratedComonOrmMetadata {
       GeneratedEnumMetadata(
         name: 'TodoStatus',
         databaseName: 'TodoStatus',
-        values: <String>['pending', 'inProgress', 'done'],
+        values: <String>['pending', 'inProgress', 'done', 'meow'],
       ),
     ],
     models: <GeneratedModelMetadata>[
@@ -232,6 +233,48 @@ class GeneratedComonOrmMetadata {
           ),
         ],
       ),
+      GeneratedModelMetadata(
+        name: 'Profiles',
+        databaseName: 'Profiles',
+        primaryKeyFields: <String>['id'],
+        compoundUniqueFieldSets: <List<String>>[],
+        fields: <GeneratedFieldMetadata>[
+          GeneratedFieldMetadata(
+            name: 'id',
+            databaseName: 'id',
+            kind: GeneratedRuntimeFieldKind.scalar,
+            type: 'Int',
+            isNullable: false,
+            isList: false,
+            isId: true,
+            isUnique: false,
+            isUpdatedAt: false,
+            defaultValue: GeneratedFieldDefaultMetadata(kind: GeneratedRuntimeDefaultKind.autoincrement),
+          ),
+          GeneratedFieldMetadata(
+            name: 'name',
+            databaseName: 'name',
+            kind: GeneratedRuntimeFieldKind.scalar,
+            type: 'String',
+            isNullable: false,
+            isList: false,
+            isId: false,
+            isUnique: false,
+            isUpdatedAt: false,
+          ),
+          GeneratedFieldMetadata(
+            name: 'role',
+            databaseName: 'role',
+            kind: GeneratedRuntimeFieldKind.enumeration,
+            type: 'UserRole',
+            isNullable: false,
+            isList: false,
+            isId: false,
+            isUnique: false,
+            isUpdatedAt: false,
+          ),
+        ],
+      ),
     ],
   );
 }
@@ -245,7 +288,8 @@ enum UserRole {
 enum TodoStatus {
   pending,
   inProgress,
-  done
+  done,
+  meow
 }
 
 class StringFieldUpdateOperationsInput {
@@ -549,6 +593,90 @@ class Todo {
     _deepHash(createdAt),
     _deepHash(userId),
     _deepHash(user),
+  ]);
+}
+
+class Profiles {
+  const Profiles({this.id, this.name, this.role, });
+
+  final int? id;
+  final String? name;
+  final UserRole? role;
+
+  factory Profiles.fromRecord(Map<String, Object?> record) {
+    return Profiles(
+      id: record['id'] as int?,
+      name: record['name'] as String?,
+      role: record['role'] == null ? null : UserRole.values.byName(record['role'] as String),
+    );
+  }
+
+  factory Profiles.fromJson(Map<String, Object?> json) {
+    return Profiles(
+      id: json['id'] as int?,
+      name: json['name'] as String?,
+      role: json['role'] == null ? null : UserRole.values.byName(json['role'] as String),
+    );
+  }
+
+  Profiles copyWith({
+    Object? id = _undefined,
+    Object? name = _undefined,
+    Object? role = _undefined,
+  }) {
+    return Profiles(
+      id: id == _undefined ? this.id : id as int?,
+      name: name == _undefined ? this.name : name as String?,
+      role: role == _undefined ? this.role : role as UserRole?,
+    );
+  }
+
+  Map<String, Object?> toRecord() {
+    final record = <String, Object?>{};
+    if (id != null) {
+      record['id'] = id;
+    }
+    if (name != null) {
+      record['name'] = name;
+    }
+    if (role != null) {
+      record['role'] = role!.name;
+    }
+    return Map<String, Object?>.unmodifiable(record);
+  }
+
+  Map<String, Object?> toJson() {
+    final json = <String, Object?>{};
+    if (id != null) {
+      json['id'] = id;
+    }
+    if (name != null) {
+      json['name'] = name;
+    }
+    if (role != null) {
+      json['role'] = role!.name;
+    }
+    return Map<String, Object?>.unmodifiable(json);
+  }
+
+  @override
+  String toString() => 'Profiles(id: $id, name: $name, role: $role)';
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is Profiles &&
+        _deepEquals(id, other.id) &&
+        _deepEquals(name, other.name) &&
+        _deepEquals(role, other.role);
+  }
+
+  @override
+  int get hashCode => Object.hashAll(<Object?>[
+    runtimeType,
+    _deepHash(id),
+    _deepHash(name),
+    _deepHash(role),
   ]);
 }
 
@@ -3265,6 +3393,1076 @@ class UserUpdateNestedOneWithoutTodosInput {
   final bool disconnect;
 
   bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
+}
+
+class ProfilesDelegate {
+  const ProfilesDelegate._(this._client);
+
+  final ComonOrmClient _client;
+  ModelDelegate get _delegate => _client.model('Profiles');
+
+  Future<Profiles?> findUnique({
+    required ProfilesWhereUniqueInput where,
+    ProfilesInclude? include,
+    ProfilesSelect? select,
+  }) {
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'Profiles',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : Profiles.fromRecord(record));
+  }
+
+  Future<Profiles?> findFirst({
+    ProfilesWhereInput? where,
+    ProfilesWhereUniqueInput? cursor,
+    List<ProfilesOrderByInput>? orderBy,
+    List<ProfilesScalarField>? distinct,
+    ProfilesInclude? include,
+    ProfilesSelect? select,
+    int? skip,
+  }) async {
+    final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryInclude = include?.toQueryInclude();
+    final querySelect = select?.toQuerySelect();
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'Profiles',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
+        orderBy: queryOrderBy,
+        distinct: queryDistinct,
+        include: queryInclude,
+        select: querySelect,
+        skip: skip,
+      ),
+    ).then((record) => record == null ? null : Profiles.fromRecord(record));
+  }
+
+  Future<List<Profiles>> findMany({
+    ProfilesWhereInput? where,
+    ProfilesWhereUniqueInput? cursor,
+    List<ProfilesOrderByInput>? orderBy,
+    List<ProfilesScalarField>? distinct,
+    ProfilesInclude? include,
+    ProfilesSelect? select,
+    int? skip,
+    int? take,
+  }) async {
+    final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryInclude = include?.toQueryInclude();
+    final querySelect = select?.toQuerySelect();
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'Profiles',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
+        orderBy: queryOrderBy,
+        distinct: queryDistinct,
+        include: queryInclude,
+        select: querySelect,
+        skip: skip,
+        take: take,
+      ),
+    ).then((records) => records.map(Profiles.fromRecord).toList(growable: false));
+  }
+
+  Future<int> count({ProfilesWhereInput? where}) {
+    return _delegate.count(
+      CountQuery(
+        model: 'Profiles',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+      ),
+    );
+  }
+
+  Future<ProfilesAggregateResult> aggregate({
+    ProfilesWhereInput? where,
+    List<ProfilesOrderByInput>? orderBy,
+    int? skip,
+    int? take,
+    ProfilesCountAggregateInput? count,
+    ProfilesAvgAggregateInput? avg,
+    ProfilesSumAggregateInput? sum,
+    ProfilesMinAggregateInput? min,
+    ProfilesMaxAggregateInput? max,
+  }) {
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'Profiles',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(ProfilesAggregateResult.fromQueryResult);
+  }
+
+  Future<List<ProfilesGroupByRow>> groupBy({
+    required List<ProfilesScalarField> by,
+    ProfilesWhereInput? where,
+    List<ProfilesGroupByOrderByInput>? orderBy,
+    ProfilesGroupByHavingInput? having,
+    int? skip,
+    int? take,
+    ProfilesCountAggregateInput? count,
+    ProfilesAvgAggregateInput? avg,
+    ProfilesSumAggregateInput? sum,
+    ProfilesMinAggregateInput? min,
+    ProfilesMaxAggregateInput? max,
+  }) {
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'Profiles',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(ProfilesGroupByRow.fromQueryResultRow).toList(growable: false));
+  }
+
+  Future<Profiles> create({
+    required ProfilesCreateInput data,
+    ProfilesInclude? include,
+  }) {
+    final queryInclude = include?.toQueryInclude();
+    return _client.transaction((txClient) async {
+      final tx = GeneratedComonOrmClient._fromClient(txClient);
+      return _performCreateWithRelationWrites(
+        tx: tx,
+        data: data,
+        include: queryInclude,
+      );
+    });
+  }
+
+  Future<int> createMany({
+    required List<ProfilesCreateInput> data,
+    bool skipDuplicates = false,
+  }) {
+    if (data.isEmpty) {
+      return Future<int>.value(0);
+    }
+    return _client.transaction((txClient) async {
+      final tx = GeneratedComonOrmClient._fromClient(txClient);
+      final txDelegate = tx._client.model('Profiles');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Profiles',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
+      var createdCount = 0;
+      for (final entry in data) {
+        try {
+          if (entry.hasDeferredRelationWrites) {
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
+          } else {
+            await txDelegate.create(
+              CreateQuery(
+                model: 'Profiles',
+                data: entry.toData(),
+                nestedCreates: entry.toNestedCreates(),
+              ),
+            );
+          }
+        } on Object catch (error) {
+          if (skipDuplicates && _isSkippableDuplicateError(error)) {
+            continue;
+          }
+          rethrow;
+        }
+        createdCount++;
+      }
+      return createdCount;
+    });
+  }
+
+  Future<Profiles> update({
+    required ProfilesWhereUniqueInput where,
+    required ProfilesUpdateInput data,
+    ProfilesInclude? include,
+    ProfilesSelect? select,
+  }) {
+    final predicates = where.toPredicates();
+    final queryInclude = include?.toQueryInclude();
+    final querySelect = select?.toQuerySelect();
+    return _client.transaction((txClient) async {
+      final tx = GeneratedComonOrmClient._fromClient(txClient);
+      final txDelegate = tx._client.model('Profiles');
+      final existing = await txDelegate.findUnique(
+        FindUniqueQuery(
+          model: 'Profiles',
+          where: predicates,
+        ),
+      );
+      if (existing == null) {
+        throw StateError('No record found for update in Profiles.');
+      }
+      return _performUpdateWithRelationWrites(
+        tx: tx,
+        predicates: predicates,
+        existing: existing,
+        data: data,
+        include: queryInclude,
+        select: querySelect,
+      );
+    });
+  }
+
+  Future<Profiles> upsert({
+    required ProfilesWhereUniqueInput where,
+    required ProfilesCreateInput create,
+    required ProfilesUpdateInput update,
+    ProfilesInclude? include,
+    ProfilesSelect? select,
+  }) {
+    final predicates = where.toPredicates();
+    final queryInclude = include?.toQueryInclude();
+    final querySelect = select?.toQuerySelect();
+    return _client.transaction((txClient) async {
+      final tx = GeneratedComonOrmClient._fromClient(txClient);
+      final txDelegate = tx._client.model('Profiles');
+      final existing = await txDelegate.findUnique(
+        FindUniqueQuery(
+          model: 'Profiles',
+          where: predicates,
+        ),
+      );
+      if (existing != null) {
+        return _performUpdateWithRelationWrites(
+          tx: tx,
+          predicates: predicates,
+          existing: existing,
+          data: update,
+          include: queryInclude,
+          select: querySelect,
+        );
+      }
+      return _performCreateWithRelationWrites(
+        tx: tx,
+        data: create,
+        include: queryInclude,
+        select: querySelect,
+      );
+    });
+  }
+
+  Future<int> updateMany({
+    required ProfilesWhereInput where,
+    required ProfilesUpdateInput data,
+  }) {
+    final predicates = where.toPredicates();
+    if (data.hasComputedOperators || data.hasRelationWrites) {
+      return _client.transaction((txClient) async {
+        final tx = GeneratedComonOrmClient._fromClient(txClient);
+        final txDelegate = tx._client.model('Profiles');
+        final existingRecords = await txDelegate.findMany(
+          FindManyQuery(
+            model: 'Profiles',
+            where: predicates,
+          ),
+        );
+        var updatedCount = 0;
+        for (final record in existingRecords) {
+          await _performUpdateWithRelationWrites(
+            tx: tx,
+            predicates: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
+            existing: record,
+            data: data,
+          );
+          updatedCount++;
+        }
+        return updatedCount;
+      });
+    }
+    return _delegate.updateMany(
+      UpdateManyQuery(
+        model: 'Profiles',
+        where: predicates,
+        data: data.toData(),
+      ),
+    );
+  }
+
+  Future<Profiles> _performCreateWithRelationWrites({
+    required GeneratedComonOrmClient tx,
+    required ProfilesCreateInput data,
+    QueryInclude? include,
+    QuerySelect? select,
+  }) async {
+    final txDelegate = tx._client.model('Profiles');
+    final created = await txDelegate.create(
+      CreateQuery(
+        model: 'Profiles',
+        data: data.toData(),
+        nestedCreates: data.toNestedCreates(),
+      ),
+    );
+    final predicates = _primaryKeyWhereUniqueFromRecord(created).toPredicates();
+    if (data.hasDeferredRelationWrites) {
+      await _applyNestedRelationWrites(
+        tx: tx,
+        predicates: predicates,
+        existing: created,
+        data: data.toDeferredRelationUpdateInput(),
+      );
+    }
+    if (include == null && select == null && !data.hasDeferredRelationWrites) {
+      return Profiles.fromRecord(created);
+    }
+    final projected = await txDelegate.findUnique(
+      FindUniqueQuery(
+        model: 'Profiles',
+        where: predicates,
+        include: include,
+        select: select,
+      ),
+    );
+    if (projected == null) {
+      throw StateError('Profiles create branch could not reload the created record by primary key.');
+    }
+    return Profiles.fromRecord(projected);
+  }
+
+  ProfilesWhereUniqueInput _primaryKeyWhereUniqueFromRecord(
+    Map<String, Object?> record,
+  ) {
+    return ProfilesWhereUniqueInput(id: (record['id'] as int?)!);
+  }
+
+  Future<Profiles> _performUpdateWithRelationWrites({
+    required GeneratedComonOrmClient tx,
+    required List<QueryPredicate> predicates,
+    required Map<String, Object?> existing,
+    required ProfilesUpdateInput data,
+    QueryInclude? include,
+    QuerySelect? select,
+  }) async {
+    final txDelegate = tx._client.model('Profiles');
+    await txDelegate.update(
+      UpdateQuery(
+        model: 'Profiles',
+        where: predicates,
+        data: data.resolveDataAgainstRecord(existing),
+      ),
+    );
+    await _applyNestedRelationWrites(
+      tx: tx,
+      predicates: predicates,
+      existing: existing,
+      data: data,
+    );
+    final projected = await txDelegate.findUnique(
+      FindUniqueQuery(
+        model: 'Profiles',
+        where: predicates,
+        include: include,
+        select: select,
+      ),
+    );
+    if (projected == null) {
+      throw StateError('Profiles update branch could not reload the updated record for the provided unique selector.');
+    }
+    return Profiles.fromRecord(projected);
+  }
+
+  Future<void> _applyNestedRelationWrites({
+    required GeneratedComonOrmClient tx,
+    required List<QueryPredicate> predicates,
+    required Map<String, Object?> existing,
+    required ProfilesUpdateInput data,
+  }) async {
+    return;
+  }
+
+
+  Future<Profiles> delete({
+    required ProfilesWhereUniqueInput where,
+    ProfilesInclude? include,
+    ProfilesSelect? select,
+  }) {
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'Profiles',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(Profiles.fromRecord);
+  }
+
+  Future<int> deleteMany({
+    required ProfilesWhereInput where,
+  }) {
+    return _delegate.deleteMany(
+      DeleteManyQuery(
+        model: 'Profiles',
+        where: where.toPredicates(),
+      ),
+    );
+  }
+}
+
+class ProfilesWhereInput {
+  const ProfilesWhereInput({this.AND = const <ProfilesWhereInput>[], this.OR = const <ProfilesWhereInput>[], this.NOT = const <ProfilesWhereInput>[], this.id, this.idFilter, this.name, this.nameFilter, this.role, });
+
+  final List<ProfilesWhereInput> AND;
+  final List<ProfilesWhereInput> OR;
+  final List<ProfilesWhereInput> NOT;
+  final int? id;
+  final IntFilter? idFilter;
+  final String? name;
+  final StringFilter? nameFilter;
+  final UserRole? role;
+
+  List<QueryPredicate> toPredicates() {
+    final predicates = <QueryPredicate>[];
+    if (AND.isNotEmpty) {
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
+    }
+    if (OR.isNotEmpty) {
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
+    }
+    if (NOT.isNotEmpty) {
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
+    }
+    if (id != null) {
+      predicates.add(QueryPredicate(field: 'id', operator: 'equals', value: id));
+    }
+    if (idFilter != null) {
+      predicates.addAll(idFilter!.toPredicates('id'));
+    }
+    if (name != null) {
+      predicates.add(QueryPredicate(field: 'name', operator: 'equals', value: name));
+    }
+    if (nameFilter != null) {
+      predicates.addAll(nameFilter!.toPredicates('name'));
+    }
+    if (role != null) {
+      predicates.add(QueryPredicate(field: 'role', operator: 'equals', value: _enumName(role)));
+    }
+    return List<QueryPredicate>.unmodifiable(predicates);
+  }
+}
+
+class ProfilesWhereUniqueInput {
+  const ProfilesWhereUniqueInput({this.id, });
+
+  final int? id;
+
+  List<QueryPredicate> toPredicates() {
+    final selectors = <List<QueryPredicate>>[];
+    if (id != null) {
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'id', operator: 'equals', value: id),
+      ]);
+    }
+    if (selectors.length != 1) {
+      throw StateError('Exactly one unique selector must be provided for ProfilesWhereUniqueInput.');
+    }
+    return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
+  }
+
+  bool matchesRecord(Map<String, Object?> record) {
+    var selectorCount = 0;
+    var matches = false;
+    if (id != null) {
+      selectorCount++;
+      matches = record['id'] == id;
+    }
+    if (selectorCount != 1) {
+      throw StateError('Exactly one unique selector must be provided for ProfilesWhereUniqueInput.');
+    }
+    return matches;
+  }
+}
+
+class ProfilesOrderByInput {
+  const ProfilesOrderByInput({this.id, this.name, this.role, });
+
+  final SortOrder? id;
+  final SortOrder? name;
+  final SortOrder? role;
+
+  List<QueryOrderBy> toQueryOrderBy() {
+    final orderings = <QueryOrderBy>[];
+    if (id != null) {
+      orderings.add(QueryOrderBy(field: 'id', direction: id!));
+    }
+    if (name != null) {
+      orderings.add(QueryOrderBy(field: 'name', direction: name!));
+    }
+    if (role != null) {
+      orderings.add(QueryOrderBy(field: 'role', direction: role!));
+    }
+    return List<QueryOrderBy>.unmodifiable(orderings);
+  }
+}
+
+enum ProfilesScalarField {
+  id,
+  name,
+  role
+}
+
+class ProfilesCountAggregateInput {
+  const ProfilesCountAggregateInput({this.all = false, this.id = false, this.name = false, this.role = false, });
+
+  final bool all;
+  final bool id;
+  final bool name;
+  final bool role;
+
+  QueryCountSelection toQueryCountSelection() {
+    final fields = <String>{};
+    if (id) {
+      fields.add('id');
+    }
+    if (name) {
+      fields.add('name');
+    }
+    if (role) {
+      fields.add('role');
+    }
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
+  }
+}
+
+class ProfilesAvgAggregateInput {
+  const ProfilesAvgAggregateInput({this.id = false, });
+
+  final bool id;
+
+  Set<String> toFields() {
+    final fields = <String>{};
+    if (id) {
+      fields.add('id');
+    }
+    return Set<String>.unmodifiable(fields);
+  }
+}
+
+class ProfilesSumAggregateInput {
+  const ProfilesSumAggregateInput({this.id = false, });
+
+  final bool id;
+
+  Set<String> toFields() {
+    final fields = <String>{};
+    if (id) {
+      fields.add('id');
+    }
+    return Set<String>.unmodifiable(fields);
+  }
+}
+
+class ProfilesMinAggregateInput {
+  const ProfilesMinAggregateInput({this.id = false, this.name = false, this.role = false, });
+
+  final bool id;
+  final bool name;
+  final bool role;
+
+  Set<String> toFields() {
+    final fields = <String>{};
+    if (id) {
+      fields.add('id');
+    }
+    if (name) {
+      fields.add('name');
+    }
+    if (role) {
+      fields.add('role');
+    }
+    return Set<String>.unmodifiable(fields);
+  }
+}
+
+class ProfilesMaxAggregateInput {
+  const ProfilesMaxAggregateInput({this.id = false, this.name = false, this.role = false, });
+
+  final bool id;
+  final bool name;
+  final bool role;
+
+  Set<String> toFields() {
+    final fields = <String>{};
+    if (id) {
+      fields.add('id');
+    }
+    if (name) {
+      fields.add('name');
+    }
+    if (role) {
+      fields.add('role');
+    }
+    return Set<String>.unmodifiable(fields);
+  }
+}
+
+class ProfilesCountAggregateResult {
+  const ProfilesCountAggregateResult({this.all, this.id, this.name, this.role, });
+
+  final int? all;
+  final int? id;
+  final int? name;
+  final int? role;
+
+  factory ProfilesCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
+    return ProfilesCountAggregateResult(
+      all: result.all,
+      id: result.fields['id'],
+      name: result.fields['name'],
+      role: result.fields['role'],
+    );
+  }
+}
+
+class ProfilesAvgAggregateResult {
+  const ProfilesAvgAggregateResult({this.id, });
+
+  final double? id;
+
+  factory ProfilesAvgAggregateResult.fromMap(Map<String, double?> values) {
+    return ProfilesAvgAggregateResult(
+      id: _asDouble(values['id']),
+    );
+  }
+}
+
+class ProfilesSumAggregateResult {
+  const ProfilesSumAggregateResult({this.id, });
+
+  final int? id;
+
+  factory ProfilesSumAggregateResult.fromMap(Map<String, num?> values) {
+    return ProfilesSumAggregateResult(
+      id: values['id']?.toInt(),
+    );
+  }
+}
+
+class ProfilesMinAggregateResult {
+  const ProfilesMinAggregateResult({this.id, this.name, this.role, });
+
+  final int? id;
+  final String? name;
+  final UserRole? role;
+
+  factory ProfilesMinAggregateResult.fromMap(Map<String, Object?> values) {
+    return ProfilesMinAggregateResult(
+      id: values['id'] as int?,
+      name: values['name'] as String?,
+      role: values['role'] == null ? null : UserRole.values.byName(values['role'] as String),
+    );
+  }
+}
+
+class ProfilesMaxAggregateResult {
+  const ProfilesMaxAggregateResult({this.id, this.name, this.role, });
+
+  final int? id;
+  final String? name;
+  final UserRole? role;
+
+  factory ProfilesMaxAggregateResult.fromMap(Map<String, Object?> values) {
+    return ProfilesMaxAggregateResult(
+      id: values['id'] as int?,
+      name: values['name'] as String?,
+      role: values['role'] == null ? null : UserRole.values.byName(values['role'] as String),
+    );
+  }
+}
+
+class ProfilesAggregateResult {
+  const ProfilesAggregateResult({
+    this.count,
+    this.avg,
+    this.sum,
+    this.min,
+    this.max,
+  });
+
+  final ProfilesCountAggregateResult? count;
+  final ProfilesAvgAggregateResult? avg;
+  final ProfilesSumAggregateResult? sum;
+  final ProfilesMinAggregateResult? min;
+  final ProfilesMaxAggregateResult? max;
+
+  factory ProfilesAggregateResult.fromQueryResult(AggregateQueryResult result) {
+    return ProfilesAggregateResult(
+      count: result.count == null ? null : ProfilesCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : ProfilesAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : ProfilesSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : ProfilesMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : ProfilesMaxAggregateResult.fromMap(result.max!),
+    );
+  }
+}
+
+class ProfilesGroupByHavingInput {
+  const ProfilesGroupByHavingInput({this.id, });
+
+  final NumericAggregatesFilter? id;
+
+  List<QueryAggregatePredicate> toAggregatePredicates() {
+    final predicates = <QueryAggregatePredicate>[];
+    if (id != null) {
+      predicates.addAll(id!.toPredicates('id'));
+    }
+    return List<QueryAggregatePredicate>.unmodifiable(predicates);
+  }
+}
+
+class ProfilesCountAggregateOrderByInput {
+  const ProfilesCountAggregateOrderByInput({this.all, this.id, this.name, this.role, });
+
+  final SortOrder? all;
+  final SortOrder? id;
+  final SortOrder? name;
+  final SortOrder? role;
+
+  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
+    final orderings = <GroupByOrderBy>[];
+    if (all != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
+    }
+    if (id != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
+    }
+    if (name != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'name', direction: name!));
+    }
+    if (role != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'role', direction: role!));
+    }
+    return List<GroupByOrderBy>.unmodifiable(orderings);
+  }
+}
+
+class ProfilesAvgAggregateOrderByInput {
+  const ProfilesAvgAggregateOrderByInput({this.id, });
+
+  final SortOrder? id;
+
+  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
+    final orderings = <GroupByOrderBy>[];
+    if (id != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
+    }
+    return List<GroupByOrderBy>.unmodifiable(orderings);
+  }
+}
+
+class ProfilesSumAggregateOrderByInput {
+  const ProfilesSumAggregateOrderByInput({this.id, });
+
+  final SortOrder? id;
+
+  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
+    final orderings = <GroupByOrderBy>[];
+    if (id != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
+    }
+    return List<GroupByOrderBy>.unmodifiable(orderings);
+  }
+}
+
+class ProfilesMinAggregateOrderByInput {
+  const ProfilesMinAggregateOrderByInput({this.id, this.name, this.role, });
+
+  final SortOrder? id;
+  final SortOrder? name;
+  final SortOrder? role;
+
+  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
+    final orderings = <GroupByOrderBy>[];
+    if (id != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
+    }
+    if (name != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'name', direction: name!));
+    }
+    if (role != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'role', direction: role!));
+    }
+    return List<GroupByOrderBy>.unmodifiable(orderings);
+  }
+}
+
+class ProfilesMaxAggregateOrderByInput {
+  const ProfilesMaxAggregateOrderByInput({this.id, this.name, this.role, });
+
+  final SortOrder? id;
+  final SortOrder? name;
+  final SortOrder? role;
+
+  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
+    final orderings = <GroupByOrderBy>[];
+    if (id != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
+    }
+    if (name != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'name', direction: name!));
+    }
+    if (role != null) {
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'role', direction: role!));
+    }
+    return List<GroupByOrderBy>.unmodifiable(orderings);
+  }
+}
+
+class ProfilesGroupByOrderByInput {
+  const ProfilesGroupByOrderByInput({this.id, this.name, this.role, this.count, this.avg, this.sum, this.min, this.max});
+
+  final SortOrder? id;
+  final SortOrder? name;
+  final SortOrder? role;
+  final ProfilesCountAggregateOrderByInput? count;
+  final ProfilesAvgAggregateOrderByInput? avg;
+  final ProfilesSumAggregateOrderByInput? sum;
+  final ProfilesMinAggregateOrderByInput? min;
+  final ProfilesMaxAggregateOrderByInput? max;
+
+  List<GroupByOrderBy> toGroupByOrderBy() {
+    final orderings = <GroupByOrderBy>[];
+    if (id != null) {
+      orderings.add(GroupByOrderBy.field(field: 'id', direction: id!));
+    }
+    if (name != null) {
+      orderings.add(GroupByOrderBy.field(field: 'name', direction: name!));
+    }
+    if (role != null) {
+      orderings.add(GroupByOrderBy.field(field: 'role', direction: role!));
+    }
+    if (count != null) {
+      orderings.addAll(count!.toGroupByOrderBy(QueryAggregateFunction.count));
+    }
+    if (avg != null) {
+      orderings.addAll(avg!.toGroupByOrderBy(QueryAggregateFunction.avg));
+    }
+    if (sum != null) {
+      orderings.addAll(sum!.toGroupByOrderBy(QueryAggregateFunction.sum));
+    }
+    if (min != null) {
+      orderings.addAll(min!.toGroupByOrderBy(QueryAggregateFunction.min));
+    }
+    if (max != null) {
+      orderings.addAll(max!.toGroupByOrderBy(QueryAggregateFunction.max));
+    }
+    return List<GroupByOrderBy>.unmodifiable(orderings);
+  }
+}
+
+class ProfilesGroupByRow {
+  const ProfilesGroupByRow({this.id, this.name, this.role, this.count, this.avg, this.sum, this.min, this.max});
+
+  final int? id;
+  final String? name;
+  final UserRole? role;
+  final ProfilesCountAggregateResult? count;
+  final ProfilesAvgAggregateResult? avg;
+  final ProfilesSumAggregateResult? sum;
+  final ProfilesMinAggregateResult? min;
+  final ProfilesMaxAggregateResult? max;
+
+  factory ProfilesGroupByRow.fromQueryResultRow(GroupByQueryResultRow row) {
+    return ProfilesGroupByRow(
+      id: row.group['id'] as int?,
+      name: row.group['name'] as String?,
+      role: row.group['role'] == null ? null : UserRole.values.byName(row.group['role'] as String),
+      count: row.aggregates.count == null ? null : ProfilesCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : ProfilesAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : ProfilesSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : ProfilesMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : ProfilesMaxAggregateResult.fromMap(row.aggregates.max!),
+    );
+  }
+}
+
+class ProfilesInclude {
+  const ProfilesInclude();
+
+
+  QueryInclude? toQueryInclude() {
+    return null;
+  }
+}
+
+class ProfilesSelect {
+  const ProfilesSelect({this.id = false, this.name = false, this.role = false, });
+
+  final bool id;
+  final bool name;
+  final bool role;
+
+  QuerySelect? toQuerySelect() {
+    final fields = <String>{};
+    if (id) {
+      fields.add('id');
+    }
+    if (name) {
+      fields.add('name');
+    }
+    if (role) {
+      fields.add('role');
+    }
+    if (fields.isEmpty) {
+      return null;
+    }
+    return QuerySelect(Set<String>.unmodifiable(fields));
+  }
+}
+
+class ProfilesCreateInput {
+  const ProfilesCreateInput({this.id, required this.name, required this.role, });
+
+  final int? id;
+  final String name;
+  final UserRole role;
+
+  Map<String, Object?> toData() {
+    final data = <String, Object?>{};
+    if (id != null) {
+      data['id'] = id;
+    }
+    data['name'] = name;
+    data['role'] = _enumName(role);
+    return Map<String, Object?>.unmodifiable(data);
+  }
+
+  List<List<QueryPredicate>> toUniqueSelectorPredicates() {
+    final selectors = <List<QueryPredicate>>[];
+    if (id != null) {
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'id', operator: 'equals', value: id),
+      ]);
+    }
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
+  }
+
+  List<CreateRelationWrite> toNestedCreates() {
+    final writes = <CreateRelationWrite>[];
+    return List<CreateRelationWrite>.unmodifiable(writes);
+  }
+
+  bool get hasDeferredRelationWrites {
+    return false;
+  }
+
+  ProfilesUpdateInput toDeferredRelationUpdateInput() {
+    return ProfilesUpdateInput(
+    );
+  }
+}
+
+class ProfilesUpdateInput {
+  const ProfilesUpdateInput({this.name, this.nameOps, this.role, this.roleOps, });
+
+  final String? name;
+  final StringFieldUpdateOperationsInput? nameOps;
+  final UserRole? role;
+  final EnumFieldUpdateOperationsInput<UserRole>? roleOps;
+
+  bool get hasComputedOperators {
+    return false;
+  }
+
+  bool get hasRelationWrites {
+    return false;
+  }
+
+  Map<String, Object?> toData() {
+    final data = <String, Object?>{};
+    if (name != null && nameOps != null) {
+      throw StateError('Only one of name or nameOps may be provided for ProfilesUpdateInput.name.');
+    }
+    if (name != null) {
+      data['name'] = name;
+    }
+    if (nameOps != null) {
+      final ops = nameOps!;
+      if (ops.hasSet) {
+        data['name'] = ops.set as String?;
+      }
+    }
+    if (role != null && roleOps != null) {
+      throw StateError('Only one of role or roleOps may be provided for ProfilesUpdateInput.role.');
+    }
+    if (role != null) {
+      data['role'] = _enumName(role);
+    }
+    if (roleOps != null) {
+      final ops = roleOps!;
+      if (ops.hasSet) {
+        data['role'] = _enumName(ops.set as UserRole?);
+      }
+    }
+    return Map<String, Object?>.unmodifiable(data);
+  }
+
+  Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
+    final data = <String, Object?>{};
+    if (name != null && nameOps != null) {
+      throw StateError('Only one of name or nameOps may be provided for ProfilesUpdateInput.name.');
+    }
+    if (name != null) {
+      data['name'] = name;
+    }
+    if (nameOps != null) {
+      final ops = nameOps!;
+      if (ops.hasSet) {
+        data['name'] = ops.set as String?;
+      }
+    }
+    if (role != null && roleOps != null) {
+      throw StateError('Only one of role or roleOps may be provided for ProfilesUpdateInput.role.');
+    }
+    if (role != null) {
+      data['role'] = _enumName(role);
+    }
+    if (roleOps != null) {
+      final ops = roleOps!;
+      if (ops.hasSet) {
+        data['role'] = _enumName(ops.set as UserRole?);
+      }
+    }
+    return Map<String, Object?>.unmodifiable(data);
+  }
 }
 
 DateTime? _asDateTime(Object? value) {

@@ -50,11 +50,14 @@ class MigrationCliDispatcher {
   bool get _errAnsiEnabled => sinkSupportsAnsi(_err);
 
   /// Dispatches [arguments] to the provider-specific migration executable.
-  Future<int> run(List<String> arguments) async {
+  Future<int> run(
+    List<String> arguments, {
+    String commandName = 'migrate',
+  }) async {
     if (arguments.isEmpty ||
         arguments.contains('--help') ||
         arguments.contains('-h')) {
-      _writeUsage();
+      _writeUsage(commandName: commandName);
       return 0;
     }
 
@@ -92,18 +95,45 @@ class MigrationCliDispatcher {
     }
   }
 
-  void _writeUsage() {
-    _out.writeln(cliTitle('comon_orm migrate', ansiEnabled: _outAnsiEnabled));
+  void _writeUsage({required String commandName}) {
+    _out.writeln(
+      cliTitle('comon_orm $commandName', ansiEnabled: _outAnsiEnabled),
+    );
     _out.writeln(
       cliMuted(
-        'Usage: comon_orm migrate <command> [options]',
+        'Usage: comon_orm $commandName <command> [options]',
         ansiEnabled: _outAnsiEnabled,
       ),
     );
     _out.writeln('Commands:');
-    _out.writeln(
-      '  diff|dev|deploy|apply|rollback|reset|resolve|history|status|push are delegated to the adapter package selected from datasource.provider.',
-    );
+    switch (commandName) {
+      case 'db':
+        _out.writeln(
+          '  push      Push the current schema without creating migration history.',
+        );
+      case 'migrate':
+        _out.writeln(
+          '  diff      Compare schema sources and print or write an SQL diff.',
+        );
+        _out.writeln(
+          '  dev       Create and apply a local migration, then regenerate the client.',
+        );
+        _out.writeln(
+          '  deploy    Apply reviewed local migrations to the target database.',
+        );
+        _out.writeln(
+          '  rollback  Revert to a recorded schema snapshot for recovery scenarios.',
+        );
+        _out.writeln(
+          '  reset     Reset the database from the schema and regenerate the client.',
+        );
+        _out.writeln(
+          '  resolve   Mark migrations applied or rolled back in migration history.',
+        );
+        _out.writeln(
+          '  status    Compare local migration artifacts with database history.',
+        );
+    }
     _out.writeln('Options:');
     _out.writeln(
       '  --schema <path>        Schema file to inspect before delegating. Defaults to auto-discovery: prisma/schema.prisma, schema.prisma.',
@@ -112,7 +142,7 @@ class MigrationCliDispatcher {
       '  --datasource <name>    Select datasource when the schema declares multiple datasource blocks.',
     );
     _out.writeln(
-      '  Any remaining options are forwarded to the provider-specific migration CLI unchanged.',
+      '  Remaining options are forwarded unchanged to the provider-specific CLI.',
     );
   }
 

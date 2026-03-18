@@ -15,13 +15,16 @@ The correct startup shape is:
 final migrator = SqliteFlutterMigrator(
   currentVersion: 3,
   migrations: <SqliteFlutterMigration>[
-    SqliteFlutterMigration.sql(
+    SqliteFlutterMigration.schema(
       fromVersion: 1,
       toVersion: 2,
       debugName: 'add_user_names',
-      statements: <String>[
-        'ALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT "";',
-      ],
+      run: (schema) {
+        schema.alterTable('users', (table) {
+          table.text('first_name').notNull().defaultValue('');
+          table.text('last_name').notNull().defaultValue('');
+        });
+      },
     ),
   ],
 );
@@ -64,21 +67,22 @@ Use when:
 Preferred action:
 
 - a small versioned migration in Dart code
-- `SqliteFlutterMigration.sql(...)` is the default fit
+- `SqliteFlutterMigration.schema(...)` is the default fit for all structural changes
+- `SqliteFlutterMigration.sql(...)` for raw SQL when needed
 
-### Rebuild Migration
+### Destructive Migration
 
 Use when:
 
 - removing columns
+- renaming columns or tables
 - reshaping data
-- renaming or splitting fields
 - changing constraints SQLite cannot update in place
 
 Preferred action:
 
-- explicit Dart-coded migration with one transaction
-- prefer `SqliteFlutterMigration.rebuildTable(...)` when the change is a standard create or copy or drop or rename flow
+- `SqliteFlutterMigration.schema(...)` with `dropColumn`, `renameColumn`, or `renameTable`
+- `SqliteFlutterMigration.rebuildTable(...)` when the change is a complex rebuild with data transformation
 - fall back to `SqliteFlutterMigration(...)` with a custom callback when the rebuild needs special logic
 
 ## Safety Rules
@@ -92,7 +96,8 @@ Preferred action:
 ## Good API Shape
 
 - one migration object per version step
-- a convenience constructor for simple SQL-first steps
+- a Dart-coded schema builder for most structural changes
+- a SQL-first constructor for raw statements
 - a rebuild helper for common SQLite replacement-table flows
 - a custom callback for complex data moves
 - one migrator that runs before generated runtime open
@@ -101,16 +106,19 @@ Preferred action:
 
 Use these names when the repository already depends on `comon_orm_sqlite_flutter`:
 
-- `SqliteFlutterMigration.sql(...)`
-- `SqliteFlutterMigration.rebuildTable(...)`
-- `SqliteFlutterMigration(...)`
+- `SqliteFlutterMigration.schema(...)` — Dart-coded builder API (preferred)
+- `SqliteFlutterMigration.sql(...)` — raw SQL statements
+- `SqliteFlutterMigration.rebuildTable(...)` — SQLite 12-step table rebuild
+- `SqliteFlutterMigration.schemaDiff(...)` — auto-diff from schema snapshots
+- `SqliteFlutterMigration(...)` — fully custom callback
 - `SqliteFlutterMigrator`
 - `upgradeSqliteFlutterDatabase(...)`
 
 Good recommendation pattern:
 
-- additive change: `SqliteFlutterMigration.sql(...)`
-- common rebuild: `SqliteFlutterMigration.rebuildTable(...)`
+- create/alter/rename/drop tables: `SqliteFlutterMigration.schema(...)`
+- raw SQL with optional post-callback: `SqliteFlutterMigration.sql(...)`
+- complex rebuild with data transform: `SqliteFlutterMigration.rebuildTable(...)`
 - custom data move: `SqliteFlutterMigration(...)` with `run: (tx) async { ... }`
 
 ## What Not To Promise

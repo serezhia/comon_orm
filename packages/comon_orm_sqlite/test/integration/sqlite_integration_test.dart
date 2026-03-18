@@ -74,10 +74,21 @@ model User {
           final outBuffer = StringBuffer();
           final errBuffer = StringBuffer();
           final cli = SqliteMigrationCli(out: outBuffer, err: errBuffer);
+          final targetSchemaPath =
+              '${tempRoot.path}${Platform.pathSeparator}target.prisma';
+          File(targetSchemaPath).writeAsStringSync('''
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  nickname String?
+}
+''');
           final exitCode = cli.run(<String>[
             'status',
             '--db',
             databasePath,
+            '--schema',
+            targetSchemaPath,
             '--from',
             tempRoot.path,
           ]);

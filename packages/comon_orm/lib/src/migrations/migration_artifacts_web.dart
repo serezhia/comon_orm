@@ -4,6 +4,8 @@ import 'package:crypto/crypto.dart';
 
 import '../schema/schema_ast.dart';
 
+const _manualMigrationWarningSuffix = 'requires manual migration.';
+
 /// Describes a migration artifact loaded from disk.
 class LocalMigrationArtifact {
   /// Creates a local migration artifact descriptor.
@@ -45,6 +47,28 @@ class LocalMigrationArtifact {
 
   /// Content checksum used for drift detection.
   final String checksum;
+}
+
+/// Exception raised when a migration requires manual intervention.
+class ManualMigrationRequiredException implements Exception {
+  /// Creates a manual-migration exception.
+  const ManualMigrationRequiredException(this.message);
+
+  /// Human-readable error message.
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+/// Whether [warning] indicates that the migration cannot be applied automatically.
+bool isManualMigrationWarning(String warning) {
+  return warning.trim().endsWith(_manualMigrationWarningSuffix);
+}
+
+/// Whether any warning indicates that the migration requires manual intervention.
+bool containsManualMigrationWarnings(Iterable<String> warnings) {
+  return warnings.any(isManualMigrationWarning);
 }
 
 /// Computes the stable checksum stored with a migration artifact.

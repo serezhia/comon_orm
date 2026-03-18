@@ -50,6 +50,41 @@ void main() {
       }
     });
 
+    test('deploy rejects artifacts that require manual migration', () async {
+      final tempRoot = Directory.systemTemp.createTempSync('comon_orm_pg_');
+      try {
+        _writeMigrationArtifact(
+          tempRoot,
+          name: '20260315_require_last_name',
+          beforeSchema: 'model User {\n  id Int @id\n  lastName String?\n}\n',
+          afterSchema: 'model User {\n  id Int @id\n  lastName String\n}\n',
+          warnings: const <String>[
+            'Altering User.lastName requires manual migration.',
+          ],
+        );
+
+        final service = PostgresqlMigrationService(
+          runner: _RecordingPostgresqlMigrationRunner(),
+        );
+
+        await expectLater(
+          () => service.deployMigrations(
+            executor: _FakeSessionExecutor(),
+            migrationsDirectory: tempRoot.path,
+          ),
+          throwsA(
+            isA<ManualMigrationRequiredException>().having(
+              (error) => error.message,
+              'message',
+              contains('20260315_require_last_name'),
+            ),
+          ),
+        );
+      } finally {
+        tempRoot.deleteSync(recursive: true);
+      }
+    });
+
     test('resolve delegates applied and rolled-back actions', () async {
       final tempRoot = Directory.systemTemp.createTempSync('comon_orm_pg_');
       try {
@@ -204,6 +239,7 @@ void _writeMigrationArtifact(
   required String name,
   required String beforeSchema,
   required String afterSchema,
+  List<String> warnings = const <String>[],
 }) {
   final directory = Directory('${root.path}${Platform.pathSeparator}$name')
     ..createSync(recursive: true);
@@ -216,4 +252,9 @@ void _writeMigrationArtifact(
   File(
     '${directory.path}${Platform.pathSeparator}migration.sql',
   ).writeAsStringSync('-- noop\n');
+  if (warnings.isNotEmpty) {
+    File(
+      '${directory.path}${Platform.pathSeparator}warnings.txt',
+    ).writeAsStringSync('${warnings.join('\n')}\n');
+  }
 }

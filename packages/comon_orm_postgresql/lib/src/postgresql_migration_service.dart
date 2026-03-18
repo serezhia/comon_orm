@@ -164,6 +164,12 @@ class PostgresqlMigrationService {
         continue;
       }
 
+      if (containsManualMigrationWarnings(artifact.warnings)) {
+        throw ManualMigrationRequiredException(
+          'Migration `${artifact.name}` requires manual migration and cannot be applied automatically. Complete the change manually, then run `migrate resolve --applied ${artifact.name}`.',
+        );
+      }
+
       await runner.migrateToSchema(
         executor: executor,
         target: const SchemaParser().parse(artifact.afterSchema),

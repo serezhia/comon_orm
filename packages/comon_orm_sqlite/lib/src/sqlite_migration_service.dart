@@ -168,6 +168,12 @@ class SqliteMigrationService {
         continue;
       }
 
+      if (containsManualMigrationWarnings(artifact.warnings)) {
+        throw ManualMigrationRequiredException(
+          'Migration `${artifact.name}` requires manual migration and cannot be applied automatically. Complete the change manually, then run `migrate resolve --applied ${artifact.name}`.',
+        );
+      }
+
       runner.migrateToSchema(
         database: database,
         target: const SchemaParser().parse(artifact.afterSchema),

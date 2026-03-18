@@ -56,10 +56,12 @@ class ComonOrmCli {
         case 'migrate':
           return _migrationDispatcher.run(
             arguments.skip(1).toList(growable: false),
+            commandName: 'migrate',
           );
         case 'db':
           return _migrationDispatcher.run(
             arguments.skip(1).toList(growable: false),
+            commandName: 'db',
           );
         default:
           _err.writeln(

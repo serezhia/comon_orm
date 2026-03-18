@@ -1,6 +1,7 @@
 import 'package:comon_orm/comon_orm.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 
+import 'migration_schema.dart';
 import 'sqlite_flutter_schema_migration_planner.dart';
 
 /// Runs one versioned local SQLite migration step.
@@ -125,6 +126,47 @@ class SqliteFlutterMigration {
         for (final statement in plan.statements) {
           await tx.execute(statement);
         }
+      },
+    );
+  }
+
+  /// Creates a Dart-coded migration step using the [MigrationSchema] builder.
+  ///
+  /// This is the recommended way to write most migrations:
+  ///
+  /// ```dart
+  /// SqliteFlutterMigration.schema(
+  ///   fromVersion: 0,
+  ///   toVersion: 1,
+  ///   debugName: 'create_users',
+  ///   run: (schema) {
+  ///     schema.createTable('users', (table) {
+  ///       table.id();
+  ///       table.text('email').notNull().unique();
+  ///       table.text('name');
+  ///       table.boolean('active').notNull().defaultValue(true);
+  ///       table.timestamps();
+  ///     });
+  ///   },
+  /// );
+  /// ```
+  ///
+  /// Operations are collected synchronously during [run] and then executed
+  /// in order against the migration transaction.
+  factory SqliteFlutterMigration.schema({
+    required int fromVersion,
+    required int toVersion,
+    required String debugName,
+    required void Function(MigrationSchema schema) run,
+  }) {
+    return SqliteFlutterMigration(
+      fromVersion: fromVersion,
+      toVersion: toVersion,
+      debugName: debugName,
+      run: (tx) async {
+        final schema = MigrationSchema();
+        run(schema);
+        await schema.applyTo(tx);
       },
     );
   }

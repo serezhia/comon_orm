@@ -227,6 +227,12 @@ String buildMigrationSqlScript(PlannedMigration plan) {
     return '-- Schema rebuild required to apply this migration safely.\n';
   }
   if (plan.statements.isEmpty) {
+    if (containsManualMigrationWarnings(plan.warnings)) {
+      return '''-- Manual migration required.
+-- This schema change could not be converted into executable SQL automatically.
+-- Apply the required SQL changes manually, then mark the migration as applied with migrate resolve.
+''';
+    }
     return '-- No schema changes required.\n';
   }
   return '${plan.statements.join(';\n')};\n';

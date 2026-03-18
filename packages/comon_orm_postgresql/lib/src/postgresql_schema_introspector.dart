@@ -342,6 +342,14 @@ class PostgresqlSchemaIntrospector {
           .map((entry) => entry['target_column'] as String)
           .toList(growable: false);
       final targetModel = entries.first['target_table'] as String;
+      final isNullable = localFields.any((fieldName) {
+        final column = columns.firstWhere(
+          (entry) => entry['column_name'] == fieldName,
+        );
+        final isPrimaryKey = primaryKeyColumns.contains(fieldName);
+        return (column['is_nullable'] as String? ?? 'YES') == 'YES' &&
+            !isPrimaryKey;
+      });
       final relationArguments = <String, String>{
         'fields': '[${localFields.join(', ')}]',
         'references': '[${targetFields.join(', ')}]',
@@ -366,7 +374,7 @@ class PostgresqlSchemaIntrospector {
           name: _lowercaseFirst(targetModel),
           type: targetModel,
           isList: false,
-          isNullable: true,
+          isNullable: isNullable,
           attributes: List<FieldAttribute>.unmodifiable(<FieldAttribute>[
             FieldAttribute(
               name: 'relation',

@@ -7,7 +7,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('SqliteMigrationCli', () {
-    test('runs diff apply and history against a file-backed database', () {
+    test('runs diff deploy rollback and status against a file-backed database', () {
       final tempRoot = Directory.systemTemp.createTempSync('comon_orm_cli_');
       try {
         final dbPath = '${tempRoot.path}${Platform.pathSeparator}test.db';
@@ -84,16 +84,19 @@ model User {
         );
 
         outBuffer.clear();
-        final applyExitCode = cli.run(<String>[
-          'apply',
+        final deployExitCode = cli.run(<String>[
+          'deploy',
           '--schema',
           targetSchemaPath,
-          '--name',
-          '20260313_add_user_nickname',
+          '--from',
+          migrationsPath,
         ]);
 
-        expect(applyExitCode, 0);
-        expect(outBuffer.toString(), contains('Applied: true'));
+        expect(deployExitCode, 0);
+        expect(
+          outBuffer.toString(),
+          contains('All migrations have been successfully applied.'),
+        );
 
         final rollbackExitCode = cli.run(<String>[
           'rollback',
@@ -115,17 +118,6 @@ model User {
         } finally {
           revertedDatabase.close();
         }
-
-        outBuffer.clear();
-        final historyExitCode = cli.run(<String>[
-          'history',
-          '--schema',
-          targetSchemaPath,
-        ]);
-
-        expect(historyExitCode, 0);
-        expect(outBuffer.toString(), contains('20260313_add_user_nickname'));
-        expect(outBuffer.toString(), contains('rollback'));
 
         outBuffer.clear();
         final statusExitCode = cli.run(<String>[
@@ -251,6 +243,84 @@ model User {
         } finally {
           database.close();
         }
+      } finally {
+        Directory.current = previousCurrent;
+        tempRoot.deleteSync(recursive: true);
+      }
+    });
+
+    test('dev requires create-only for manual migrations', () {
+      final tempRoot = Directory.systemTemp.createTempSync('comon_orm_cli_');
+      final previousCurrent = Directory.current;
+      try {
+        final prismaDir = Directory(
+          '${tempRoot.path}${Platform.pathSeparator}prisma',
+        )..createSync(recursive: true);
+        File(
+          '${prismaDir.path}${Platform.pathSeparator}schema.prisma',
+        ).writeAsStringSync('''
+datasource db {
+  provider = "sqlite"
+  url = "file:dev.db"
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  lastName String
+}
+''');
+
+        final database = sqlite.sqlite3.open(
+          '${prismaDir.path}${Platform.pathSeparator}dev.db',
+        );
+        try {
+          const SqliteSchemaApplier().apply(
+            database,
+            const SchemaParser().parse('''
+model User {
+  id Int @id @default(autoincrement())
+  lastName String?
+}
+'''),
+          );
+        } finally {
+          database.close();
+        }
+
+        Directory.current = tempRoot;
+        final outBuffer = StringBuffer();
+        final errBuffer = StringBuffer();
+        final cli = SqliteMigrationCli(
+          out: outBuffer,
+          err: errBuffer,
+          interactiveInput: false,
+        );
+
+        final exitCode = cli.run(<String>[
+          'dev',
+          '--name',
+          '20260318_require_last_name',
+        ]);
+
+        expect(exitCode, 1);
+        expect(
+          errBuffer.toString(),
+          contains(
+            'requires a manual migration and cannot be applied automatically',
+          ),
+        );
+        expect(
+          errBuffer.toString(),
+          contains(
+            'migrate dev --create-only --name 20260318_require_last_name',
+          ),
+        );
+        expect(
+          Directory(
+            '${prismaDir.path}${Platform.pathSeparator}migrations${Platform.pathSeparator}20260318_require_last_name',
+          ).existsSync(),
+          isFalse,
+        );
       } finally {
         Directory.current = previousCurrent;
         tempRoot.deleteSync(recursive: true);

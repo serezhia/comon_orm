@@ -59,13 +59,11 @@ class SqliteMigrationCli {
     try {
       return switch (command) {
         'diff' => _runDiff(options),
-        'apply' => _runApply(options),
         'deploy' => _runDeploy(options),
         'dev' => _runDev(options),
         'rollback' => _runRollback(options),
         'reset' => _runReset(options),
         'resolve' => _runResolve(options),
-        'history' => _runHistory(options),
         'push' => _runPush(options),
         'status' => _runStatus(options),
         _ => _unknownCommand(command),
@@ -177,86 +175,7 @@ class SqliteMigrationCli {
     }
   }
 
-  int _runApply(Map<String, String> options) {
-    out.writeln(
-      cliWarning(
-        '`migrate apply` is a legacy command. Prefer `migrate dev` or `migrate deploy`.',
-        ansiEnabled: _outAnsiEnabled,
-      ),
-    );
-    final loaded = _loadSchema(options['schema']);
-    final databasePath = options['db'] ?? _resolveDatabasePath(options, loaded);
-    final migrationName = _requireOption(options, 'name');
-    final allowWarnings = options['allow-warnings'] == 'true';
-
-    final database = _openDatabase(databasePath);
-    try {
-      final result = service.applySchema(
-        database: database,
-        target: loaded.schema,
-        migrationName: migrationName,
-        allowWarnings: allowWarnings,
-      );
-
-      out.writeln(
-        cliSuccess('Applied: ${result.applied}', ansiEnabled: _outAnsiEnabled),
-      );
-      out.writeln(
-        cliInfo(
-          'Statements: ${result.plan.statements.length}',
-          ansiEnabled: _outAnsiEnabled,
-        ),
-      );
-      out.writeln(
-        cliInfo(
-          'Warnings: ${result.plan.warnings.length}',
-          ansiEnabled: _outAnsiEnabled,
-        ),
-      );
-      _writeWarnings(result.plan.warnings);
-      return 0;
-    } finally {
-      database.close();
-    }
-  }
-
-  int _runHistory(Map<String, String> options) {
-    out.writeln(
-      cliWarning(
-        '`migrate history` is a legacy command. Prefer `migrate status`.',
-        ansiEnabled: _outAnsiEnabled,
-      ),
-    );
-    final loaded = _loadSchema(options['schema']);
-    final databasePath = options['db'] ?? _resolveDatabasePath(options, loaded);
-    final database = _openDatabase(databasePath);
-    try {
-      final history = service.runner.loadHistory(database);
-      if (history.isEmpty) {
-        out.writeln(
-          cliInfo('No migrations applied.', ansiEnabled: _outAnsiEnabled),
-        );
-        return 0;
-      }
-
-      for (final record in history) {
-        out.writeln(
-          '${record.kind.name} | ${record.name} | ${record.appliedAt.toIso8601String()} | ${record.statementCount}${record.targetName == null ? '' : ' | ${record.targetName}'}',
-        );
-      }
-      return 0;
-    } finally {
-      database.close();
-    }
-  }
-
   int _runRollback(Map<String, String> options) {
-    out.writeln(
-      cliWarning(
-        '`migrate rollback` is a legacy command. Prefer `migrate resolve --rolled-back` and a forward fix when possible.',
-        ansiEnabled: _outAnsiEnabled,
-      ),
-    );
     final loaded = _loadSchema(options['schema']);
     final databasePath = options['db'] ?? _resolveDatabasePath(options, loaded);
     final migrationsPath =
@@ -443,6 +362,26 @@ class SqliteMigrationCli {
         );
       }
 
+      final requiresManualMigration = containsManualMigrationWarnings(
+        draft.plan.warnings,
+      );
+      if (requiresManualMigration && !createOnly) {
+        _writeWarnings(draft.plan.warnings);
+        err.writeln(
+          cliError(
+            'This schema change requires a manual migration and cannot be applied automatically.',
+            ansiEnabled: _errAnsiEnabled,
+          ),
+        );
+        err.writeln(
+          cliWarning(
+            'Run `migrate dev --create-only --name $migrationName`, complete the change manually, then run `migrate resolve --applied $migrationName`.',
+            ansiEnabled: _errAnsiEnabled,
+          ),
+        );
+        return 1;
+      }
+
       if (draft.plan.warnings.isNotEmpty &&
           !prompter.confirm(
             'Apply this migration despite warnings?',
@@ -470,6 +409,14 @@ class SqliteMigrationCli {
       _writeWarnings(draft.plan.warnings);
 
       if (createOnly) {
+        if (requiresManualMigration) {
+          out.writeln(
+            cliWarning(
+              'Draft requires manual migration. Complete the change manually, then run `migrate resolve --applied $migrationName`.',
+              ansiEnabled: _outAnsiEnabled,
+            ),
+          );
+        }
         return 0;
       }
 
@@ -693,13 +640,7 @@ class SqliteMigrationCli {
       '  deploy [--db <path>] [--schema <path>] [--datasource <name>] [--from <dir>]',
     );
     out.writeln(
-      '  apply [--db <path>] [--schema <path>] [--datasource <name>] --name <migration> [--allow-warnings]',
-    );
-    out.writeln(
       '  rollback [--db <path>] [--schema <path>] [--datasource <name>] [--from <dir>] [--name <migration>] [--rollback-name <name>] [--allow-warnings]',
-    );
-    out.writeln(
-      '  history [--db <path>] [--schema <path>] [--datasource <name>]',
     );
     out.writeln(
       '  reset [--db <path>] [--schema <path>] [--datasource <name>] [--from <dir>] [--force]',

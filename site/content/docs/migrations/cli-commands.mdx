@@ -155,9 +155,9 @@ Supported source pairs include:
 
 Use `--output` to write the SQL to disk and `--exit-code` for CI-style checks.
 
-## Legacy commands
+## Recovery command
 
-`migrate apply`, `migrate rollback`, and `migrate history` still exist for compatibility, but they are no longer the preferred workflow.
+`migrate rollback` remains available for recovery scenarios when you need to revert to a recorded schema snapshot.
 
 The modern flow is built around `migrate dev`, `migrate deploy`, `migrate reset`, `migrate resolve`, `migrate status`, and `db push`.
 

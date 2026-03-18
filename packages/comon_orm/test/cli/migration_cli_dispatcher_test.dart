@@ -53,7 +53,7 @@ model User {
       }
     });
 
-    test('delegates SQLite migrations to comon_orm_sqlite', () async {
+    test('delegates SQLite rollback to comon_orm_sqlite', () async {
       final tempRoot = Directory.systemTemp.createTempSync(
         'comon_orm_migrate_sqlite_',
       );
@@ -80,7 +80,7 @@ model User {
         );
 
         final exitCode = await dispatcher.run(<String>[
-          'history',
+          'rollback',
           '--schema',
           schemaPath,
         ]);
@@ -92,7 +92,7 @@ model User {
           'comon_orm_sqlite:comon_orm_sqlite',
         );
         expect(invocation.arguments, <String>[
-          'history',
+          'rollback',
           '--schema',
           schemaPath,
         ]);
@@ -226,6 +226,69 @@ model User {
       } finally {
         tempRoot.deleteSync(recursive: true);
       }
+    });
+
+    test('prints migrate subcommands in help output', () async {
+      final out = StringBuffer();
+      final err = StringBuffer();
+      final dispatcher = MigrationCliDispatcher(out: out, err: err);
+
+      final exitCode = await dispatcher.run(<String>[], commandName: 'migrate');
+
+      expect(exitCode, 0);
+      expect(
+        out.toString(),
+        contains('Usage: comon_orm migrate <command> [options]'),
+      );
+      expect(out.toString(), contains('  diff      Compare schema sources'));
+      expect(
+        out.toString(),
+        contains('  dev       Create and apply a local migration'),
+      );
+      expect(
+        out.toString(),
+        contains('  deploy    Apply reviewed local migrations'),
+      );
+      expect(
+        out.toString(),
+        contains('  status    Compare local migration artifacts'),
+      );
+      expect(
+        out.toString(),
+        contains('  rollback  Revert to a recorded schema snapshot'),
+      );
+      expect(out.toString(), isNot(contains('  apply     ')));
+      expect(out.toString(), isNot(contains('  history   ')));
+      expect(
+        out.toString(),
+        isNot(contains('  push      Push the current schema')),
+      );
+      expect(err.toString(), isEmpty);
+    });
+
+    test('prints db subcommands in help output', () async {
+      final out = StringBuffer();
+      final err = StringBuffer();
+      final dispatcher = MigrationCliDispatcher(out: out, err: err);
+
+      final exitCode = await dispatcher.run(<String>[], commandName: 'db');
+
+      expect(exitCode, 0);
+      expect(
+        out.toString(),
+        contains('Usage: comon_orm db <command> [options]'),
+      );
+      expect(
+        out.toString(),
+        contains(
+          '  push      Push the current schema without creating migration history.',
+        ),
+      );
+      expect(
+        out.toString(),
+        isNot(contains('  dev       Create and apply a new local migration')),
+      );
+      expect(err.toString(), isEmpty);
     });
   });
 }

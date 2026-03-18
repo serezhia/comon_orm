@@ -400,6 +400,8 @@ model User {
           final cli = PostgresqlMigrationCli(out: outBuffer, err: errBuffer);
           final targetSchemaPath =
               '${tempRoot.path}${Platform.pathSeparator}target.prisma';
+          final cliMigrationsPath =
+              '${tempRoot.path}${Platform.pathSeparator}cli_migrations';
           File(targetSchemaPath).writeAsStringSync('''
 model User {
   id Int @id @default(autoincrement())
@@ -418,43 +420,51 @@ model User {
             '--name',
             '20260313_cli_add_user_nickname',
             '--out',
-            tempRoot.path,
+            cliMigrationsPath,
           ]);
           expect(diffExit, 0);
           expect(errBuffer.toString(), isEmpty);
 
           outBuffer.clear();
-          final applyExit = await cli.run(<String>[
-            'apply',
+          final deployExit = await cli.run(<String>[
+            'deploy',
             '--url',
             harness!.connectionUrl,
             '--schema',
             targetSchemaPath,
-            '--name',
-            '20260313_cli_add_user_nickname',
+            '--from',
+            cliMigrationsPath,
           ]);
-          expect(applyExit, 0);
-          expect(outBuffer.toString(), contains('Applied: true'));
-
-          outBuffer.clear();
-          final historyExit = await cli.run(<String>[
-            'history',
-            '--url',
-            harness!.connectionUrl,
-          ]);
-          expect(historyExit, 0);
+          expect(deployExit, 0);
           expect(
             outBuffer.toString(),
-            contains('20260313_cli_add_user_nickname'),
+            contains('All migrations have been successfully applied.'),
           );
+
+          outBuffer.clear();
+          final statusExit = await cli.run(<String>[
+            'status',
+            '--url',
+            harness!.connectionUrl,
+            '--schema',
+            targetSchemaPath,
+            '--from',
+            cliMigrationsPath,
+          ]);
+          expect(statusExit, 0);
+          expect(outBuffer.toString(), contains('Active migrations: 1'));
+          expect(outBuffer.toString(), contains('Local migrations: 1'));
+          expect(outBuffer.toString(), contains('Issues: 0'));
 
           outBuffer.clear();
           final rollbackExit = await cli.run(<String>[
             'rollback',
             '--url',
             harness!.connectionUrl,
+            '--schema',
+            targetSchemaPath,
             '--from',
-            tempRoot.path,
+            cliMigrationsPath,
             '--allow-warnings',
           ]);
           expect(rollbackExit, 0);
@@ -535,10 +545,21 @@ model User {
           final outBuffer = StringBuffer();
           final errBuffer = StringBuffer();
           final cli = PostgresqlMigrationCli(out: outBuffer, err: errBuffer);
+          final targetSchemaPath =
+              '${tempRoot.path}${Platform.pathSeparator}target.prisma';
+          File(targetSchemaPath).writeAsStringSync('''
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  nickname String?
+}
+''');
           final exitCode = await cli.run(<String>[
             'status',
             '--url',
             harness!.connectionUrl,
+            '--schema',
+            targetSchemaPath,
             '--from',
             tempRoot.path,
           ]);
@@ -962,6 +983,44 @@ model Post {
           expect(relation, isNotNull);
           expect(relation!.arguments['onDelete'], 'SetNull');
           expect(relation.arguments['onUpdate'], 'Cascade');
+        } finally {
+          await connection.close();
+        }
+      },
+      timeout: const Timeout(Duration(minutes: 2)),
+    );
+
+    test(
+      'introspects required relations when foreign key columns are required',
+      () async {
+        if (!dockerAvailable) {
+          return;
+        }
+
+        final schema = const SchemaParser().parse('''
+model User {
+  id Int @id @default(autoincrement())
+  todos Todo[]
+}
+
+model Todo {
+  id Int @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+}
+''');
+
+        final connection = await harness!.openConnection();
+        try {
+          await const PostgresqlSchemaApplier().apply(connection, schema);
+
+          final introspected = await const PostgresqlSchemaIntrospector()
+              .introspect(connection);
+          final todoModel = introspected.findModel('Todo');
+          final relation = todoModel?.findField('user');
+
+          expect(relation, isNotNull);
+          expect(relation!.isNullable, isFalse);
         } finally {
           await connection.close();
         }
