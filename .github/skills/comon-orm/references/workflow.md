@@ -23,8 +23,8 @@ Most mistakes happen when they get mixed.
 ## Core Commands
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm generate
 ```
 
 ## Local Setup Workflow
@@ -42,27 +42,27 @@ Rules:
 Use this for any database that matters.
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name <migration_name> --out prisma/migrations
-dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations
-dart run comon_orm migrate apply --schema schema.prisma --name <migration_name>
-dart run comon_orm migrate history --schema schema.prisma
-dart run comon_orm migrate rollback --schema schema.prisma --from prisma/migrations --allow-warnings
+dart run comon_orm migrate dev --name <migration_name>
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
+dart run comon_orm migrate resolve --applied <migration_name>
 ```
 
 Recommended sequence:
 
 1. edit `schema.prisma`
 2. run `check` and `generate`
-3. run `migrate diff`
+3. run `migrate dev --create-only` when you want to review artifacts before applying
 4. review `migration.sql`, `warnings.txt`, `before.prisma`, and `after.prisma`
 5. commit schema changes and migration artifacts together
 6. run `status` against the target database before applying
-7. run `apply`
-8. verify with `history` and `status`
+7. run `migrate deploy` in the target environment
+8. verify with `status`
 
 ## Important Migration Semantics
 
 - `diff` writes migration artifacts to disk for review, status checks, and rollback metadata.
+- `migrate dev` applies pending local migrations first, then drafts and optionally applies the next migration.
 - `apply` recalculates the plan from the live database to the current schema.
 - do not describe `apply` as replaying the exact checked-in `migration.sql`
 - migration artifacts are still important and should stay in git

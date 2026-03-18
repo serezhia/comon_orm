@@ -101,6 +101,92 @@ model User {
       }
     });
 
+    test('auto-discovers schema and forwards absolute --schema path', () async {
+      final tempRoot = Directory.systemTemp.createTempSync(
+        'comon_orm_migrate_auto_',
+      );
+      final previousCurrent = Directory.current;
+      try {
+        final prismaDir = Directory(
+          '${tempRoot.path}${Platform.pathSeparator}prisma',
+        )..createSync(recursive: true);
+        final schemaPath =
+            '${prismaDir.path}${Platform.pathSeparator}schema.prisma';
+        File(schemaPath).writeAsStringSync('''
+datasource db {
+  provider = "sqlite"
+  url = "file:dev.db"
+}
+
+model User {
+  id Int @id
+}
+''');
+
+        Directory.current = tempRoot;
+        final expectedSchemaPath = File('prisma/schema.prisma').absolute.path;
+
+        late MigrationCliInvocation invocation;
+        final dispatcher = MigrationCliDispatcher(
+          delegate: (value) async {
+            invocation = value;
+            return 0;
+          },
+        );
+
+        final exitCode = await dispatcher.run(<String>['status']);
+
+        expect(exitCode, 0);
+        expect(
+          invocation.arguments,
+          containsAll(<String>['--schema', expectedSchemaPath]),
+        );
+      } finally {
+        Directory.current = previousCurrent;
+        tempRoot.deleteSync(recursive: true);
+      }
+    });
+
+    test('delegates db push to the provider executable', () async {
+      final tempRoot = Directory.systemTemp.createTempSync(
+        'comon_orm_db_push_',
+      );
+      try {
+        final schemaPath =
+            '${tempRoot.path}${Platform.pathSeparator}schema.prisma';
+        File(schemaPath).writeAsStringSync('''
+datasource db {
+  provider = "sqlite"
+  url = "file:dev.db"
+}
+
+model User {
+  id Int @id
+}
+''');
+
+        late MigrationCliInvocation invocation;
+        final dispatcher = MigrationCliDispatcher(
+          delegate: (value) async {
+            invocation = value;
+            return 0;
+          },
+        );
+
+        final exitCode = await dispatcher.run(<String>[
+          'push',
+          '--schema',
+          schemaPath,
+        ]);
+
+        expect(exitCode, 0);
+        expect(invocation.provider, 'sqlite');
+        expect(invocation.arguments.first, 'push');
+      } finally {
+        tempRoot.deleteSync(recursive: true);
+      }
+    });
+
     test('returns usage error for unsupported providers', () async {
       final tempRoot = Directory.systemTemp.createTempSync(
         'comon_orm_migrate_mysql_',

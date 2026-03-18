@@ -19,6 +19,8 @@ Use rollback when:
 
 ## Rollback command
 
+`migrate rollback` remains available, but treat it as a recovery tool rather than the default rollout workflow.
+
 ```bash
 dart run comon_orm migrate rollback \
   --schema schema.prisma \
@@ -60,8 +62,19 @@ That is a signal to:
 - avoid blind rollback on important environments
 - prefer a forward migration that restores the desired state explicitly
 
+## History repair
+
+If the database state is correct but the recorded migration state is wrong, use `migrate resolve` instead of forcing another schema mutation.
+
+Typical commands:
+
+```bash
+dart run comon_orm migrate resolve --applied 20260318_add_post_status
+dart run comon_orm migrate resolve --rolled-back 20260318_add_post_status
+```
+
 ## Warning-gated rollback
 
-Rollback stops on warnings by default just like apply.
+Rollback stops on warnings by default just like other mutation commands.
 
 Use `--allow-warnings` only after you review the implied data loss or rebuild consequences.

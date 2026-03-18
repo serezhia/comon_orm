@@ -14,7 +14,7 @@ The unified entry point is the `comon_orm` CLI.
 Validates `schema.prisma`.
 
 ```bash
-dart run comon_orm check schema.prisma
+dart run comon_orm check
 ```
 
 Use it when:
@@ -32,7 +32,7 @@ The docs use `check` consistently so the command vocabulary stays uniform.
 Formats the schema file in place.
 
 ```bash
-dart run comon_orm format schema.prisma
+dart run comon_orm format
 ```
 
 ### `generate`
@@ -40,39 +40,75 @@ dart run comon_orm format schema.prisma
 Generates the Dart client from the schema.
 
 ```bash
-dart run comon_orm generate schema.prisma
+dart run comon_orm generate
 ```
 
 This writes the Dart client to the `output` path from the `generator` block.
 
+If `--schema` is omitted, the CLI looks for `prisma/schema.prisma` first and then `schema.prisma`.
+
 ## Migration commands
 
-### `migrate diff`
+### `migrate dev`
 
-Compares the live database with the current schema and writes review artifacts on disk.
+Creates and applies a new local migration, then updates the generated client.
 
 ```bash
-dart run comon_orm migrate diff \
-  --schema schema.prisma \
-  --name 20260318_add_post_status \
-  --out prisma/migrations
+dart run comon_orm migrate dev --name 20260318_add_post_status
 ```
 
-Artifacts created:
+Use it for local development when you want the schema, migration artifact, database, and generated client to move together.
+
+Typical artifact output lives in `prisma/migrations` and includes:
 
 - `migration.sql`
 - `warnings.txt`
 - `before.prisma`
 - `after.prisma`
+- `metadata.txt`
+
+`migrate dev` also checks for drift against the latest applied local snapshot before creating the next migration.
+
+### `migrate deploy`
+
+Applies already-created local migrations to the target database.
+
+```bash
+dart run comon_orm migrate deploy
+```
+
+Use it in CI, staging, and production where migrations should already be reviewed and committed.
+
+### `migrate reset`
+
+Drops the current schema contents, recreates them from the current schema, and regenerates the client.
+
+```bash
+dart run comon_orm migrate reset
+```
+
+Use it only for disposable local databases.
+
+### `migrate resolve`
+
+Repairs migration history when a migration was applied manually or needs to be marked rolled back.
+
+```bash
+dart run comon_orm migrate resolve --applied 20260318_add_post_status
+```
+
+or:
+
+```bash
+dart run comon_orm migrate resolve --rolled-back 20260318_add_post_status
+```
 
 ### `migrate status`
 
 Checks whether local migration artifacts and the database history still agree.
 
 ```bash
-dart run comon_orm migrate status \
-  --schema schema.prisma \
-  --from prisma/migrations
+dart run comon_orm migrate status
 ```
 
 Use this first whenever you suspect drift.
@@ -85,65 +121,84 @@ Typical status findings include:
 - `missing-db-snapshot`
 - `invalid-local-artifacts`
 
-### `migrate apply`
+### `db push`
 
-Applies the current schema target to the live database and records the result in `_comon_orm_migrations`.
+Pushes the current schema directly to the database without creating migration history.
 
 ```bash
-dart run comon_orm migrate apply \
-  --schema schema.prisma \
-  --name 20260318_add_post_status
+dart run comon_orm db push
 ```
 
-Important behavior:
+Use it for prototypes, temporary databases, and fast local iteration when you do not want to keep migration artifacts.
 
-- it recalculates the live plan from the current database to the current schema
-- it does not replay `migration.sql` verbatim
-- it stops on warnings by default
+### `migrate diff`
 
-### `migrate history`
-
-Shows the database-recorded migration history.
+Compares two schema sources and prints or writes the resulting SQL diff.
 
 ```bash
-dart run comon_orm migrate history \
-  --schema schema.prisma
-```
-
-### `migrate rollback`
-
-Rolls back using local artifacts or the snapshots recorded in the history table.
-
-```bash
-dart run comon_orm migrate rollback \
-  --schema schema.prisma \
-  --from prisma/migrations
-```
-
-Use rollback carefully. For production systems, a forward fix is often safer.
-
-## Typical reviewed flow
-
-```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm generate schema.prisma
-
 dart run comon_orm migrate diff \
-  --schema schema.prisma \
-  --name 20260318_add_post_status \
-  --out prisma/migrations
+  --from-migrations prisma/migrations \
+  --to-schema prisma/schema.prisma \
+  --script
+```
 
-dart run comon_orm migrate status \
-  --schema schema.prisma \
-  --from prisma/migrations
+Supported source pairs include:
 
-dart run comon_orm migrate apply \
-  --schema schema.prisma \
-  --name 20260318_add_post_status
+- `--from-empty`
+- `--from-schema`
+- `--from-database`
+- `--from-migrations`
+- `--to-schema`
+- `--to-database`
+- `--to-migrations`
+- `--to-empty`
+
+Use `--output` to write the SQL to disk and `--exit-code` for CI-style checks.
+
+## Legacy commands
+
+`migrate apply`, `migrate rollback`, and `migrate history` still exist for compatibility, but they are no longer the preferred workflow.
+
+The modern flow is built around `migrate dev`, `migrate deploy`, `migrate reset`, `migrate resolve`, `migrate status`, and `db push`.
+
+## Typical flows
+
+### Local development
+
+```bash
+dart run comon_orm check
+dart run comon_orm migrate dev --name 20260318_add_post_status
+```
+
+### Reviewed rollout for shared databases
+
+```bash
+dart run comon_orm check
+dart run comon_orm generate
+
+dart run comon_orm migrate status
+
+dart run comon_orm migrate deploy
+```
+
+### Schema push without migration history
+
+```bash
+dart run comon_orm check
+dart run comon_orm db push
+```
+
+### Diagnose a diff between two sources
+
+```bash
+dart run comon_orm migrate diff \
+  --from-database \
+  --to-schema prisma/schema.prisma \
+  --script
 ```
 
 <Callout title="Warnings are blocking by default">
-If the planner detects destructive drops, lossy type transitions, enum shrinkage, or rebuild-heavy transitions, `apply` and `rollback` stop unless you pass `--allow-warnings` after review.
+If the planner detects destructive drops, lossy type transitions, enum shrinkage, or rebuild-heavy transitions, migration commands stop unless you pass `--allow-warnings` after review.
 </Callout>
 
 ## Continue with

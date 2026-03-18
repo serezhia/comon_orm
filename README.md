@@ -31,14 +31,26 @@ model User {
 Generate the client:
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm generate
 ```
 
-Apply the schema to an empty database:
+Create and apply the first migration during development:
 
 ```bash
-dart run comon_orm migrate apply --schema schema.prisma --name init
+dart run comon_orm migrate dev --name init
+```
+
+Deploy reviewed migrations in CI or production:
+
+```bash
+dart run comon_orm migrate deploy
+```
+
+Prototype quickly without migration files:
+
+```bash
+dart run comon_orm db push
 ```
 
 Use the generated client in Dart:

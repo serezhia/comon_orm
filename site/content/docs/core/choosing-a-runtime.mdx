@@ -34,8 +34,8 @@ final db = await GeneratedComonOrmClientPostgresql.open();
 Typical rollout path:
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name 20260318_add_roles --out prisma/migrations
-dart run comon_orm migrate apply --schema schema.prisma --name 20260318_add_roles
+dart run comon_orm migrate dev --name 20260318_add_roles
+dart run comon_orm migrate deploy
 ```
 
 ## VM SQLite

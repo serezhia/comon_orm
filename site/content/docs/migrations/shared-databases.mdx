@@ -17,34 +17,24 @@ That includes:
 
 1. Edit `schema.prisma`.
 2. Run `check` and `generate`.
-3. Draft a migration with `migrate diff`.
-4. Review `migration.sql`, `warnings.txt`, `before.prisma`, and `after.prisma`.
+3. Create the next migration locally with `migrate dev`.
+4. Review `migration.sql`, `warnings.txt`, `before.prisma`, `after.prisma`, and `metadata.txt`.
 5. Commit schema changes, generated client, and migration artifacts together.
 6. Run `migrate status` against the target database.
-7. Apply with `migrate apply`.
-8. Verify with `migrate history` and `migrate status`.
+7. Apply with `migrate deploy`.
+8. Verify with `migrate status`.
 
 ## Commands
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm generate
 
-dart run comon_orm migrate diff \
-  --schema schema.prisma \
-  --name 20260315_add_user_role \
-  --out prisma/migrations
+dart run comon_orm migrate dev --name 20260315_add_user_role
 
-dart run comon_orm migrate status \
-  --schema schema.prisma \
-  --from prisma/migrations
+dart run comon_orm migrate status
 
-dart run comon_orm migrate apply \
-  --schema schema.prisma \
-  --name 20260315_add_user_role
-
-dart run comon_orm migrate history \
-  --schema schema.prisma
+dart run comon_orm migrate deploy
 ```
 
 ## What to review in the drafted artifact
@@ -86,15 +76,25 @@ They matter for:
 
 - auditability
 - `migrate status`
-- `migrate rollback`
+- `migrate resolve`
 - recovery when a local artifact has to be reconstructed from history
+
+### `metadata.txt`
+
+This file stores migration metadata such as statement counts and whether a rebuild was required.
+
+It matters for:
+
+- deploy planning
+- drift/status diagnostics
+- provider-specific execution details
 
 ## Important nuance
 
-`diff` and `apply` are not the same step.
+`dev` and `deploy` are not the same step.
 
-- `diff` compares the live database to the current schema and writes an artifact to disk
-- `apply` compares the live database to the current schema again and executes the plan
+- `dev` creates the next local migration artifact, applies it to the current database, and refreshes the client
+- `deploy` applies already-created local migrations to another database
 - checked-in migration artifacts remain important for review, status, rollback, and audit
 
 ## History table
@@ -110,15 +110,17 @@ Applied migrations are recorded in `_comon_orm_migrations` with metadata such as
 
 That metadata is what makes drift detection, status checks, and rollback support possible.
 
+If you need to repair that history, use `migrate resolve --applied ...` or `migrate resolve --rolled-back ...`.
+
 ## Warnings and risk handling
 
-`apply` and `rollback` stop by default when the planner detects risky changes such as destructive drops, lossy type changes, enum shrinkage, or SQLite rebuild scenarios.
+`dev`, `deploy`, and other mutation commands stop by default when the planner detects risky changes such as destructive drops, lossy type changes, enum shrinkage, or SQLite rebuild scenarios.
 
 Use `--allow-warnings` only after explicit review.
 
 ## Practical review rules
 
 1. Never edit old checked-in migration directories after they were applied anywhere important.
-2. Run `migrate status` before `migrate apply` on environments that may have drifted.
+2. Run `migrate status` before `migrate deploy` on environments that may have drifted.
 3. Treat warnings as a review step, not as noise to bypass.
 4. Prefer a new forward migration over rewriting history.

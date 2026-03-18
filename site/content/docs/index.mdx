@@ -3,52 +3,69 @@ title: Documentation
 description: Product documentation for schema design, generated Dart usage, and migrations.
 ---
 
-# Build from schema, not handwritten SQL glue
+# comon_orm docs
 
-`comon_orm` is a schema-first ORM toolkit for Dart. The workflow is intentionally simple: model your data in `schema.prisma`, generate a typed client, and use reviewed migrations when the database matters.
+If you are here, you usually need one of three things:
+
+- understand how to describe data in `schema.prisma`
+- open the generated client correctly in Dart or Flutter
+- change a real database without guessing what the migration layer will do
 
 Throughout these docs, `runtime` means normal application database access, while `rollout` means preparing or changing a real database schema.
+
+`comon_orm` is built around one idea: the schema is the source of truth, but runtime access and database rollout are different concerns. Generating a client is not the same thing as preparing a real database.
+
+## Start with the page that matches your job today
+
+If you are new to the project, start with QuickStart.
+
+If you already know what you need, jump straight to the relevant section:
+
+- Schema: define models, relations, enums, maps, indexes, and native types
+- Dart: use the generated delegates for CRUD, filters, includes, transactions, and tests
+- Migrations: draft, review, apply, diagnose, and recover schema changes
+- Core: understand package boundaries, platform support, and runtime choices
 
 <Cards>
   <Card
     title="QuickStart"
     href="/docs/quickstart"
-    description="The shortest end-to-end path: schema, generate, review a migration, and run CRUD code."
+    description="The shortest end-to-end path from schema.prisma to a generated client, reviewed migration, and working code."
   />
   <Card
     title="Core"
     href="/docs/core"
-    description="Product overview, architecture, platform split, and current boundaries."
+    description="Package boundaries, architecture, runtime choices, and current limitations."
   />
   <Card
     title="Schema"
     href="/docs/schema"
-    description="Schema blocks, field attributes, relation modeling, and practical DSL guidance."
+    description="Datasource, generator, models, fields, relations, enums, and provider-specific native types."
   />
   <Card
     title="Dart"
     href="/docs/dart"
-    description="Generated client usage, adapters, runtime metadata, and application integration."
+    description="Runtime setup, CRUD, filtering, relation writes, aggregates, transactions, and testing."
   />
   <Card
     title="Migrations"
     href="/docs/migrations"
-    description="Reviewed shared-database migrations plus explicit Flutter local SQLite upgrades."
+    description="Reviewed shared-database rollout, Flutter local SQLite upgrades, rollback, and troubleshooting."
   />
 </Cards>
 
-## What this documentation is optimized for
+## What this site is actually good at
 
-- understanding the actual supported workflow, not an aspirational Prisma clone story
-- getting from an empty schema to a running Dart app quickly
-- choosing the right migration strategy for PostgreSQL, SQLite, and Flutter local SQLite
-- knowing where runtime guarantees stop and rollout review starts
+- showing the supported workflow as it exists today, not an idealized Prisma clone
+- getting from an empty schema to a working Dart or Flutter integration quickly
+- making the runtime path and the rollout path explicit instead of mixing them together
+- documenting where PostgreSQL, SQLite, Flutter SQLite, and in-memory behavior overlap and where they do not
 
 <Callout title="Start here if you are new">
 Read the QuickStart first, then use the section docs as reference. The root README stays intentionally short; this site is where the full workflow, examples, and operational guidance live.
 </Callout>
 
-## Core path
+## The normal path through comon_orm
 
 1. Write `schema.prisma`.
 2. Run `check` and `generate`.
@@ -56,9 +73,43 @@ Read the QuickStart first, then use the section docs as reference. The root READ
 4. Open the generated client against runtime schema metadata.
 5. Use the generated delegates in application code.
 
-## Recommended reading order
+## Common entry points
 
-1. QuickStart for the shortest end-to-end path.
-2. Schema for DSL reference and modeling rules.
-3. Dart for generated client usage.
-4. Migrations for rollout and recovery.
+### I need to model data
+
+Start with `/docs/schema`.
+
+Use that section for:
+
+- field types and defaults
+- relation ownership
+- enums and native types
+- naming and mapping rules
+
+### I need to write application code
+
+Start with `/docs/dart`.
+
+Use that section for:
+
+- opening the generated client correctly
+- CRUD and filters
+- nested relation writes
+- transaction and testing patterns
+
+### I need to change a database safely
+
+Start with `/docs/migrations`.
+
+Use that section for:
+
+- reviewed shared-database migrations
+- Flutter local SQLite upgrades
+- rollback and forward-fix decisions
+- troubleshooting drift and artifact mismatches
+
+### I need the big picture first
+
+Start with `/docs/core`.
+
+That section explains how the packages fit together, which runtime to choose, and what the current boundaries are.

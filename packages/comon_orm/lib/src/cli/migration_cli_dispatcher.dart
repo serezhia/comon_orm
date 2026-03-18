@@ -2,6 +2,8 @@ import 'dart:io';
 
 import '../schema/schema_ast.dart';
 import '../schema/schema_workflow.dart';
+import 'cli_output.dart';
+import 'cli_paths.dart';
 
 /// Runs a provider-specific migration CLI for a validated invocation.
 typedef MigrationCliDelegate =
@@ -44,6 +46,9 @@ class MigrationCliDispatcher {
   final StringSink _out;
   final StringSink _err;
 
+  bool get _outAnsiEnabled => sinkSupportsAnsi(_out);
+  bool get _errAnsiEnabled => sinkSupportsAnsi(_err);
+
   /// Dispatches [arguments] to the provider-specific migration executable.
   Future<int> run(List<String> arguments) async {
     if (arguments.isEmpty ||
@@ -54,7 +59,9 @@ class MigrationCliDispatcher {
     }
 
     try {
-      final schemaPath = _readOption(arguments, 'schema') ?? 'schema.prisma';
+      final schemaPath = discoverSchemaPath(
+        explicitPath: _readOption(arguments, 'schema'),
+      );
       final datasourceName = _readOption(arguments, 'datasource');
       final loaded = _workflow.loadValidatedSchemaSync(schemaPath);
       final provider = _resolveProvider(
@@ -62,37 +69,44 @@ class MigrationCliDispatcher {
         datasourceName: datasourceName,
       );
       final packageExecutable = _packageExecutableFor(provider);
+      final forwardedArguments = _upsertOption(arguments, 'schema', schemaPath);
 
       return _delegate(
         MigrationCliInvocation(
           provider: provider,
           packageExecutable: packageExecutable,
-          arguments: List<String>.unmodifiable(arguments),
+          arguments: List<String>.unmodifiable(forwardedArguments),
         ),
       );
     } on SchemaValidationException catch (error) {
       for (final issue in error.issues) {
-        _err.writeln(issue);
+        _err.writeln(cliError('$issue', ansiEnabled: _errAnsiEnabled));
       }
       return 1;
     } on FormatException catch (error) {
-      _err.writeln(error.message);
+      _err.writeln(cliError(error.message, ansiEnabled: _errAnsiEnabled));
       return 2;
     } on Object catch (error) {
-      _err.writeln(error);
+      _err.writeln(cliError('$error', ansiEnabled: _errAnsiEnabled));
       return 1;
     }
   }
 
   void _writeUsage() {
-    _out.writeln('Usage: comon_orm migrate <command> [options]');
+    _out.writeln(cliTitle('comon_orm migrate', ansiEnabled: _outAnsiEnabled));
+    _out.writeln(
+      cliMuted(
+        'Usage: comon_orm migrate <command> [options]',
+        ansiEnabled: _outAnsiEnabled,
+      ),
+    );
     _out.writeln('Commands:');
     _out.writeln(
-      '  diff|apply|rollback|history|status are delegated to the adapter package selected from datasource.provider.',
+      '  diff|dev|deploy|apply|rollback|reset|resolve|history|status|push are delegated to the adapter package selected from datasource.provider.',
     );
     _out.writeln('Options:');
     _out.writeln(
-      '  --schema <path>        Schema file to inspect before delegating. Defaults to schema.prisma.',
+      '  --schema <path>        Schema file to inspect before delegating. Defaults to auto-discovery: prisma/schema.prisma, schema.prisma.',
     );
     _out.writeln(
       '  --datasource <name>    Select datasource when the schema declares multiple datasource blocks.',
@@ -114,6 +128,43 @@ class MigrationCliDispatcher {
       return arguments[index + 1];
     }
     return null;
+  }
+
+  List<String> _upsertOption(
+    List<String> arguments,
+    String name,
+    String value,
+  ) {
+    final token = '--$name';
+    final normalized = <String>[];
+    var replaced = false;
+
+    for (var index = 0; index < arguments.length; index++) {
+      final current = arguments[index];
+      if (current != token) {
+        normalized.add(current);
+        continue;
+      }
+
+      if (index + 1 >= arguments.length) {
+        throw FormatException('Missing value for $token');
+      }
+
+      if (!replaced) {
+        normalized
+          ..add(token)
+          ..add(value);
+        replaced = true;
+      }
+      index++;
+    }
+
+    if (!replaced) {
+      normalized
+        ..add(token)
+        ..add(value);
+    }
+    return normalized;
   }
 
   String _resolveProvider(SchemaDocument schema, {String? datasourceName}) {

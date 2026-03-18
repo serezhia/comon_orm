@@ -25,9 +25,10 @@ If the database matters, use migrations.
 ## Short version
 
 - runtime adapters should open from generated metadata
-- `migrate diff` creates a reviewed migration artifact on disk
-- `migrate apply` applies the current schema target to the live database and records history
+- `migrate dev` is the normal local command for creating and applying the next migration
+- `migrate deploy` applies reviewed local migrations to shared environments
 - `migrate status` is the first command to run when local files and the database may have diverged
+- `db push` updates a database without creating migration history
 - `rollback` exists, but production usually wants a forward fix rather than a blind revert
 
 ## Decision rules

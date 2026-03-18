@@ -161,6 +161,43 @@ class MigrationResult<TPlan extends PlannedMigration> {
   final bool applied;
 }
 
+/// Result of applying all pending local migrations.
+class DeployResult {
+  /// Creates a deploy result.
+  const DeployResult({
+    required this.localMigrationCount,
+    required this.appliedMigrationNames,
+  });
+
+  /// Number of local migration directories discovered on disk.
+  final int localMigrationCount;
+
+  /// Migration names applied during deployment.
+  final List<String> appliedMigrationNames;
+
+  /// Whether any migrations were applied.
+  bool get appliedAny => appliedMigrationNames.isNotEmpty;
+}
+
+/// Result of marking migration history manually.
+class ResolveResult {
+  /// Creates a resolve result.
+  const ResolveResult({
+    required this.migrationName,
+    required this.action,
+    required this.changed,
+  });
+
+  /// Migration name that was resolved.
+  final String migrationName;
+
+  /// Human-readable action, such as `applied` or `rolled back`.
+  final String action;
+
+  /// Whether history state changed.
+  final bool changed;
+}
+
 /// Result of rolling back relational migration state.
 class RollbackResult {
   /// Creates a rollback result.

@@ -73,8 +73,8 @@ model Tag {
 Run schema validation first. Then generate the client.
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm generate
 ```
 
 Typical output shape:
@@ -90,16 +90,22 @@ Generated client written to lib/generated/comon_orm_client.dart
 
 For shared databases, do not jump straight from generation to runtime.
 
-Draft a migration artifact and review it first.
+For day-to-day local development, the shortest path is `migrate dev`.
 
 ```bash
-dart run comon_orm migrate diff \
-  --schema schema.prisma \
-  --name 20260318_initial_blog \
-  --out prisma/migrations
+dart run comon_orm migrate dev --name 20260318_initial_blog
 ```
 
-This creates a directory similar to:
+This creates a migration artifact in `prisma/migrations`, applies it to your local database, and refreshes the generated client.
+
+For reviewed rollouts to shared databases, keep creation and deployment separate.
+
+```bash
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
+```
+
+`migrate dev` creates a directory similar to:
 
 ```text
 prisma/migrations/
@@ -108,32 +114,30 @@ prisma/migrations/
     warnings.txt
     before.prisma
     after.prisma
+    metadata.txt
 ```
 
-Then inspect the artifact before applying it:
+Then inspect the artifact:
 
 - `migration.sql` is the human-reviewed DDL
 - `warnings.txt` contains destructive or rebuild-related warnings
 - `before.prisma` and `after.prisma` capture the schema snapshots used for review and rollback support
+- `metadata.txt` stores migration metadata used for status and deploy flows
 
-Check status before applying:
+Check status whenever you suspect drift or before deploying to another environment:
 
 ```bash
-dart run comon_orm migrate status \
-  --schema schema.prisma \
-  --from prisma/migrations
+dart run comon_orm migrate status
 ```
 
-Apply only after review:
+Deploy reviewed local migrations to shared environments with:
 
 ```bash
-dart run comon_orm migrate apply \
-  --schema schema.prisma \
-  --name 20260318_initial_blog
+dart run comon_orm migrate deploy
 ```
 
 <Callout title="Important">
-`migrate diff` and `migrate apply` are intentionally different steps. `diff` writes reviewed artifacts on disk. `apply` recalculates the live plan against the current database and records migration history.
+Use `migrate dev` for local creation and application of a new migration. Use `migrate deploy` to apply already-reviewed local migrations to shared environments. Use `db push` only when you explicitly do not want migration history.
 </Callout>
 
 If you need the full command reference, continue with `/docs/migrations/cli-commands` after this page.

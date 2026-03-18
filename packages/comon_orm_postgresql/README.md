@@ -154,9 +154,11 @@ final adapter = await PostgresqlDatabaseAdapter.connect(
 Most users should call migrations through the unified core CLI:
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations
+dart run comon_orm check
+dart run comon_orm generate
+dart run comon_orm migrate dev --name 20260315_init
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
 ```
 
 Important:
@@ -165,6 +167,7 @@ Important:
 - the preferred application runtime path is `GeneratedComonOrmClient.runtimeSchema` plus `openFromGeneratedSchema(...)`
 - schema apply stays in tooling/setup flows instead of runtime adapter convenience APIs
 - destructive enum transitions and other risky changes still require manual review
+- `db push` exists for prototypes or disposable databases, but reviewed shared-database flows should prefer `migrate dev` and `migrate deploy`
 
 ## 📱 Platform Notes
 

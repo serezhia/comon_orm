@@ -1,6 +1,10 @@
 export 'src/client/client_base.dart';
 export 'src/client/query_aggregates.dart';
 export 'src/client/query_models.dart';
+export 'src/cli/cli_output.dart';
+export 'src/cli/cli_paths.dart';
+export 'src/cli/cli_prompts.dart';
+export 'src/cli/generated_client_writer.dart';
 export 'src/codegen/client_generator.dart';
 export 'src/codegen/codegen_ir.dart';
 export 'src/engine/database_adapter.dart';

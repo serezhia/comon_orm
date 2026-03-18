@@ -27,7 +27,7 @@ docker run --rm -d \
 ```bash
 dart pub get
 export DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/comon_orm_example?sslmode=disable
-dart run ../../packages/comon_orm/bin/comon_orm.dart generate schema.prisma
+dart run ../../packages/comon_orm/bin/comon_orm.dart generate
 dart pub global activate dart_frog_cli
 dart_frog dev
 ```
@@ -36,37 +36,30 @@ dart_frog dev
 
 Runtime path теперь всегда идет через compiled metadata: приложение открывает adapter через `GeneratedComonOrmClient.runtimeSchema` и `openFromGeneratedSchema(...)`, без повторной загрузки `schema.prisma` на обычном старте.
 
-Перед запуском нужно заранее подготовить схему базы через migration/apply tooling.
+Перед запуском нужно заранее подготовить схему базы через `migrate dev` для локальной разработки или через `migrate deploy` для уже подготовленных migration artifacts.
 
 Общий guide по миграциям и различию между local bootstrap и production migration flow теперь вынесен в документацию сайта: `site/content/docs/migrations`.
 
 ## Миграции
 
 ```bash
-dart run comon_orm migrate diff \
-  --schema schema.prisma \
-  --name 20260314_init \
-  --out prisma/migrations
+dart run comon_orm check
+dart run comon_orm generate
 
-dart run comon_orm migrate apply \
-  --schema schema.prisma \
-  --name 20260314_init
+dart run comon_orm migrate dev --name 20260314_init
 
-dart run comon_orm migrate status \
-  --schema schema.prisma \
-  --from prisma/migrations
+dart run comon_orm migrate status
 
-dart run comon_orm migrate rollback \
-  --schema schema.prisma \
-  --from prisma/migrations \
-  --allow-warnings
+dart run comon_orm migrate deploy
 ```
+
+Для прототипов без migration history можно использовать и `dart run comon_orm db push`, но для shared PostgreSQL flow предпочтительнее `migrate dev` плюс `migrate deploy`.
 
 `status` сверяет локальные миграции с `_comon_orm_migrations` в базе и показывает checksum drift, отсутствующие локально миграции и другие расхождения.
 
-`apply` и `rollback` блокируются по умолчанию, если план содержит предупреждения о возможной потере данных. Это касается, например, удаления колонок, enum values, смены типов или rebuild-сценариев. Если вы осознанно принимаете риск, запускайте команду с `--allow-warnings`.
+`migrate dev` и `migrate deploy` блокируются по умолчанию, если план содержит предупреждения о возможной потере данных. Это касается, например, удаления колонок, enum values, смены типов или rebuild-сценариев. Если вы осознанно принимаете риск, запускайте команду с `--allow-warnings` после ревью.
 
-Важно: `diff` здесь создаёт migration artifact для ревью и истории, а `apply` затем строит план заново из live DB и текущей `schema.prisma`. Не относитесь к этому как к строгому replay уже сгенерированного `migration.sql`.
+Если нужно именно сравнить два состояния схемы без создания новой миграции, используйте `migrate diff --from-* --to-* --script` как диагностический инструмент.
 
 В базе теперь хранится не только история применения, но и metadata для восстановления: provider, checksum, warnings, rebuild flag и snapshots схемы до и после миграции. Поэтому rollback может восстановиться даже без локального `before.prisma`, если миграция уже была записана новым форматом.
 

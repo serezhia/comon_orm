@@ -135,6 +135,98 @@ class SqliteMigrationService {
     );
   }
 
+  /// Applies [target] directly without writing migration history.
+  SqliteMigrationResult pushSchema({
+    required sqlite.Database database,
+    required SchemaDocument target,
+    bool allowWarnings = false,
+  }) {
+    return runner.pushToSchema(
+      database: database,
+      target: target,
+      allowWarnings: allowWarnings,
+    );
+  }
+
+  /// Applies all pending local migrations in order.
+  DeployResult deployMigrations({
+    required sqlite.Database database,
+    required String migrationsDirectory,
+  }) {
+    final localArtifacts = loadLocalMigrationArtifacts(
+      migrationsDirectory,
+      provider: SqliteMigrationRunner.providerName,
+    );
+    final activeNames = runner
+        .loadActiveHistory(database)
+        .map((record) => record.name)
+        .toSet();
+    final appliedMigrationNames = <String>[];
+
+    for (final artifact in localArtifacts) {
+      if (activeNames.contains(artifact.name)) {
+        continue;
+      }
+
+      runner.migrateToSchema(
+        database: database,
+        target: const SchemaParser().parse(artifact.afterSchema),
+        migrationName: artifact.name,
+        allowWarnings: true,
+      );
+      activeNames.add(artifact.name);
+      appliedMigrationNames.add(artifact.name);
+    }
+
+    return DeployResult(
+      localMigrationCount: localArtifacts.length,
+      appliedMigrationNames: List<String>.unmodifiable(appliedMigrationNames),
+    );
+  }
+
+  /// Marks a local migration as already applied without executing SQL.
+  ResolveResult resolveApplied({
+    required sqlite.Database database,
+    required String migrationsDirectory,
+    required String migrationName,
+  }) {
+    final artifact = _findRequiredArtifact(
+      migrationsDirectory: migrationsDirectory,
+      migrationName: migrationName,
+    );
+    final changed = runner.markMigrationApplied(
+      database: database,
+      migrationName: migrationName,
+      statementCount: artifact.statementCount,
+      checksum: artifact.checksum,
+      beforeSchema: artifact.beforeSchema,
+      afterSchema: artifact.afterSchema,
+      warnings: artifact.warnings,
+      rebuildRequired: artifact.rebuildRequired,
+    );
+    return ResolveResult(
+      migrationName: migrationName,
+      action: 'applied',
+      changed: changed,
+    );
+  }
+
+  /// Marks an active migration as rolled back without executing SQL.
+  ResolveResult resolveRolledBack({
+    required sqlite.Database database,
+    required String migrationName,
+  }) {
+    final changed = runner.markMigrationRolledBack(
+      database: database,
+      migrationName: migrationName,
+    );
+    return ResolveResult(
+      migrationName: migrationName,
+      action: 'rolled back',
+      changed: changed,
+    );
+  }
+
   /// Rolls back a migration using stored or on-disk schema snapshots.
   SqliteRollbackResult rollbackMigration({
     required sqlite.Database database,
@@ -273,6 +365,24 @@ class SqliteMigrationService {
       statements: plan.statements,
       warnings: mergeMigrationWarnings(plan.warnings, riskWarnings),
       requiresRebuild: plan.requiresRebuild,
+    );
+  }
+
+  LocalMigrationArtifact _findRequiredArtifact({
+    required String migrationsDirectory,
+    required String migrationName,
+  }) {
+    final artifacts = loadLocalMigrationArtifacts(
+      migrationsDirectory,
+      provider: SqliteMigrationRunner.providerName,
+    );
+    for (final artifact in artifacts) {
+      if (artifact.name == migrationName) {
+        return artifact;
+      }
+    }
+    throw StateError(
+      'Migration $migrationName was not found in $migrationsDirectory.',
     );
   }
 }

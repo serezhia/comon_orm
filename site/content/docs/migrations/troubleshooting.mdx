@@ -14,7 +14,7 @@ This usually means either a destructive warning was accepted or a SQLite rebuild
 What to inspect:
 
 - `warnings.txt` in the drafted migration directory
-- `dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations`
+- `dart run comon_orm migrate status`
 - `_comon_orm_migrations` history, especially `before_schema`, `after_schema`, and `rebuild_required`
 
 Recovery path:
@@ -65,8 +65,8 @@ This means a migration directory exists locally but the database has not recorde
 What to do:
 
 1. confirm the target environment is the one you intended to inspect
-2. run `migrate history` to see the recorded end state
-3. if the local migration is the next reviewed change, run `migrate apply`
+2. inspect `_comon_orm_migrations` to see the recorded end state
+3. if the local migration is the next reviewed change for that environment, run `migrate deploy`
 
 ## SQLite rebuild warnings
 

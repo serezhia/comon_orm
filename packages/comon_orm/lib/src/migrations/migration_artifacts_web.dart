@@ -14,6 +14,8 @@ class LocalMigrationArtifact {
     required this.afterSchema,
     required this.migrationSql,
     required this.warnings,
+    required this.statementCount,
+    required this.rebuildRequired,
     required this.checksum,
   });
 
@@ -34,6 +36,12 @@ class LocalMigrationArtifact {
 
   /// Warning lines associated with the migration.
   final List<String> warnings;
+
+  /// Statement count declared in metadata or derived from the script.
+  final int statementCount;
+
+  /// Whether the artifact represents a rebuild migration.
+  final bool rebuildRequired;
 
   /// Content checksum used for drift detection.
   final String checksum;

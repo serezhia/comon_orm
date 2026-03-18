@@ -132,6 +132,97 @@ class PostgresqlMigrationService {
     );
   }
 
+  /// Applies [target] directly without creating history entries.
+  Future<PostgresqlMigrationResult> pushSchema({
+    required pg.SessionExecutor executor,
+    required SchemaDocument target,
+    bool allowWarnings = false,
+  }) {
+    return runner.pushToSchema(
+      executor: executor,
+      target: target,
+      allowWarnings: allowWarnings,
+    );
+  }
+
+  /// Applies all pending local migrations in order.
+  Future<DeployResult> deployMigrations({
+    required pg.SessionExecutor executor,
+    required String migrationsDirectory,
+  }) async {
+    final localArtifacts = loadLocalMigrationArtifacts(
+      migrationsDirectory,
+      provider: PostgresqlMigrationRunner.providerName,
+    );
+    final activeNames = (await runner.loadActiveHistory(
+      executor,
+    )).map((record) => record.name).toSet();
+    final appliedMigrationNames = <String>[];
+
+    for (final artifact in localArtifacts) {
+      if (activeNames.contains(artifact.name)) {
+        continue;
+      }
+
+      await runner.migrateToSchema(
+        executor: executor,
+        target: const SchemaParser().parse(artifact.afterSchema),
+        migrationName: artifact.name,
+        allowWarnings: true,
+      );
+      activeNames.add(artifact.name);
+      appliedMigrationNames.add(artifact.name);
+    }
+
+    return DeployResult(
+      localMigrationCount: localArtifacts.length,
+      appliedMigrationNames: List<String>.unmodifiable(appliedMigrationNames),
+    );
+  }
+
+  /// Marks a local migration as already applied without executing SQL.
+  Future<ResolveResult> resolveApplied({
+    required pg.SessionExecutor executor,
+    required String migrationsDirectory,
+    required String migrationName,
+  }) async {
+    final artifact = _findRequiredArtifact(
+      migrationsDirectory: migrationsDirectory,
+      migrationName: migrationName,
+    );
+    final changed = await runner.markMigrationApplied(
+      executor: executor,
+      migrationName: migrationName,
+      statementCount: artifact.statementCount,
+      checksum: artifact.checksum,
+      beforeSchema: artifact.beforeSchema,
+      afterSchema: artifact.afterSchema,
+      warnings: artifact.warnings,
+      rebuildRequired: artifact.rebuildRequired,
+    );
+    return ResolveResult(
+      migrationName: migrationName,
+      action: 'applied',
+      changed: changed,
+    );
+  }
+
+  /// Marks an active migration as rolled back without executing SQL.
+  Future<ResolveResult> resolveRolledBack({
+    required pg.SessionExecutor executor,
+    required String migrationName,
+  }) async {
+    final changed = await runner.markMigrationRolledBack(
+      executor: executor,
+      migrationName: migrationName,
+    );
+    return ResolveResult(
+      migrationName: migrationName,
+      action: 'rolled back',
+      changed: changed,
+    );
+  }
+
   /// Rolls back a migration using stored or on-disk schema snapshots.
   Future<PostgresqlRollbackResult> rollbackMigration({
     required pg.SessionExecutor executor,
@@ -269,6 +360,24 @@ class PostgresqlMigrationService {
       statements: plan.statements,
       warnings: mergeMigrationWarnings(plan.warnings, riskWarnings),
       requiresRebuild: plan.requiresRebuild,
+    );
+  }
+
+  LocalMigrationArtifact _findRequiredArtifact({
+    required String migrationsDirectory,
+    required String migrationName,
+  }) {
+    final artifacts = loadLocalMigrationArtifacts(
+      migrationsDirectory,
+      provider: PostgresqlMigrationRunner.providerName,
+    );
+    for (final artifact in artifacts) {
+      if (artifact.name == migrationName) {
+        return artifact;
+      }
+    }
+    throw StateError(
+      'Migration $migrationName was not found in $migrationsDirectory.',
     );
   }
 }

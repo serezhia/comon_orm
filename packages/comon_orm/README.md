@@ -31,9 +31,9 @@ dependencies:
 Validate, format, and generate from a schema:
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm format schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm format
+dart run comon_orm generate
 ```
 
 `validate` is still available as an alias for `check`.

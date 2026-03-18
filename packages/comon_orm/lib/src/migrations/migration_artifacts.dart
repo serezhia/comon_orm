@@ -15,6 +15,8 @@ class LocalMigrationArtifact {
     required this.afterSchema,
     required this.migrationSql,
     required this.warnings,
+    required this.statementCount,
+    required this.rebuildRequired,
     required this.checksum,
   });
 
@@ -35,6 +37,12 @@ class LocalMigrationArtifact {
 
   /// Warning lines associated with the migration.
   final List<String> warnings;
+
+  /// Statement count declared in metadata or derived from the script.
+  final int statementCount;
+
+  /// Whether the artifact represents a rebuild migration.
+  final bool rebuildRequired;
 
   /// Content checksum used for drift detection.
   final String checksum;
@@ -173,6 +181,20 @@ List<LocalMigrationArtifact> loadLocalMigrationArtifacts(
     final beforeText = beforeSchema.readAsStringSync();
     final afterText = afterSchema.readAsStringSync();
     final sqlText = migrationSql.readAsStringSync();
+    final metadataFile = File(
+      '${directory.path}${Platform.pathSeparator}metadata.txt',
+    );
+    final metadata = metadataFile.existsSync()
+        ? parseMetadataText(metadataFile.readAsStringSync())
+        : const <String, String>{};
+    final rebuildRequired =
+        metadata['rebuild_required'] == 'true' ||
+        sqlText.startsWith(
+          '-- Schema rebuild required to apply this migration safely.',
+        );
+    final statementCount =
+        int.tryParse(metadata['statement_count'] ?? '') ??
+        _estimateStatementCount(sqlText, rebuildRequired: rebuildRequired);
 
     artifacts.add(
       LocalMigrationArtifact(
@@ -182,21 +204,35 @@ List<LocalMigrationArtifact> loadLocalMigrationArtifacts(
         afterSchema: afterText,
         migrationSql: sqlText,
         warnings: warningLines,
+        statementCount: statementCount,
+        rebuildRequired: rebuildRequired,
         checksum: computeMigrationChecksum(
           provider: provider,
           beforeSchema: beforeText,
           afterSchema: afterText,
           migrationSql: sqlText,
           warnings: warningLines,
-          requiresRebuild: sqlText.startsWith(
-            '-- Schema rebuild required to apply this migration safely.',
-          ),
+          requiresRebuild: rebuildRequired,
         ),
       ),
     );
   }
 
   return List<LocalMigrationArtifact>.unmodifiable(artifacts);
+}
+
+int _estimateStatementCount(
+  String migrationSql, {
+  required bool rebuildRequired,
+}) {
+  if (rebuildRequired) {
+    return 0;
+  }
+  return migrationSql
+      .split(';')
+      .map((statement) => statement.trim())
+      .where((statement) => statement.isNotEmpty && !statement.startsWith('--'))
+      .length;
 }
 
 /// Converts a schema AST back into `schema.prisma` source text.

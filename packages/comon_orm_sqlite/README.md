@@ -96,9 +96,11 @@ final db = await GeneratedComonOrmClientSqlite.open();
 The preferred flow is the unified core CLI:
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate rollback --schema schema.prisma --from prisma/migrations
+dart run comon_orm check
+dart run comon_orm generate
+dart run comon_orm migrate dev --name 20260315_init
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
 ```
 
 Important:
@@ -107,6 +109,7 @@ Important:
 - the preferred application runtime path is `GeneratedComonOrmClient.runtimeSchema` plus `openFromGeneratedSchema(...)`
 - schema apply stays in tooling/setup flows instead of runtime adapter convenience APIs
 - some schema transitions require rebuilds because SQLite cannot express them with `ALTER TABLE`
+- `db push` or `migrate reset` can be fine for disposable local databases, but shared or long-lived SQLite should still use reviewed migrations
 
 ## 📱 Platform Notes
 

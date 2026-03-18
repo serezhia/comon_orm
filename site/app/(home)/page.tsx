@@ -19,19 +19,25 @@ export default function HomePage() {
               className="max-w-4xl text-5xl font-semibold tracking-[-0.07em] text-balance text-white sm:text-6xl xl:text-7xl"
               style={{ fontFamily: 'var(--font-display), sans-serif' }}
             >
-              Dark, fast, typed access to your database from one schema.
+              Describe the data model once. Work with a typed client in Dart.
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-zinc-300 sm:text-xl">
-              Model once in schema.prisma, generate a Dart client, review the migration path, and ship the same developer experience across PostgreSQL, SQLite, and Flutter SQLite.
+              Write `schema.prisma`, generate the client, choose the right rollout path, and use the same generated API across PostgreSQL, SQLite, Flutter SQLite, and in-memory tests.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/docs/core"
+              href="/docs/quickstart"
               className="inline-flex items-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(249,115,22,0.28)] transition hover:translate-y-[-1px] hover:bg-orange-400"
             >
-              Open documentation
+              Start with QuickStart
+            </Link>
+            <Link
+              href="/docs"
+              className="inline-flex items-center rounded-2xl border border-white/12 bg-white/6 px-5 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/10"
+            >
+              Browse docs
             </Link>
             <Link
               href="https://github.com/serezhia/comon_orm"
@@ -45,19 +51,19 @@ export default function HomePage() {
             <div className="rounded-3xl border border-white/8 bg-white/5 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.22)] backdrop-blur-sm">
               <p className="text-sm font-semibold text-orange-300">Schema</p>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Prisma-style models, relations, enums, mappings, and provider-aware native types.
+                Models, relations, enums, defaults, maps, indexes, and provider-aware native types.
               </p>
             </div>
             <div className="rounded-3xl border border-white/8 bg-white/5 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.22)] backdrop-blur-sm">
               <p className="text-sm font-semibold text-orange-300">Dart</p>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Generated delegates, nested writes, filters, aggregation, and metadata-driven runtime openers.
+                Generated delegates, filters, nested writes, transactions, testing, and runtime setup.
               </p>
             </div>
             <div className="rounded-3xl border border-white/8 bg-white/5 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.22)] backdrop-blur-sm">
               <p className="text-sm font-semibold text-orange-300">Migrations</p>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Reviewed shared-database rollout and explicit local upgrade paths for Flutter SQLite.
+                Reviewed shared-database rollout, Flutter local upgrades, rollback, and recovery.
               </p>
             </div>
           </div>
@@ -67,28 +73,21 @@ export default function HomePage() {
           <div className="absolute -inset-4 rounded-[2.25rem] bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.18),transparent_46%)] blur-2xl" />
           <div className="relative overflow-hidden rounded-[2rem] border border-orange-400/18 bg-[#111111] shadow-[0_32px_90px_rgba(0,0,0,0.48)]">
             <div className="flex items-center justify-between border-b border-white/8 px-5 py-4 text-[11px] uppercase tracking-[0.2em] text-zinc-400">
-              <span className="text-orange-300">Quick Start</span>
-              <span>schema to runtime</span>
+              <span className="text-orange-300">Typical flow</span>
+              <span>schema - rollout - runtime</span>
             </div>
 
             <div className="space-y-5 p-5">
               <div className="rounded-2xl border border-white/6 bg-black/25 p-4">
-                <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                  <span className="h-2 w-2 rounded-full bg-orange-400" />
-                  schema.prisma
+                <div className="mb-3 flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-orange-400" />
+                    schema.prisma
+                  </div>
+                  <span className="text-zinc-600">source of truth</span>
                 </div>
-                <pre className="overflow-x-auto whitespace-pre-wrap text-sm leading-7 text-zinc-200">
-                  <code>{`datasource db {
-  provider = "sqlite"
-  url      = "dev.db"
-}
-
-generator client {
-  provider = "comon_orm"
-  output   = "lib/generated/comon_orm_client.dart"
-}
-
-model User {
+                <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-zinc-200 sm:text-sm">
+                  <code>{`model User {
   id    Int    @id @default(autoincrement())
   email String @unique
   name  String?
@@ -96,27 +95,60 @@ model User {
                 </pre>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/6 bg-white/4 p-4">
+              <div className="rounded-2xl border border-white/6 bg-white/4 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                    Generate
+                    Workflow
                   </p>
-                  <pre className="mt-3 overflow-x-auto text-sm leading-6 text-zinc-200">
-                    <code>dart run comon_orm generate schema.prisma</code>
-                  </pre>
+                  <code className="rounded-full border border-white/8 bg-black/20 px-2.5 py-1 text-[10px] text-zinc-400">
+                    dart run comon_orm ...
+                  </code>
                 </div>
-                <div className="rounded-2xl border border-white/6 bg-white/4 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                    Apply
-                  </p>
-                  <pre className="mt-3 overflow-x-auto text-sm leading-6 text-zinc-200">
-                    <code>dart run comon_orm migrate apply --schema schema.prisma --name init</code>
-                  </pre>
+
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-white/6 bg-black/20 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-300">
+                      1. Check
+                    </p>
+                    <pre className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-zinc-200">
+                      <code>check schema.prisma</code>
+                    </pre>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/6 bg-black/20 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-300">
+                      2. Generate
+                    </p>
+                    <pre className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-zinc-200">
+                      <code>generate schema.prisma</code>
+                    </pre>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/6 bg-black/20 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-300">
+                      3. Choose rollout
+                    </p>
+                    <pre className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-zinc-200">
+                      <code>migrate diff --name init</code>
+                    </pre>
+                    <p className="mt-2 text-xs leading-5 text-zinc-400">
+                      For shared databases. Flutter local SQLite upgrades stay explicit in app code.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/6 bg-black/20 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-300">
+                      4. Open client
+                    </p>
+                    <pre className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-zinc-200">
+                      <code>GeneratedComonOrmClientSqlite.open()</code>
+                    </pre>
+                  </div>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-orange-400/15 bg-orange-500/8 p-4 text-sm leading-7 text-zinc-200">
-                Then open <span className="font-semibold text-white">GeneratedComonOrmClientSqlite</span> and work through typed delegates instead of handwritten SQL wrappers.
+                The same schema drives both sides of the workflow: generated client for runtime, reviewed migrations or explicit upgrades for rollout.
               </div>
             </div>
           </div>

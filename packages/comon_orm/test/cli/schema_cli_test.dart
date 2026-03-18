@@ -30,6 +30,37 @@ model User {
       }
     });
 
+    test('check auto-discovers prisma/schema.prisma', () async {
+      final tempRoot = Directory.systemTemp.createTempSync('comon_orm_cli_');
+      final previousCurrent = Directory.current;
+      try {
+        final prismaDir = Directory(
+          '${tempRoot.path}${Platform.pathSeparator}prisma',
+        )..createSync(recursive: true);
+        File(
+          '${prismaDir.path}${Platform.pathSeparator}schema.prisma',
+        ).writeAsStringSync('''
+model User {
+  id Int @id
+}
+''');
+
+        Directory.current = tempRoot;
+        final out = StringBuffer();
+        final err = StringBuffer();
+        final cli = ComonOrmCli(out: out, err: err);
+
+        final exitCode = await cli.run(<String>['check']);
+
+        expect(exitCode, 0);
+        expect(out.toString(), contains('Schema is valid.'));
+        expect(err.toString(), isEmpty);
+      } finally {
+        Directory.current = previousCurrent;
+        tempRoot.deleteSync(recursive: true);
+      }
+    });
+
     test('check prints line and column for validation errors', () async {
       final tempRoot = Directory.systemTemp.createTempSync('comon_orm_cli_');
       try {

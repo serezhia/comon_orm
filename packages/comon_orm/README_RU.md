@@ -31,9 +31,9 @@ dependencies:
 Провалидируйте, отформатируйте и сгенерируйте client из схемы:
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm format schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm format
+dart run comon_orm generate
 ```
 
 `validate` по-прежнему доступен как alias для `check`.
