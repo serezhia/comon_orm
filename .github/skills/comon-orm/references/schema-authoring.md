@@ -168,6 +168,6 @@ Do not confuse local setup/bootstrap with real migrations: schema apply belongs 
 ## Load These Docs When Needed
 
 - `README.md` for top-level workflow and runtime examples
-- `SCHEMA_REFERENCE.md` for syntax and supported constructs
-- `MIGRATIONS.md` for local-vs-production migration guidance
+- `site/content/docs/schema/reference.mdx` for syntax and supported constructs
+- `site/content/docs/migrations/index.mdx` for local-vs-production migration guidance
 - `workflow.md` for the operational migration sequence

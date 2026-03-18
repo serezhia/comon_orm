@@ -7,30 +7,61 @@ void main() {
 
   group('QueryPlanner', () {
     test(
-      'planFindMany returns findMany action with batch strategy when include is present',
+      'planFindMany returns join strategy for simple singular include chains',
       () {
         final plan = planner.planFindMany(
           const FindManyQuery(
-            model: 'User',
+            model: 'Post',
             include: QueryInclude({
-              'posts': QueryIncludeEntry(
+              'user': QueryIncludeEntry(
                 relation: QueryRelation(
-                  field: 'posts',
-                  targetModel: 'Post',
-                  cardinality: QueryRelationCardinality.many,
-                  localKeyField: 'id',
-                  targetKeyField: 'userId',
+                  field: 'user',
+                  targetModel: 'User',
+                  cardinality: QueryRelationCardinality.one,
+                  localKeyField: 'userId',
+                  targetKeyField: 'id',
                 ),
+                include: QueryInclude({
+                  'manager': QueryIncludeEntry(
+                    relation: QueryRelation(
+                      field: 'manager',
+                      targetModel: 'User',
+                      cardinality: QueryRelationCardinality.one,
+                      localKeyField: 'managerId',
+                      targetKeyField: 'id',
+                    ),
+                  ),
+                }),
               ),
             }),
           ),
         );
-        expect(plan.model, 'User');
-        expect(plan.action, PlannedAction.findMany);
-        expect(plan.includeRelations, ['posts']);
-        expect(plan.includeStrategy, IncludeStrategy.batch);
+        expect(plan.includeStrategy, IncludeStrategy.join);
       },
     );
+
+    test('planFindMany returns batch strategy for non-join include graphs', () {
+      final plan = planner.planFindMany(
+        const FindManyQuery(
+          model: 'User',
+          include: QueryInclude({
+            'posts': QueryIncludeEntry(
+              relation: QueryRelation(
+                field: 'posts',
+                targetModel: 'Post',
+                cardinality: QueryRelationCardinality.many,
+                localKeyField: 'id',
+                targetKeyField: 'userId',
+              ),
+            ),
+          }),
+        ),
+      );
+      expect(plan.model, 'User');
+      expect(plan.action, PlannedAction.findMany);
+      expect(plan.includeRelations, ['posts']);
+      expect(plan.includeStrategy, IncludeStrategy.batch);
+    });
 
     test('planFindMany returns perRow strategy when no include', () {
       final plan = planner.planFindMany(const FindManyQuery(model: 'User'));
@@ -45,29 +76,26 @@ void main() {
       expect(plan.action, PlannedAction.findUnique);
     });
 
-    test(
-      'planFindFirst returns findFirst action with batch strategy when include present',
-      () {
-        final plan = planner.planFindFirst(
-          const FindFirstQuery(
-            model: 'Post',
-            include: QueryInclude({
-              'user': QueryIncludeEntry(
-                relation: QueryRelation(
-                  field: 'user',
-                  targetModel: 'User',
-                  cardinality: QueryRelationCardinality.one,
-                  localKeyField: 'userId',
-                  targetKeyField: 'id',
-                ),
+    test('planFindFirst returns join strategy for simple singular include', () {
+      final plan = planner.planFindFirst(
+        const FindFirstQuery(
+          model: 'Post',
+          include: QueryInclude({
+            'user': QueryIncludeEntry(
+              relation: QueryRelation(
+                field: 'user',
+                targetModel: 'User',
+                cardinality: QueryRelationCardinality.one,
+                localKeyField: 'userId',
+                targetKeyField: 'id',
               ),
-            }),
-          ),
-        );
-        expect(plan.action, PlannedAction.findFirst);
-        expect(plan.includeStrategy, IncludeStrategy.batch);
-      },
-    );
+            ),
+          }),
+        ),
+      );
+      expect(plan.action, PlannedAction.findFirst);
+      expect(plan.includeStrategy, IncludeStrategy.join);
+    });
 
     test('planCreate returns create action with nestedWriteRelations', () {
       const relation = QueryRelation(

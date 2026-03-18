@@ -1,6 +1,6 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
-// schema-hash: 5b1947af9971d9480810ae42d9db95975f9566bca0b04175a83525492e6651e5
+// schema-hash: b4fc93c9aa5c940a2e5e7097537aeb7f16d160c4d49259596348bd620b429d08
 import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
 
@@ -507,26 +507,20 @@ class UserDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'User',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(
-                model: 'User',
-                where: selector,
-              ),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
             await _performCreateWithRelationWrites(

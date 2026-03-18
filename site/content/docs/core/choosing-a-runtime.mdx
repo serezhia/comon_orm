@@ -1,0 +1,104 @@
+---
+title: Choosing a runtime
+description: Pick the right adapter and migration strategy for backend, local SQLite, Flutter, and tests.
+---
+
+# Choosing a runtime
+
+`comon_orm` gives you one generated client shape across several runtime adapters. The important choice is not only the database engine, but also who owns rollout.
+
+## Quick matrix
+
+| Situation | Runtime | Rollout strategy |
+| --- | --- | --- |
+| Backend API with shared database | PostgreSQL or shared SQLite | Reviewed CLI migrations |
+| CLI tool or local VM app | SQLite | Reviewed migrations or explicit bootstrap |
+| Flutter app with device-local data | Flutter SQLite | Explicit app-side upgrade before runtime open |
+| Tests and examples | In-memory | No migration step; runtime metadata is enough |
+
+## PostgreSQL
+
+Choose PostgreSQL when:
+
+- the database is shared
+- concurrent application access matters
+- you need stronger in-place migration behavior than SQLite can offer
+- enums, richer native types, and operational tooling matter
+
+Typical runtime path:
+
+```dart
+final db = await GeneratedComonOrmClientPostgresql.open();
+```
+
+Typical rollout path:
+
+```bash
+dart run comon_orm migrate diff --schema schema.prisma --name 20260318_add_roles --out prisma/migrations
+dart run comon_orm migrate apply --schema schema.prisma --name 20260318_add_roles
+```
+
+## VM SQLite
+
+Choose VM SQLite when:
+
+- the app runs locally on Dart VM or the server
+- the database is file-backed and simple to operate
+- you want the same generated client shape as PostgreSQL with a smaller local footprint
+
+Typical runtime path:
+
+```dart
+final db = await GeneratedComonOrmClientSqlite.open();
+```
+
+Use the reviewed CLI flow when the SQLite file is shared or long-lived. For disposable local development data, explicit bootstrap can be enough.
+
+## Flutter SQLite
+
+Choose Flutter SQLite when:
+
+- the app owns a device-local SQLite file
+- runtime goes through `sqflite` / `sqflite_common`
+- upgrades must happen on-device before the generated runtime opens the file
+
+Typical runtime path:
+
+```dart
+await upgradeSqliteFlutterDatabase(
+  databasePath: 'app.db',
+  migrator: migrator,
+);
+
+final db = await GeneratedComonOrmClientFlutterSqlite.open(
+  databasePath: 'app.db',
+);
+```
+
+This is intentionally different from the shared-database CLI workflow.
+
+## In-memory
+
+Choose in-memory when:
+
+- writing tests
+- prototyping generated-client behavior
+- validating relation semantics without filesystem or network setup
+
+Typical runtime path:
+
+```dart
+final db = GeneratedComonOrmClient.openInMemory();
+```
+
+This path uses generated runtime metadata and is usually the fastest route for unit and integration tests.
+
+<Callout title="Choosing the runtime is also choosing the operational model">
+The biggest mistakes happen when a project picks the right adapter but the wrong rollout story. Shared databases want reviewed migrations. Device-local Flutter databases want explicit app-side upgrades.
+</Callout>
+
+## Continue with
+
+- `/docs/dart/runtime-and-adapters` for normal runtime startup patterns
+- `/docs/migrations` for rollout decisions and recovery paths
+- `/docs/dart/testing` for fast in-memory tests

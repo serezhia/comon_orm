@@ -1,0 +1,129 @@
+---
+title: Datasource and generator
+description: Configure the database provider, URL, generated output, and SQLite helper flavor.
+---
+
+# Datasource and generator
+
+These two blocks define the outer workflow:
+
+- `datasource` selects the database provider and connection target
+- `generator` controls the generated Dart client
+
+## Datasource block
+
+The common keys are:
+
+- `provider`
+- `url`
+
+PostgreSQL usually points at an environment variable:
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+SQLite usually points at a file path or local database name:
+
+```prisma
+datasource db {
+  provider = "sqlite"
+  url      = "dev.db"
+}
+```
+
+Practical guidance:
+
+- use `env("DATABASE_URL")` for shared PostgreSQL environments
+- use a literal file path for local SQLite during development
+- keep one datasource per schema file unless you are intentionally splitting projects
+
+## Generator block
+
+The common keys are:
+
+- `provider`
+- `output`
+- `sqliteHelper`
+
+VM or server-side SQLite:
+
+```prisma
+generator client {
+  provider     = "comon_orm"
+  output       = "lib/generated/comon_orm_client.dart"
+  sqliteHelper = "vm"
+}
+```
+
+Flutter SQLite:
+
+```prisma
+generator client {
+  provider     = "comon_orm"
+  output       = "lib/generated/comon_orm_client.dart"
+  sqliteHelper = "flutter"
+}
+```
+
+## What each key changes
+
+| Key | Meaning |
+| --- | --- |
+| `provider` | Must be `comon_orm` for the generated Dart client |
+| `output` | The generated Dart file path |
+| `sqliteHelper = "vm"` | Emits helpers for `comon_orm_sqlite` |
+| `sqliteHelper = "flutter"` | Emits helpers for `comon_orm_sqlite_flutter` |
+
+## Typical combinations
+
+### PostgreSQL backend
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "comon_orm"
+  output   = "lib/generated/comon_orm_client.dart"
+}
+```
+
+### Local SQLite CLI app or test app
+
+```prisma
+datasource db {
+  provider = "sqlite"
+  url      = "dev.db"
+}
+
+generator client {
+  provider     = "comon_orm"
+  output       = "lib/generated/comon_orm_client.dart"
+  sqliteHelper = "vm"
+}
+```
+
+### Flutter local SQLite
+
+```prisma
+datasource db {
+  provider = "sqlite"
+  url      = "app.db"
+}
+
+generator client {
+  provider     = "comon_orm"
+  output       = "lib/generated/comon_orm_client.dart"
+  sqliteHelper = "flutter"
+}
+```
+
+<Callout title="Generated client and runtime helper must agree">
+If the datasource says `sqlite` and the generator emits Flutter helpers, the normal runtime opener should be `GeneratedComonOrmClientFlutterSqlite.open(...)`. Keep datasource, generator, and runtime package aligned.
+</Callout>

@@ -1,0 +1,241 @@
+---
+title: QuickStart
+description: Go from an empty project to a generated client, reviewed migration, and working CRUD code.
+---
+
+# QuickStart
+
+This page is the shortest complete path through `comon_orm`.
+
+By the end you will have:
+
+- a `schema.prisma` file
+- a generated Dart client
+- a reviewed migration for a shared database
+- working CRUD code against the generated delegates
+
+## 1. Write `schema.prisma`
+
+Start with one schema that is rich enough to show the real workflow: enums, relations, defaults, timestamps, and an implicit many-to-many relation.
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "comon_orm"
+  output   = "lib/generated/comon_orm_client.dart"
+}
+
+enum Role {
+  admin
+  member
+}
+
+enum PostStatus {
+  draft
+  published
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  name      String
+  role      Role       @default(member)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  posts     Post[]
+}
+
+model Post {
+  id        Int        @id @default(autoincrement())
+  title     String
+  content   String?
+  status    PostStatus @default(draft)
+  authorId  Int
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags      Tag[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  posts Post[]
+}
+```
+
+## 2. Check and generate
+
+Run schema validation first. Then generate the client.
+
+```bash
+dart run comon_orm check schema.prisma
+dart run comon_orm generate schema.prisma
+```
+
+Typical output shape:
+
+```text
+Schema is valid.
+Generated client written to lib/generated/comon_orm_client.dart
+```
+
+`check` is the preferred command name. `validate` still exists as an alias, but the docs use `check` consistently.
+
+## 3. Draft and review a migration
+
+For shared databases, do not jump straight from generation to runtime.
+
+Draft a migration artifact and review it first.
+
+```bash
+dart run comon_orm migrate diff \
+  --schema schema.prisma \
+  --name 20260318_initial_blog \
+  --out prisma/migrations
+```
+
+This creates a directory similar to:
+
+```text
+prisma/migrations/
+  20260318_initial_blog/
+    migration.sql
+    warnings.txt
+    before.prisma
+    after.prisma
+```
+
+Then inspect the artifact before applying it:
+
+- `migration.sql` is the human-reviewed DDL
+- `warnings.txt` contains destructive or rebuild-related warnings
+- `before.prisma` and `after.prisma` capture the schema snapshots used for review and rollback support
+
+Check status before applying:
+
+```bash
+dart run comon_orm migrate status \
+  --schema schema.prisma \
+  --from prisma/migrations
+```
+
+Apply only after review:
+
+```bash
+dart run comon_orm migrate apply \
+  --schema schema.prisma \
+  --name 20260318_initial_blog
+```
+
+<Callout title="Important">
+`migrate diff` and `migrate apply` are intentionally different steps. `diff` writes reviewed artifacts on disk. `apply` recalculates the live plan against the current database and records migration history.
+</Callout>
+
+If you need the full command reference, continue with `/docs/migrations/cli-commands` after this page.
+
+## 4. Open the generated client
+
+With PostgreSQL, the normal runtime path is the generated opener:
+
+```dart
+import 'lib/generated/comon_orm_client.dart';
+
+Future<void> main() async {
+  final db = await GeneratedComonOrmClientPostgresql.open();
+
+  try {
+    final user = await db.user.create(
+      data: const UserCreateInput(
+        email: 'alice@example.com',
+        name: 'Alice',
+        posts: PostCreateNestedManyWithoutAuthorInput(
+          create: <PostCreateWithoutAuthorInput>[
+            PostCreateWithoutAuthorInput(
+              title: 'QuickStart post',
+              content: 'Created from the generated client',
+              status: PostStatus.published,
+            ),
+          ],
+        ),
+      ),
+      include: const UserInclude(posts: true),
+    );
+
+    final publishedPosts = await db.post.findMany(
+      where: const PostWhereInput(
+        status: EnumFilter<PostStatus>(equals: PostStatus.published),
+      ),
+      include: const PostInclude(
+        author: true,
+        tags: true,
+      ),
+    );
+
+    print(user.email);
+    print(publishedPosts.length);
+  } finally {
+    await db.close();
+  }
+}
+```
+
+## 5. Flutter local SQLite variant
+
+If the app owns a device-local SQLite file, the shape is similar but the rollout strategy changes.
+
+Use a Flutter helper in the generator block:
+
+```prisma
+generator client {
+  provider     = "comon_orm"
+  output       = "lib/generated/comon_orm_client.dart"
+  sqliteHelper = "flutter"
+}
+```
+
+Then upgrade local SQLite first and open the runtime second:
+
+```dart
+await upgradeSqliteFlutterDatabase(
+  databasePath: 'app.db',
+  migrator: migrator,
+);
+
+final db = await GeneratedComonOrmClientFlutterSqlite.open(
+  databasePath: 'app.db',
+);
+```
+
+That split is the core rule for Flutter local data:
+
+1. app-side upgrade first
+2. normal runtime open second
+
+<Callout title="Operational rule">
+Use reviewed CLI migrations for shared databases. Use explicit app-side upgrades for device-local Flutter SQLite files with important data.
+</Callout>
+
+## Next pages
+
+<Cards>
+  <Card
+    title="Schema"
+    href="/docs/schema"
+    description="See the full schema DSL, attributes, enums, relations, and native types."
+  />
+  <Card
+    title="Dart"
+    href="/docs/dart"
+    description="See CRUD, filters, nested writes, transactions, and aggregate queries."
+  />
+  <Card
+    title="Migrations"
+    href="/docs/migrations"
+    description="See the reviewed shared-database workflow and the Flutter local SQLite path."
+  />
+</Cards>

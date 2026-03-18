@@ -1,6 +1,6 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
-// schema-hash: 103cfa960ef080b83d9f425f6c34036e44282b071ec4b0ed3b1bd7f448ac0d60
+// schema-hash: 7c6b1b12bd01ca0b87d81e3274ad99240ec226342cb40c102438d08239fe41a5
 import 'package:comon_orm/comon_orm.dart';
 
 class GeneratedComonOrmClient {
@@ -914,26 +914,20 @@ class UserDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'User',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(
-                model: 'User',
-                where: selector,
-              ),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
             await _performCreateWithRelationWrites(
@@ -2118,26 +2112,20 @@ class ProfileDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Profile');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Profile',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(
-                model: 'Profile',
-                where: selector,
-              ),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
             await _performCreateWithRelationWrites(
@@ -3412,26 +3400,20 @@ class AccountDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Account');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Account',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(
-                model: 'Account',
-                where: selector,
-              ),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
             await _performCreateWithRelationWrites(
@@ -4675,26 +4657,20 @@ class AccountProfileDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('AccountProfile');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'AccountProfile',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(
-                model: 'AccountProfile',
-                where: selector,
-              ),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
             await _performCreateWithRelationWrites(

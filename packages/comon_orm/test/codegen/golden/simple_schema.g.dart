@@ -622,26 +622,20 @@ class UserDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'User',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(
-                model: 'User',
-                where: selector,
-              ),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
             await _performCreateWithRelationWrites(
@@ -1921,26 +1915,20 @@ class PostDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Post');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Post',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(
-                model: 'Post',
-                where: selector,
-              ),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
             await _performCreateWithRelationWrites(

@@ -38,7 +38,7 @@ Runtime path теперь всегда идет через compiled metadata: п
 
 Перед запуском нужно заранее подготовить схему базы через migration/apply tooling.
 
-Общий guide по миграциям и различию между local bootstrap и production migration flow лежит в `MIGRATIONS.md` в корне репозитория.
+Общий guide по миграциям и различию между local bootstrap и production migration flow теперь вынесен в документацию сайта: `site/content/docs/migrations`.
 
 ## Миграции
 

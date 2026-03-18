@@ -62,8 +62,8 @@ SQLite exports from `packages/comon_orm_sqlite/lib/comon_orm_sqlite.dart`:
 ## Repository Docs To Load When Needed
 
 - `README.md` for top-level usage, migration semantics, and runtime bootstrap
-- `MIGRATIONS.md` for rollout guidance and risk handling
-- `SCHEMA_REFERENCE.md` for supported schema constructs and examples
+- `site/content/docs/migrations/index.mdx` for rollout guidance and risk handling
+- `site/content/docs/schema/reference.mdx` for supported schema constructs and examples
 - `examples/postgres/README.md` for a runnable end-to-end example
 
 ## Practical Rules

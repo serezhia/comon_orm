@@ -1,6 +1,6 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
-// schema-hash: 17633ba002b5872c0214054e820888fa86d10d81dfd8c734258bf586a571e44f
+// schema-hash: c21ae1cfc506d7f87b4cdcb4006fcd6ef578be3f183734fcc5322bbca5ee2340
 import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_sqlite_flutter/comon_orm_sqlite_flutter.dart';
 
@@ -483,26 +483,20 @@ class TodoDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Todo');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Todo',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(
-                model: 'Todo',
-                where: selector,
-              ),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
             await _performCreateWithRelationWrites(

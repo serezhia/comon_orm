@@ -4,6 +4,7 @@ export 'src/client/query_models.dart';
 export 'src/codegen/client_generator.dart';
 export 'src/codegen/codegen_ir.dart';
 export 'src/engine/database_adapter.dart';
+export 'src/engine/database_middleware.dart';
 export 'src/engine/query_planner.dart';
 export 'src/engine/sqlite_query_support.dart';
 export 'src/migrations/migration_artifacts_web.dart'

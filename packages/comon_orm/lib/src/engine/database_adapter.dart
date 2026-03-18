@@ -138,7 +138,12 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
 
   final Map<String, List<Map<String, Object?>>> _store;
   final Map<String, List<_RelationLink>> _relationLinks;
-  final RuntimeSchemaView? _schema;
+  RuntimeSchemaView? _schema;
+
+  /// Binds runtime schema metadata when the adapter was created without one.
+  void bindRuntimeSchema(RuntimeSchemaView schema) {
+    _schema ??= schema;
+  }
 
   /// Clock used for automatically populated values such as `@updatedAt`.
   DateTime Function() now = () => DateTime.now().toUtc();
@@ -544,11 +549,80 @@ class InMemoryDatabaseAdapter implements DatabaseAdapter {
       final adapter = tx as InMemoryDatabaseAdapter;
       var count = 0;
       for (final row in query.data) {
-        await adapter.create(CreateQuery(model: query.model, data: row));
+        final nextRecord = adapter._applyAutomaticFieldValues(
+          query.model,
+          row,
+          isCreate: true,
+        );
+        adapter._assignAutoId(query.model, nextRecord);
+        if (query.skipDuplicates &&
+            adapter._conflictsWithUniqueConstraint(query.model, nextRecord)) {
+          continue;
+        }
+        adapter._store
+            .putIfAbsent(query.model, () => <Map<String, Object?>>[])
+            .add(nextRecord);
         count++;
       }
       return count;
     });
+  }
+
+  bool _conflictsWithUniqueConstraint(
+    String model,
+    Map<String, Object?> candidate,
+  ) {
+    final schema = _schema?.findModel(model);
+    if (schema == null) {
+      return false;
+    }
+    final records = _store[model] ?? const <Map<String, Object?>>[];
+    for (final fieldSet in _uniqueConstraintFieldSets(schema)) {
+      final selectorValues = <String, Object?>{};
+      var hasNull = false;
+      for (final field in fieldSet) {
+        final value = candidate[field];
+        if (value == null) {
+          hasNull = true;
+          break;
+        }
+        selectorValues[field] = value;
+      }
+      if (hasNull) {
+        continue;
+      }
+      final exists = records.any(
+        (record) =>
+            fieldSet.every((field) => record[field] == selectorValues[field]),
+      );
+      if (exists) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  List<List<String>> _uniqueConstraintFieldSets(RuntimeModelView model) {
+    final fieldSets = <List<String>>[];
+    if (model.primaryKeyFields.isNotEmpty) {
+      fieldSets.add(model.primaryKeyFields);
+    }
+    for (final field in model.fields) {
+      if ((field.isId || field.isUnique) && !field.isList) {
+        fieldSets.add(<String>[field.name]);
+      }
+    }
+    fieldSets.addAll(model.compoundUniqueFieldSets);
+
+    final seen = <String>{};
+    final unique = <List<String>>[];
+    for (final fieldSet in fieldSets) {
+      final key = fieldSet.join('|');
+      if (seen.add(key)) {
+        unique.add(fieldSet);
+      }
+    }
+    return unique;
   }
 
   @override

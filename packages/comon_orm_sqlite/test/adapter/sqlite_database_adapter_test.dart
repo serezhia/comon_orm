@@ -242,6 +242,74 @@ void main() {
       expect(grouped.last.avg!.profileViews, 10);
     });
 
+    test(
+      'supports distinct cursor pagination without in-memory fallback',
+      () async {
+        await client.user.create(
+          data: const UserCreateInput(
+            name: 'Alice',
+            email: 'alice@prisma.io',
+            country: 'US',
+            profileViews: 10,
+          ),
+        );
+        await client.user.create(
+          data: const UserCreateInput(
+            name: 'Bob',
+            email: 'bob@prisma.io',
+            country: 'US',
+            profileViews: 20,
+          ),
+        );
+        await client.user.create(
+          data: const UserCreateInput(
+            name: 'Claire',
+            email: 'claire@prisma.io',
+            country: 'FR',
+            profileViews: 5,
+          ),
+        );
+        await client.user.create(
+          data: const UserCreateInput(
+            name: 'Dan',
+            email: 'dan@prisma.io',
+            country: 'FR',
+            profileViews: 15,
+          ),
+        );
+
+        final nextDistinct = await client.user.findMany(
+          orderBy: const <UserOrderByInput>[
+            UserOrderByInput(country: SortOrder.asc),
+            UserOrderByInput(profileViews: SortOrder.desc),
+          ],
+          distinct: const <UserScalarField>[UserScalarField.country],
+          cursor: const UserWhereUniqueInput(email: 'dan@prisma.io'),
+          skip: 1,
+          take: 1,
+          select: const UserSelect(name: true, country: true),
+        );
+
+        expect(nextDistinct, hasLength(1));
+        expect(nextDistinct.single.name, 'Bob');
+        expect(nextDistinct.single.country, 'US');
+
+        final missingCursorRow = await client.user.findMany(
+          orderBy: const <UserOrderByInput>[
+            UserOrderByInput(country: SortOrder.asc),
+            UserOrderByInput(profileViews: SortOrder.desc),
+          ],
+          distinct: const <UserScalarField>[UserScalarField.country],
+          cursor: const UserWhereUniqueInput(email: 'claire@prisma.io'),
+          skip: 1,
+          take: 1,
+          select: const UserSelect(name: true, country: true),
+        );
+
+        expect(missingCursorRow, isEmpty);
+      },
+    );
+
     test('supports notIn and case-insensitive string filters', () async {
       await client.user.create(
         data: const UserCreateInput(name: 'Alice', email: 'alice@prisma.io'),
@@ -333,6 +401,174 @@ void main() {
         select: const UserSelect(name: true),
       );
       expect(notInIds.map((u) => u.name).toList(), <String?>['Bob', 'Carol']);
+    });
+
+    test('materializes nested singular include chain', () async {
+      final nestedSchema = const SchemaParser().parse('''
+model User {
+  id        Int    @id
+  name      String
+  email     String @unique
+  managerId Int?
+  manager   User?  @relation("Management", fields: [managerId], references: [id])
+  reports   User[] @relation("Management")
+  posts     Post[]
+}
+
+model Post {
+  id     Int  @id
+  title  String
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+''');
+      final nestedDatabase = sqlite.sqlite3.openInMemory();
+      const SqliteSchemaApplier().apply(nestedDatabase, nestedSchema);
+      final nestedAdapter = SqliteDatabaseAdapter(
+        database: nestedDatabase,
+        schema: nestedSchema,
+      );
+
+      nestedDatabase.execute(
+        "INSERT INTO \"User\" (\"id\", \"name\", \"email\", \"managerId\") VALUES "
+        "(3, 'Carol', 'carol@x.dev', NULL), "
+        "(1, 'Bob', 'bob@x.dev', 3), "
+        "(2, 'Alice', 'alice@x.dev', 1)",
+      );
+      nestedDatabase.execute(
+        "INSERT INTO \"Post\" (\"id\", \"title\", \"userId\") VALUES (10, 'Hello', 2)",
+      );
+
+      final rows = await nestedAdapter.findMany(
+        FindManyQuery(
+          model: 'Post',
+          include: QueryInclude(<String, QueryIncludeEntry>{
+            'user': QueryIncludeEntry(
+              relation: const QueryRelation(
+                field: 'user',
+                targetModel: 'User',
+                cardinality: QueryRelationCardinality.one,
+                localKeyField: 'userId',
+                targetKeyField: 'id',
+              ),
+              include: QueryInclude(<String, QueryIncludeEntry>{
+                'manager': QueryIncludeEntry(
+                  relation: const QueryRelation(
+                    field: 'manager',
+                    targetModel: 'User',
+                    cardinality: QueryRelationCardinality.one,
+                    localKeyField: 'managerId',
+                    targetKeyField: 'id',
+                  ),
+                  include: QueryInclude(<String, QueryIncludeEntry>{
+                    'manager': QueryIncludeEntry(
+                      relation: const QueryRelation(
+                        field: 'manager',
+                        targetModel: 'User',
+                        cardinality: QueryRelationCardinality.one,
+                        localKeyField: 'managerId',
+                        targetKeyField: 'id',
+                      ),
+                    ),
+                  }),
+                ),
+              }),
+            ),
+          }),
+        ),
+      );
+
+      expect(rows, hasLength(1));
+      expect(rows.single['user'], <String, Object?>{
+        'id': 2,
+        'name': 'Alice',
+        'email': 'alice@x.dev',
+        'managerId': 1,
+        'manager': <String, Object?>{
+          'id': 1,
+          'name': 'Bob',
+          'email': 'bob@x.dev',
+          'managerId': 3,
+          'manager': <String, Object?>{
+            'id': 3,
+            'name': 'Carol',
+            'email': 'carol@x.dev',
+            'managerId': null,
+          },
+        },
+      });
+
+      nestedAdapter.close();
+    });
+
+    test('batches implicit many-to-many include across multiple parents', () async {
+      final relationSchema = const SchemaParser().parse('''
+model User {
+  id   Int   @id
+  name String
+  tags Tag[]
+}
+
+model Tag {
+  id    Int    @id
+  label String
+  users User[]
+}
+''');
+      final relationDatabase = sqlite.sqlite3.openInMemory();
+      const SqliteSchemaApplier().apply(relationDatabase, relationSchema);
+      final relationAdapter = SqliteDatabaseAdapter(
+        database: relationDatabase,
+        schema: relationSchema,
+      );
+      final relationClient = ComonOrmClient(adapter: relationAdapter);
+      final storage = collectImplicitManyToManyStorages(relationSchema).single;
+      const userTagsRelation = QueryRelation(
+        field: 'tags',
+        targetModel: 'Tag',
+        cardinality: QueryRelationCardinality.many,
+        localKeyField: 'id',
+        targetKeyField: 'id',
+        storageKind: QueryRelationStorageKind.implicitManyToMany,
+        sourceModel: 'User',
+        inverseField: 'users',
+      );
+
+      relationDatabase.execute(
+        "INSERT INTO \"User\" (\"id\", \"name\") VALUES (1, 'Alice'), (2, 'Bob')",
+      );
+      relationDatabase.execute(
+        "INSERT INTO \"Tag\" (\"id\", \"label\") VALUES (10, 'urgent'), (11, 'backend')",
+      );
+      relationDatabase.execute(
+        'INSERT INTO "${storage.tableName}" ("${storage.sourceJoinColumns.first}", "${storage.targetJoinColumns.first}") '
+        'VALUES (1, 10), (1, 11), (2, 11)',
+      );
+
+      final rows = await relationClient
+          .model('User')
+          .findMany(
+            const FindManyQuery(
+              model: 'User',
+              include: QueryInclude(<String, QueryIncludeEntry>{
+                'tags': QueryIncludeEntry(relation: userTagsRelation),
+              }),
+              orderBy: <QueryOrderBy>[
+                QueryOrderBy(field: 'name', direction: SortOrder.asc),
+              ],
+            ),
+          );
+
+      expect(rows, hasLength(2));
+      expect(rows.first['tags'], <Map<String, Object?>>[
+        <String, Object?>{'id': 10, 'label': 'urgent'},
+        <String, Object?>{'id': 11, 'label': 'backend'},
+      ]);
+      expect(rows.last['tags'], <Map<String, Object?>>[
+        <String, Object?>{'id': 11, 'label': 'backend'},
+      ]);
+
+      relationAdapter.close();
     });
 
     test('reads and writes all supported scalar types', () async {
@@ -1000,6 +1236,57 @@ model Membership {
       expect(updated['email'], 'alice@example.com');
     });
 
+    test('upsert can update the conflict selector field natively', () async {
+      await adapter.create(
+        const CreateQuery(
+          model: 'User',
+          data: <String, Object?>{
+            'name': 'Alice',
+            'email': 'alice@example.com',
+          },
+        ),
+      );
+
+      final updated = await adapter.upsert(
+        const UpsertQuery(
+          model: 'User',
+          where: <QueryPredicate>[
+            QueryPredicate(
+              field: 'email',
+              operator: 'equals',
+              value: 'alice@example.com',
+            ),
+          ],
+          create: <String, Object?>{
+            'name': 'Alice Created',
+            'email': 'alice@example.com',
+          },
+          update: <String, Object?>{
+            'name': 'Alice Renamed',
+            'email': 'alice+new@example.com',
+          },
+        ),
+      );
+
+      expect(updated['name'], 'Alice Renamed');
+      expect(updated['email'], 'alice+new@example.com');
+
+      final reloaded = await adapter.findUnique(
+        const FindUniqueQuery(
+          model: 'User',
+          where: <QueryPredicate>[
+            QueryPredicate(
+              field: 'email',
+              operator: 'equals',
+              value: 'alice+new@example.com',
+            ),
+          ],
+        ),
+      );
+      expect(reloaded, isNotNull);
+      expect(reloaded!['name'], 'Alice Renamed');
+    });
+
     test('createMany inserts multiple records', () async {
       final count = await adapter.createMany(
         const CreateManyQuery(
@@ -1015,6 +1302,79 @@ model Membership {
       final all = await adapter.findMany(const FindManyQuery(model: 'User'));
       expect(all, hasLength(3));
     });
+
+    test('createMany preserves defaults across mixed row shapes', () async {
+      final user = await adapter.create(
+        const CreateQuery(
+          model: 'User',
+          data: <String, Object?>{
+            'name': 'Alice',
+            'email': 'alice@example.com',
+          },
+        ),
+      );
+
+      final count = await adapter.createMany(
+        CreateManyQuery(
+          model: 'Post',
+          data: <Map<String, Object?>>[
+            <String, Object?>{'title': 'Draft', 'userId': user['id']},
+            <String, Object?>{
+              'title': 'Published',
+              'userId': user['id'],
+              'published': true,
+            },
+          ],
+        ),
+      );
+
+      expect(count, 2);
+
+      final posts = await adapter.findMany(
+        const FindManyQuery(
+          model: 'Post',
+          orderBy: <QueryOrderBy>[
+            QueryOrderBy(field: 'id', direction: SortOrder.asc),
+          ],
+        ),
+      );
+      expect(posts, hasLength(2));
+      expect(posts[0]['published'], isFalse);
+      expect(posts[1]['published'], isTrue);
+    });
+
+    test(
+      'createMany skipDuplicates ignores duplicate unique conflicts',
+      () async {
+        final count = await adapter.createMany(
+          const CreateManyQuery(
+            model: 'User',
+            skipDuplicates: true,
+            data: <Map<String, Object?>>[
+              <String, Object?>{'name': 'Alice', 'email': 'alice@example.com'},
+              <String, Object?>{
+                'name': 'Alice Duplicate',
+                'email': 'alice@example.com',
+              },
+              <String, Object?>{'name': 'Bob', 'email': 'bob@example.com'},
+            ],
+          ),
+        );
+
+        expect(count, 2);
+        final users = await adapter.findMany(
+          const FindManyQuery(
+            model: 'User',
+            orderBy: <QueryOrderBy>[
+              QueryOrderBy(field: 'email', direction: SortOrder.asc),
+            ],
+          ),
+        );
+        expect(users, hasLength(2));
+        expect(users.first['name'], 'Alice');
+        expect(users.last['name'], 'Bob');
+      },
+    );
 
     test('createMany returns 0 for empty list', () async {
       final count = await adapter.createMany(

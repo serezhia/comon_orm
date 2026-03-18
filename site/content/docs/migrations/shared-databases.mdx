@@ -1,0 +1,124 @@
+---
+title: Shared databases
+description: The recommended reviewed migration flow for PostgreSQL and shared SQLite databases.
+---
+
+# Shared databases
+
+Use the same migration process for any database that is shared, long-lived, or contains data you care about.
+
+That includes:
+
+- PostgreSQL used by a backend or API
+- shared SQLite files used by multiple app instances or long-lived environments
+- staging and production databases
+
+## Recommended flow
+
+1. Edit `schema.prisma`.
+2. Run `check` and `generate`.
+3. Draft a migration with `migrate diff`.
+4. Review `migration.sql`, `warnings.txt`, `before.prisma`, and `after.prisma`.
+5. Commit schema changes, generated client, and migration artifacts together.
+6. Run `migrate status` against the target database.
+7. Apply with `migrate apply`.
+8. Verify with `migrate history` and `migrate status`.
+
+## Commands
+
+```bash
+dart run comon_orm check schema.prisma
+dart run comon_orm generate schema.prisma
+
+dart run comon_orm migrate diff \
+  --schema schema.prisma \
+  --name 20260315_add_user_role \
+  --out prisma/migrations
+
+dart run comon_orm migrate status \
+  --schema schema.prisma \
+  --from prisma/migrations
+
+dart run comon_orm migrate apply \
+  --schema schema.prisma \
+  --name 20260315_add_user_role
+
+dart run comon_orm migrate history \
+  --schema schema.prisma
+```
+
+## What to review in the drafted artifact
+
+### `migration.sql`
+
+This is the human-readable DDL summary.
+
+Typical shape:
+
+```sql
+ALTER TABLE "posts" ADD COLUMN "status" TEXT NOT NULL DEFAULT 'draft';
+CREATE INDEX "posts_author_id_status_idx" ON "posts" ("author_id", "status");
+```
+
+### `warnings.txt`
+
+This is the safety gate. If the planner sees risky transitions, the warnings appear here and `apply` stops by default.
+
+Typical warnings include:
+
+- dropping a column with live data
+- shrinking an enum while live rows still use removed values
+- lossy type changes
+- SQLite rebuild scenarios
+
+Example:
+
+```text
+Potential data loss: dropping column users.legacy_code.
+Potential rebuild: SQLite table posts must be recreated to apply relation or type changes.
+```
+
+### `before.prisma` and `after.prisma`
+
+These files capture the reviewed schema transition.
+
+They matter for:
+
+- auditability
+- `migrate status`
+- `migrate rollback`
+- recovery when a local artifact has to be reconstructed from history
+
+## Important nuance
+
+`diff` and `apply` are not the same step.
+
+- `diff` compares the live database to the current schema and writes an artifact to disk
+- `apply` compares the live database to the current schema again and executes the plan
+- checked-in migration artifacts remain important for review, status, rollback, and audit
+
+## History table
+
+Applied migrations are recorded in `_comon_orm_migrations` with metadata such as:
+
+- migration name
+- provider
+- checksum
+- warnings
+- whether a rebuild was required
+- before and after schema snapshots
+
+That metadata is what makes drift detection, status checks, and rollback support possible.
+
+## Warnings and risk handling
+
+`apply` and `rollback` stop by default when the planner detects risky changes such as destructive drops, lossy type changes, enum shrinkage, or SQLite rebuild scenarios.
+
+Use `--allow-warnings` only after explicit review.
+
+## Practical review rules
+
+1. Never edit old checked-in migration directories after they were applied anywhere important.
+2. Run `migrate status` before `migrate apply` on environments that may have drifted.
+3. Treat warnings as a review step, not as noise to bypass.
+4. Prefer a new forward migration over rewriting history.

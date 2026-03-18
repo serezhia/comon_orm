@@ -64,6 +64,11 @@ final db = await GeneratedComonOrmClientSqlite.open();
 - Tooling/setup path: schema-driven migrate/apply flows through the CLI and schema tools
 - runtime opens performed by this package enable SQLite foreign key enforcement with `PRAGMA foreign_keys = ON` by default
 
+## Internal Runtime Layout
+
+- `sqlite_database_adapter.dart` currently owns the public adapter surface together with SQL clause building, relation loading, and savepoint-based transaction coordination
+- the public runtime entry points stay `GeneratedComonOrmClient.openInMemory()` and `GeneratedComonOrmClientSqlite.open(...)`, even as internal adapter responsibilities are split over time
+
 ## 🎯 Key Features
 
 ### 🪶 Embedded SQLite Runtime

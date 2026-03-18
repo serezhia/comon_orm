@@ -421,9 +421,75 @@ model User {
       expect(rows, hasLength(1));
       expect(rows.single['name'], 'Charlie');
       expect(executor.queries, hasLength(2));
-      expect(executor.queries.first.sql, contains('WHERE ("t0"."email" = \$1)'));
+      expect(
+        executor.queries.first.sql,
+        contains('WHERE ("t0"."email" = \$1)'),
+      );
       expect(executor.queries.first.sql, contains('LIMIT \$2'));
       expect(executor.queries.first.parameters, <Object?>['b@x.dev', 1]);
+      expect(executor.queries.last.sql, contains('ORDER BY "t0"."name" ASC'));
+      expect(executor.queries.last.sql, contains('("t0"."name" > \$1)'));
+      expect(executor.queries.last.sql, contains('LIMIT \$3'));
+      expect(executor.queries.last.sql, contains('OFFSET \$4'));
+      expect(executor.queries.last.parameters, <Object?>['Bob', 'Bob', 1, 1]);
+    });
+
+    test('pushes distinct cursor pagination into SQL for findMany', () async {
+      executor.queryResponses.add(const <Map<String, Object?>>[
+        <String, Object?>{
+          '__ctid__': '(0,2)',
+          'id': 2,
+          'name': 'Bob',
+          'email': 'b@x.dev',
+          'role': 'developer',
+        },
+      ]);
+      executor.queryResponses.add(const <Map<String, Object?>>[
+        <String, Object?>{
+          '__ctid__': '(0,3)',
+          'id': 3,
+          'name': 'Charlie',
+          'email': 'c@x.dev',
+          'role': 'manager',
+        },
+      ]);
+
+      final rows = await adapter.findMany(
+        const FindManyQuery(
+          model: 'User',
+          cursor: QueryCursor(
+            where: <QueryPredicate>[
+              QueryPredicate(
+                field: 'email',
+                operator: 'equals',
+                value: 'b@x.dev',
+              ),
+            ],
+          ),
+          orderBy: <QueryOrderBy>[
+            QueryOrderBy(field: 'name', direction: SortOrder.asc),
+          ],
+          distinct: <String>{'role'},
+          skip: 1,
+          take: 1,
+        ),
+      );
+
+      expect(rows, hasLength(1));
+      expect(rows.single['name'], 'Charlie');
+      expect(executor.queries, hasLength(2));
+      expect(executor.queries.first.sql, contains('ROW_NUMBER() OVER'));
+      expect(
+        executor.queries.first.sql,
+        contains('PARTITION BY "d0"."role" ORDER BY "d0"."name" ASC'),
+      );
+      expect(
+        executor.queries.first.sql,
+        contains('FROM "_distinct" AS "t0" WHERE ("t0"."email" = \$1)'),
+      );
+      expect(executor.queries.first.sql, contains('LIMIT \$2'));
+      expect(executor.queries.first.parameters, <Object?>['b@x.dev', 1]);
+      expect(executor.queries.last.sql, contains('ROW_NUMBER() OVER'));
       expect(executor.queries.last.sql, contains('ORDER BY "t0"."name" ASC'));
       expect(executor.queries.last.sql, contains('("t0"."name" > \$1)'));
       expect(executor.queries.last.sql, contains('LIMIT \$3'));
@@ -472,6 +538,254 @@ model User {
       expect(executor.queries.last.sql, contains('FROM "Post" AS "t0"'));
       expect(executor.queries.last.parameters, <Object?>[1]);
     });
+
+    test('uses LEFT JOIN for simple singular include in findMany', () async {
+      executor.queryResponses.add(const <Map<String, Object?>>[
+        <String, Object?>{
+          '__ctid__': '(0,1)',
+          'id': 10,
+          'title': 'Hello',
+          'userId': 1,
+          '__join_t1_id': 1,
+          '__join_t1_name': 'Alice',
+          '__join_t1_role': 'developer',
+          '__join_t1_email': 'alice@x.dev',
+        },
+      ]);
+
+      final rows = await adapter.findMany(
+        FindManyQuery(
+          model: 'Post',
+          include: QueryInclude(<String, QueryIncludeEntry>{
+            'user': QueryIncludeEntry(
+              relation: const QueryRelation(
+                field: 'user',
+                targetModel: 'User',
+                cardinality: QueryRelationCardinality.one,
+                localKeyField: 'userId',
+                targetKeyField: 'id',
+              ),
+            ),
+          }),
+        ),
+      );
+
+      expect(rows, hasLength(1));
+      expect(rows.single['title'], 'Hello');
+      expect(rows.single['user'], <String, Object?>{
+        'id': 1,
+        'name': 'Alice',
+        'role': 'developer',
+        'email': 'alice@x.dev',
+      });
+      expect(executor.queries, hasLength(1));
+      expect(executor.queries.single.sql, contains('LEFT JOIN "User" AS "t1"'));
+      expect(
+        executor.queries.single.sql,
+        contains('"t0"."userId" = "t1"."id"'),
+      );
+    });
+
+    test(
+      'uses recursive LEFT JOINs for nested singular include chain',
+      () async {
+        final nestedAdapter = PostgresqlDatabaseAdapter(
+          executor: executor,
+          schema: const SchemaParser().parse('''
+model User {
+  id        Int    @id
+  name      String
+  email     String @unique
+  managerId Int?
+  manager   User?  @relation("Management", fields: [managerId], references: [id])
+  reports   User[] @relation("Management")
+  posts     Post[]
+}
+
+model Post {
+  id     Int  @id
+  title  String
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+'''),
+        );
+        executor.queryResponses.add(const <Map<String, Object?>>[
+          <String, Object?>{
+            '__ctid__': '(0,1)',
+            'id': 10,
+            'title': 'Hello',
+            'userId': 2,
+            '__join_t1_id': 2,
+            '__join_t1_name': 'Alice',
+            '__join_t1_email': 'alice@x.dev',
+            '__join_t1_managerId': 1,
+            '__join_t2_id': 1,
+            '__join_t2_name': 'Bob',
+            '__join_t2_email': 'bob@x.dev',
+            '__join_t2_managerId': 3,
+            '__join_t3_id': 3,
+            '__join_t3_name': 'Carol',
+            '__join_t3_email': 'carol@x.dev',
+            '__join_t3_managerId': null,
+          },
+        ]);
+
+        final rows = await nestedAdapter.findMany(
+          FindManyQuery(
+            model: 'Post',
+            include: QueryInclude(<String, QueryIncludeEntry>{
+              'user': QueryIncludeEntry(
+                relation: const QueryRelation(
+                  field: 'user',
+                  targetModel: 'User',
+                  cardinality: QueryRelationCardinality.one,
+                  localKeyField: 'userId',
+                  targetKeyField: 'id',
+                ),
+                include: QueryInclude(<String, QueryIncludeEntry>{
+                  'manager': QueryIncludeEntry(
+                    relation: const QueryRelation(
+                      field: 'manager',
+                      targetModel: 'User',
+                      cardinality: QueryRelationCardinality.one,
+                      localKeyField: 'managerId',
+                      targetKeyField: 'id',
+                    ),
+                    include: QueryInclude(<String, QueryIncludeEntry>{
+                      'manager': QueryIncludeEntry(
+                        relation: const QueryRelation(
+                          field: 'manager',
+                          targetModel: 'User',
+                          cardinality: QueryRelationCardinality.one,
+                          localKeyField: 'managerId',
+                          targetKeyField: 'id',
+                        ),
+                      ),
+                    }),
+                  ),
+                }),
+              ),
+            }),
+          ),
+        );
+
+        expect(rows, hasLength(1));
+        expect(rows.single['user'], <String, Object?>{
+          'id': 2,
+          'name': 'Alice',
+          'email': 'alice@x.dev',
+          'managerId': 1,
+          'manager': <String, Object?>{
+            'id': 1,
+            'name': 'Bob',
+            'email': 'bob@x.dev',
+            'managerId': 3,
+            'manager': <String, Object?>{
+              'id': 3,
+              'name': 'Carol',
+              'email': 'carol@x.dev',
+              'managerId': null,
+            },
+          },
+        });
+        expect(executor.queries, hasLength(1));
+        expect(
+          executor.queries.single.sql,
+          contains('LEFT JOIN "User" AS "t1"'),
+        );
+        expect(
+          executor.queries.single.sql,
+          contains('LEFT JOIN "User" AS "t2"'),
+        );
+        expect(
+          executor.queries.single.sql,
+          contains('LEFT JOIN "User" AS "t3"'),
+        );
+        expect(
+          executor.queries.single.sql,
+          contains('"t1"."managerId" = "t2"."id"'),
+        );
+        expect(
+          executor.queries.single.sql,
+          contains('"t2"."managerId" = "t3"."id"'),
+        );
+      },
+    );
+
+    test(
+      'batches implicit many-to-many include with one relation query',
+      () async {
+        final relationSchema = const SchemaParser().parse('''
+model User {
+  id   Int   @id
+  name String
+  tags Tag[]
+}
+
+model Tag {
+  id    Int    @id
+  label String
+  users User[]
+}
+''');
+        final relationAdapter = PostgresqlDatabaseAdapter(
+          executor: executor,
+          schema: relationSchema,
+        );
+        final storage = collectImplicitManyToManyStorages(
+          relationSchema,
+        ).single;
+
+        executor.queryResponses.add(const <Map<String, Object?>>[
+          <String, Object?>{'__ctid__': '(0,1)', 'id': 1, 'name': 'Alice'},
+          <String, Object?>{'__ctid__': '(0,2)', 'id': 2, 'name': 'Bob'},
+        ]);
+        executor.queryResponses.add(const <Map<String, Object?>>[
+          <String, Object?>{'__src_0': 1, 'id': 10, 'label': 'urgent'},
+          <String, Object?>{'__src_0': 1, 'id': 11, 'label': 'backend'},
+          <String, Object?>{'__src_0': 2, 'id': 11, 'label': 'backend'},
+        ]);
+
+        const userTagsRelation = QueryRelation(
+          field: 'tags',
+          targetModel: 'Tag',
+          cardinality: QueryRelationCardinality.many,
+          localKeyField: 'id',
+          targetKeyField: 'id',
+          storageKind: QueryRelationStorageKind.implicitManyToMany,
+          sourceModel: 'User',
+          inverseField: 'users',
+        );
+
+        final rows = await relationAdapter.findMany(
+          const FindManyQuery(
+            model: 'User',
+            include: QueryInclude(<String, QueryIncludeEntry>{
+              'tags': QueryIncludeEntry(relation: userTagsRelation),
+            }),
+            orderBy: <QueryOrderBy>[
+              QueryOrderBy(field: 'name', direction: SortOrder.asc),
+            ],
+          ),
+        );
+
+        expect(rows, hasLength(2));
+        expect(rows.first['tags'], <Map<String, Object?>>[
+          <String, Object?>{'id': 10, 'label': 'urgent'},
+          <String, Object?>{'id': 11, 'label': 'backend'},
+        ]);
+        expect(rows.last['tags'], <Map<String, Object?>>[
+          <String, Object?>{'id': 11, 'label': 'backend'},
+        ]);
+        expect(executor.queries, hasLength(2));
+        expect(
+          executor.queries.last.sql,
+          contains('JOIN "${storage.tableName}"'),
+        );
+        expect(executor.queries.last.sql, contains('FROM "Tag" AS'));
+      },
+    );
 
     test('delegates transactions to executor', () async {
       executor.queryResponses.add(const <Map<String, Object?>>[
@@ -663,6 +977,127 @@ model User {
         isTrue,
       );
     });
+
+    test(
+      'uses native ON CONFLICT upsert without transaction fallback',
+      () async {
+        final upsertAdapter = PostgresqlDatabaseAdapter.fromGeneratedSchema(
+          executor: executor,
+          schema: const GeneratedRuntimeSchema(
+            models: <GeneratedModelMetadata>[
+              GeneratedModelMetadata(
+                name: 'User',
+                databaseName: 'User',
+                primaryKeyFields: <String>['id'],
+                fields: <GeneratedFieldMetadata>[
+                  GeneratedFieldMetadata(
+                    name: 'id',
+                    databaseName: 'id',
+                    kind: GeneratedRuntimeFieldKind.scalar,
+                    type: 'Int',
+                    isNullable: false,
+                    isList: false,
+                    isId: true,
+                  ),
+                  GeneratedFieldMetadata(
+                    name: 'email',
+                    databaseName: 'email',
+                    kind: GeneratedRuntimeFieldKind.scalar,
+                    type: 'String',
+                    isNullable: false,
+                    isList: false,
+                    isUnique: true,
+                  ),
+                  GeneratedFieldMetadata(
+                    name: 'name',
+                    databaseName: 'name',
+                    kind: GeneratedRuntimeFieldKind.scalar,
+                    type: 'String',
+                    isNullable: false,
+                    isList: false,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+
+        executor.queryResponses.add(<Map<String, Object?>>[
+          <String, Object?>{
+            'id': 1,
+            'email': 'alice@x.dev',
+            'name': 'Alice Updated',
+          },
+        ]);
+
+        final result = await upsertAdapter.upsert(
+          const UpsertQuery(
+            model: 'User',
+            where: <QueryPredicate>[
+              QueryPredicate(
+                field: 'email',
+                operator: 'equals',
+                value: 'alice@x.dev',
+              ),
+            ],
+            create: <String, Object?>{
+              'id': 1,
+              'email': 'alice@x.dev',
+              'name': 'Alice',
+            },
+            update: <String, Object?>{'name': 'Alice Updated'},
+          ),
+        );
+
+        expect(result['name'], 'Alice Updated');
+        expect(executor.transactionCount, 0);
+        expect(executor.queries, hasLength(1));
+        expect(executor.queries.single.sql, contains('INSERT INTO "User"'));
+        expect(
+          executor.queries.single.sql,
+          contains('ON CONFLICT ("email") DO UPDATE'),
+        );
+        expect(executor.queries.single.sql, contains('SET "name" ='));
+        expect(executor.queries.single.sql, contains('RETURNING *'));
+        expect(executor.queries.single.parameters, <Object?>[
+          1,
+          'alice@x.dev',
+          'Alice',
+          'Alice Updated',
+        ]);
+      },
+    );
+
+    test(
+      'uses native ON CONFLICT DO NOTHING for createMany skipDuplicates',
+      () async {
+        final count = await adapter.createMany(
+          const CreateManyQuery(
+            model: 'User',
+            skipDuplicates: true,
+            data: <Map<String, Object?>>[
+              <String, Object?>{
+                'id': 1,
+                'name': 'Alice',
+                'role': 'admin',
+                'email': 'alice@x.dev',
+              },
+              <String, Object?>{
+                'id': 2,
+                'name': 'Bob',
+                'role': 'developer',
+                'email': 'bob@x.dev',
+              },
+            ],
+          ),
+        );
+
+        expect(count, 1);
+        expect(executor.transactionCount, 0);
+        expect(executor.queries, hasLength(1));
+        expect(executor.queries.single.sql, contains('ON CONFLICT DO NOTHING'));
+      },
+    );
 
     test('updates and deletes rows selected by compound predicates', () async {
       final membershipAdapter = PostgresqlDatabaseAdapter.fromGeneratedSchema(

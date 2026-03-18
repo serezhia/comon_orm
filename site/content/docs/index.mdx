@@ -1,0 +1,64 @@
+---
+title: Documentation
+description: Product documentation for schema design, generated Dart usage, and migrations.
+---
+
+# Build from schema, not handwritten SQL glue
+
+`comon_orm` is a schema-first ORM toolkit for Dart. The workflow is intentionally simple: model your data in `schema.prisma`, generate a typed client, and use reviewed migrations when the database matters.
+
+Throughout these docs, `runtime` means normal application database access, while `rollout` means preparing or changing a real database schema.
+
+<Cards>
+  <Card
+    title="QuickStart"
+    href="/docs/quickstart"
+    description="The shortest end-to-end path: schema, generate, review a migration, and run CRUD code."
+  />
+  <Card
+    title="Core"
+    href="/docs/core"
+    description="Product overview, architecture, platform split, and current boundaries."
+  />
+  <Card
+    title="Schema"
+    href="/docs/schema"
+    description="Schema blocks, field attributes, relation modeling, and practical DSL guidance."
+  />
+  <Card
+    title="Dart"
+    href="/docs/dart"
+    description="Generated client usage, adapters, runtime metadata, and application integration."
+  />
+  <Card
+    title="Migrations"
+    href="/docs/migrations"
+    description="Reviewed shared-database migrations plus explicit Flutter local SQLite upgrades."
+  />
+</Cards>
+
+## What this documentation is optimized for
+
+- understanding the actual supported workflow, not an aspirational Prisma clone story
+- getting from an empty schema to a running Dart app quickly
+- choosing the right migration strategy for PostgreSQL, SQLite, and Flutter local SQLite
+- knowing where runtime guarantees stop and rollout review starts
+
+<Callout title="Start here if you are new">
+Read the QuickStart first, then use the section docs as reference. The root README stays intentionally short; this site is where the full workflow, examples, and operational guidance live.
+</Callout>
+
+## Core path
+
+1. Write `schema.prisma`.
+2. Run `check` and `generate`.
+3. Prepare the database through reviewed migrations or explicit local upgrades.
+4. Open the generated client against runtime schema metadata.
+5. Use the generated delegates in application code.
+
+## Recommended reading order
+
+1. QuickStart for the shortest end-to-end path.
+2. Schema for DSL reference and modeling rules.
+3. Dart for generated client usage.
+4. Migrations for rollout and recovery.

@@ -172,6 +172,9 @@ model Post {
       expect(output, contains('Future<int> createMany({'));
       expect(output, contains('required List<UserCreateInput> data,'));
       expect(output, contains('bool skipDuplicates = false,'));
+      expect(output, contains('final hasDeferredRelationWrites = data.any('));
+      expect(output, contains('return txDelegate.createMany('));
+      expect(output, contains('skipDuplicates: skipDuplicates,'));
       expect(
         output,
         contains('if (skipDuplicates && _isSkippableDuplicateError(error)) {'),
@@ -186,12 +189,6 @@ model Post {
       expect(
         output,
         contains('List<List<QueryPredicate>> toUniqueSelectorPredicates() {'),
-      );
-      expect(
-        output,
-        contains(
-          'for (final selector in entry.toUniqueSelectorPredicates()) {',
-        ),
       );
       expect(output, contains('class IntFieldUpdateOperationsInput {'));
       expect(output, contains('class StringFieldUpdateOperationsInput {'));
@@ -358,6 +355,80 @@ model Group {
         ),
       );
       expect(output, contains('storageTableName: \'_comon_orm_m2m__'));
+    });
+
+    test(
+      'skips avg and sum aggregate helpers for models without numeric fields',
+      () {
+        const source = '''
+model AuditLog {
+  id      String  @id
+  action  String
+  actor   String?
+  success Boolean
+}
+''';
+
+        final schema = const SchemaParser().parse(source);
+        final output = const ClientGenerator().generateClient(schema);
+
+        expect(output, contains('Future<AuditLogAggregateResult> aggregate({'));
+        expect(output, contains('class AuditLogCountAggregateInput {'));
+        expect(output, contains('class AuditLogMinAggregateInput {'));
+        expect(output, contains('class AuditLogMaxAggregateInput {'));
+        expect(output, isNot(contains('class AuditLogAvgAggregateInput {')));
+        expect(output, isNot(contains('class AuditLogSumAggregateInput {')));
+        expect(output, isNot(contains('class AuditLogAvgAggregateResult {')));
+        expect(output, isNot(contains('class AuditLogSumAggregateResult {')));
+        expect(output, isNot(contains('    AuditLogAvgAggregateInput? avg,')));
+        expect(output, isNot(contains('    AuditLogSumAggregateInput? sum,')));
+        expect(output, contains('        avg: const <String>{},'));
+        expect(output, contains('        sum: const <String>{},'));
+        expect(output, contains('Future<List<AuditLogGroupByRow>> groupBy({'));
+        expect(output, isNot(contains('class AuditLogGroupByHavingInput {')));
+        expect(
+          output,
+          isNot(contains('class AuditLogAvgAggregateOrderByInput {')),
+        );
+        expect(
+          output,
+          isNot(contains('class AuditLogSumAggregateOrderByInput {')),
+        );
+      },
+    );
+
+    test('skips groupBy helpers for id-only models', () {
+      const source = '''
+model CursorToken {
+  id String @id
+}
+''';
+
+      final schema = const SchemaParser().parse(source);
+      final output = const ClientGenerator().generateClient(schema);
+
+      expect(
+        output,
+        contains('Future<CursorTokenAggregateResult> aggregate({'),
+      );
+      expect(
+        output,
+        isNot(contains('Future<List<CursorTokenGroupByRow>> groupBy({')),
+      );
+      expect(output, isNot(contains('class CursorTokenGroupByOrderByInput {')));
+      expect(output, isNot(contains('class CursorTokenGroupByRow {')));
+      expect(
+        output,
+        isNot(contains('class CursorTokenCountAggregateOrderByInput {')),
+      );
+      expect(
+        output,
+        isNot(contains('class CursorTokenMinAggregateOrderByInput {')),
+      );
+      expect(
+        output,
+        isNot(contains('class CursorTokenMaxAggregateOrderByInput {')),
+      );
     });
 
     test('emits compound unique input helpers for compound selectors', () {

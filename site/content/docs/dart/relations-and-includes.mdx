@@ -1,0 +1,120 @@
+---
+title: Relations and includes
+description: Include trees, select projections, and nested relation writes.
+---
+
+# Relations and includes
+
+The generated client gives you two main read-shaping tools:
+
+- `select` for field projection
+- `include` for relation loading
+
+## Include related records
+
+```dart
+final posts = await db.post.findMany(
+  include: const PostInclude(
+    author: true,
+    tags: true,
+  ),
+);
+```
+
+## Nested include trees
+
+```dart
+final users = await db.user.findMany(
+  include: const UserInclude(
+    posts: PostInclude(
+      tags: true,
+    ),
+  ),
+);
+```
+
+## Select only required fields
+
+```dart
+final users = await db.user.findMany(
+  select: const UserSelect(
+    id: true,
+    email: true,
+  ),
+);
+```
+
+## Nested create
+
+```dart
+await db.user.create(
+  data: const UserCreateInput(
+    email: 'alice@example.com',
+    name: 'Alice',
+    posts: PostCreateNestedManyWithoutAuthorInput(
+      create: <PostCreateWithoutAuthorInput>[
+        PostCreateWithoutAuthorInput(title: 'First post'),
+      ],
+    ),
+  ),
+);
+```
+
+## Connect existing records
+
+```dart
+await db.post.create(
+  data: PostCreateInput(
+    title: 'Connected post',
+    author: const UserCreateNestedOneWithoutPostsInput(
+      connect: UserWhereUniqueInput(email: 'alice@example.com'),
+    ),
+    tags: TagCreateNestedManyWithoutPostsInput(
+      connect: <TagWhereUniqueInput>[
+        const TagWhereUniqueInput(name: 'docs'),
+      ],
+    ),
+  ),
+);
+```
+
+## Connect or create
+
+```dart
+await db.post.update(
+  where: const PostWhereUniqueInput(id: 1),
+  data: PostUpdateInput(
+    tags: TagUpdateManyWithoutPostsNestedInput(
+      connectOrCreate: <TagConnectOrCreateWithoutPostsInput>[
+        TagConnectOrCreateWithoutPostsInput(
+          where: const TagWhereUniqueInput(name: 'orm'),
+          create: const TagCreateWithoutPostsInput(name: 'orm'),
+        ),
+      ],
+    ),
+  ),
+);
+```
+
+## Disconnect and set
+
+```dart
+await db.post.update(
+  where: const PostWhereUniqueInput(id: 1),
+  data: PostUpdateInput(
+    tags: TagUpdateManyWithoutPostsNestedInput(
+      disconnect: <TagWhereUniqueInput>[
+        const TagWhereUniqueInput(name: 'old-tag'),
+      ],
+      set: <TagWhereUniqueInput>[
+        const TagWhereUniqueInput(name: 'docs'),
+        const TagWhereUniqueInput(name: 'orm'),
+      ],
+    ),
+  ),
+);
+```
+
+<Callout title="Required relations still enforce ownership rules">
+Nested writes stay typed, but they do not bypass required foreign-key semantics. If a nested write would orphan a required relation, the generated layer and adapter still reject it.
+</Callout>

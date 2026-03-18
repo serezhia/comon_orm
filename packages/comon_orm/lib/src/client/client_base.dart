@@ -1,4 +1,5 @@
 import '../engine/database_adapter.dart';
+import '../engine/query_planner.dart';
 import '../runtime_metadata/runtime_schema_view.dart';
 import 'query_aggregates.dart';
 import 'query_models.dart';
@@ -17,7 +18,11 @@ class ComonOrmClient {
     required DatabaseAdapter adapter,
     RuntimeSchemaView? schemaView,
   }) : _adapter = adapter,
-       _schemaView = schemaView;
+       _schemaView = schemaView {
+    if (adapter is InMemoryDatabaseAdapter && schemaView != null) {
+      adapter.bindRuntimeSchema(schemaView);
+    }
+  }
 
   final DatabaseAdapter _adapter;
   final RuntimeSchemaView? _schemaView;
@@ -43,6 +48,8 @@ class ComonOrmClient {
 /// Binds model-scoped query objects to a concrete model name.
 class ModelDelegate {
   ModelDelegate._(this._adapter, this._model, [this._schemaView]);
+
+  static const QueryPlanner _planner = QueryPlanner();
 
   final DatabaseAdapter _adapter;
   final String _model;
@@ -85,7 +92,10 @@ class ModelDelegate {
     }
     _validatePredicateFields(query.where);
 
-    return _adapter.findMany(query);
+    final planned = _planner.planFindMany(query);
+    return _adapter.findMany(
+      query.copyWithIncludeStrategy(planned.includeStrategy),
+    );
   }
 
   /// Returns the single matching record for [query], if any.
@@ -113,7 +123,10 @@ class ModelDelegate {
     }
     _validatePredicateFields(query.where);
 
-    return _adapter.findFirst(query);
+    final planned = _planner.planFindFirst(query);
+    return _adapter.findFirst(
+      query.copyWithIncludeStrategy(planned.includeStrategy),
+    );
   }
 
   /// Counts records that match [query].

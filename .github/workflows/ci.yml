@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dart-channel:
+          - stable
+          - dev
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.dart-channel }}
+
+      - name: Install workspace dependencies
+        run: dart pub get
+
+      - name: Analyze all packages
+        run: dart run tool/analyze_all.dart
+
+      - name: Run all tests
+        run: dart run tool/test_all.dart
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed tool packages examples
+
+      - name: Publish dry-run all packages
+        run: dart run tool/dry_run_all.dart

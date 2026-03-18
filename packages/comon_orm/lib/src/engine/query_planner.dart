@@ -116,13 +116,53 @@ class QueryPlanner {
   }
 
   /// Returns the preferred include resolution strategy for the given include.
-  /// Multi-row operations benefit from [IncludeStrategy.batch]; single-record
-  /// operations keep the simpler [IncludeStrategy.perRow] default.
+  /// JOIN is preferred for shallow direct singular chains, batch for relation
+  /// graphs that remain batchable, and per-row is reserved for unsupported
+  /// complex include shapes.
   IncludeStrategy _includeStrategy(QueryInclude? include) {
     if (include == null || include.relations.isEmpty) {
       return IncludeStrategy.perRow;
     }
-    return IncludeStrategy.batch;
+    if (_canUseJoinStrategy(include, depth: 1)) {
+      return IncludeStrategy.join;
+    }
+    if (_canUseBatchStrategy(include)) {
+      return IncludeStrategy.batch;
+    }
+    return IncludeStrategy.perRow;
+  }
+
+  bool _canUseJoinStrategy(QueryInclude include, {required int depth}) {
+    if (depth > 3) {
+      return false;
+    }
+    for (final entry in include.relations.values) {
+      final relation = entry.relation;
+      if (relation.cardinality != QueryRelationCardinality.one ||
+          relation.storageKind != QueryRelationStorageKind.direct ||
+          relation.localKeyFields.length != 1 ||
+          relation.targetKeyFields.length != 1) {
+        return false;
+      }
+      final nested = entry.include;
+      if (nested != null && !_canUseJoinStrategy(nested, depth: depth + 1)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _canUseBatchStrategy(QueryInclude include) {
+    for (final entry in include.relations.values) {
+      final relation = entry.relation;
+      if (relation.storageKind == QueryRelationStorageKind.implicitManyToMany) {
+        continue;
+      }
+      if (relation.localKeyFields.length != 1) {
+        return false;
+      }
+    }
+    return true;
   }
 }
 
@@ -157,16 +197,6 @@ enum PlannedAction {
 
   /// Delete all matching records.
   deleteMany,
-}
-
-/// Strategy an adapter should use to resolve include relations.
-enum IncludeStrategy {
-  /// Resolve each parent row individually (simple, no batching).
-  perRow,
-
-  /// Collect FK values from all parent rows and fire one query per relation
-  /// level (eliminates N+1 for multi-row results).
-  batch,
 }
 
 /// Provider-agnostic execution plan derived from query input.

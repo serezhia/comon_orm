@@ -106,8 +106,22 @@ class _DuplicateOnCreateAdapter implements DatabaseAdapter {
   }
 
   @override
-  Future<int> createMany(CreateManyQuery query) {
-    throw UnimplementedError();
+  Future<int> createMany(CreateManyQuery query) async {
+    var count = 0;
+    for (final row in query.data) {
+      final email = row['email'] as String?;
+      if (email != null && createdEmails.contains(email)) {
+        if (query.skipDuplicates) {
+          continue;
+        }
+        throw const _FakeDuplicateServerException();
+      }
+      if (email != null) {
+        createdEmails.add(email);
+      }
+      count++;
+    }
+    return count;
   }
 
   @override

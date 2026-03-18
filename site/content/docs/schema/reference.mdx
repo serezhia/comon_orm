@@ -1,0 +1,106 @@
+---
+title: Schema reference
+description: Supported scalar types, attributes, generator keys, and practical schema rules.
+---
+
+# Schema reference
+
+Use this page as a compact checklist. The detailed walkthroughs live in the dedicated pages for datasource/generator, models/fields, relations, enums, and native types.
+
+## Scalar types
+
+Main scalar types recognized by `comon_orm`:
+
+- `Int`
+- `String`
+- `Boolean`
+- `DateTime`
+- `Float`
+- `Decimal`
+- `Json`
+- `Bytes`
+- `BigInt`
+
+See the full type mapping and attribute examples in `/docs/schema/models-and-fields`.
+
+## Datasource block
+
+Typical keys:
+
+- `provider`
+- `url`
+
+Examples:
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+```prisma
+datasource db {
+  provider = "sqlite"
+  url      = "dev.db"
+}
+```
+
+See `/docs/schema/datasource-and-generator` for provider-specific setup guidance.
+
+## Generator block
+
+Typical keys:
+
+- `provider`
+- `output`
+- `sqliteHelper`
+
+```prisma
+generator client {
+  provider = "comon_orm"
+  output   = "lib/generated/comon_orm_client.dart"
+  sqliteHelper = "flutter"
+}
+```
+
+`sqliteHelper` values:
+
+- `vm` for `comon_orm_sqlite`
+- `flutter` for `comon_orm_sqlite_flutter`
+
+See `/docs/schema/datasource-and-generator` for full setup combinations.
+
+## Common field attributes
+
+| Attribute | Meaning |
+| --- | --- |
+| `@id` | Primary key |
+| `@default(...)` | Default value such as `autoincrement()` or `now()` |
+| `@unique` | Unique column |
+| `@updatedAt` | Auto-refresh on update |
+| `@map("...")` | Map logical field name to database column name |
+| `@relation(...)` | Define relation ownership, references, and referential actions |
+
+See `/docs/schema/models-and-fields` and `/docs/schema/relations` for full examples.
+
+## Model attributes
+
+| Attribute | Meaning |
+| --- | --- |
+| `@@id([...])` | Compound primary key |
+| `@@unique([...])` | Compound unique constraint |
+| `@@index([...])` | Secondary index |
+| `@@map("...")` | Map logical model name to database table name |
+
+## Provider-specific native types
+
+PostgreSQL currently includes support for types such as `@db.VarChar(n)`, `@db.Text`, `@db.Json`, `@db.JsonB`, `@db.ByteA`, `@db.Numeric`, `@db.Timestamp`, `@db.Timestamptz`, and `@db.Uuid`.
+
+SQLite currently includes support for `@db.Integer`, `@db.Numeric`, `@db.Real`, `@db.Text`, and `@db.Blob`.
+
+See `/docs/schema/native-types` for the supported subset with example schemas.
+
+<Callout title="Validation behavior">
+The validator enforces relation ownership rules, unique-selector correctness for relation references, self-relation naming rules, and referential action constraints such as rejecting `SetNull` on non-nullable relation fields.
+</Callout>

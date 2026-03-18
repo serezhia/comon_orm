@@ -1,0 +1,53 @@
+---
+title: Dart
+description: How generated Dart code is shaped and how to open runtime adapters correctly.
+---
+
+# Dart
+
+After `generate`, the normal path is to work through the generated client rather than through handwritten records and raw SQL strings.
+
+## Typical runtime shape
+
+```dart
+import 'generated/comon_orm_client.dart';
+
+Future<void> main() async {
+  final db = await GeneratedComonOrmClientSqlite.open();
+
+  try {
+    final user = await db.user.create(
+      data: const UserCreateInput(
+        email: 'alice@example.com',
+        name: 'Alice',
+      ),
+    );
+
+    final users = await db.user.findMany();
+
+    print(user.email);
+    print(users.length);
+  } finally {
+    await db.close();
+  }
+}
+```
+
+## What the generated surface includes
+
+- typed models and scalar enums
+- `WhereInput` and `WhereUniqueInput` types
+- CRUD delegates such as `findMany`, `create`, `update`, `delete`, and `upsert`
+- relation-aware nested create and update inputs
+- `select`, `include`, `orderBy`, `distinct`, `skip`, `take`, aggregate, and group-by support
+
+<Cards>
+  <Card title="CRUD" href="/docs/dart/crud" description="See create, read, update, delete, batch writes, upsert, and count with concrete examples." />
+  <Card title="Filtering and sorting" href="/docs/dart/filtering-and-sorting" description="See WhereInput, orderBy, distinct, skip/take, and cursor pagination." />
+  <Card title="Relations and includes" href="/docs/dart/relations-and-includes" description="See nested writes, include trees, connect, disconnect, and connectOrCreate." />
+  <Card title="Aggregations" href="/docs/dart/aggregations" description="See aggregate(), groupBy(), and count() examples." />
+  <Card title="Transactions" href="/docs/dart/transactions" description="See transaction blocks, rollback behavior, and multi-step write patterns." />
+  <Card title="Testing" href="/docs/dart/testing" description="Use openInMemory(), generated runtime metadata, and test-friendly adapters for fast feedback." />
+  <Card title="Generated client" href="/docs/dart/generated-client" description="See the delegate API and the main generated query capabilities." />
+  <Card title="Runtime and adapters" href="/docs/dart/runtime-and-adapters" description="Choose the correct opener path for PostgreSQL, SQLite, in-memory, and Flutter SQLite." />
+</Cards>

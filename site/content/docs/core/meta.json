@@ -1,0 +1,6 @@
+{
+  "title": "Core",
+  "description": "Overview and limits.",
+  "root": true,
+  "pages": ["index", "architecture", "platforms-and-limitations", "choosing-a-runtime"]
+}

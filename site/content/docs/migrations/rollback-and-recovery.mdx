@@ -1,0 +1,67 @@
+---
+title: Rollback and recovery
+description: When to use rollback, when to prefer a forward fix, and how to recover from common migration-state failures.
+---
+
+# Rollback and recovery
+
+Rollback exists, but it is not the default answer to every production problem.
+
+## Prefer forward fixes for shared databases
+
+If a migration was already applied to a shared environment, a new forward migration is usually safer than mutating history or repeatedly rolling backward and forward.
+
+Use rollback when:
+
+- the migration just landed and the blast radius is limited
+- the rollback path is reviewed and understood
+- the before-state is still valid for current application code
+
+## Rollback command
+
+```bash
+dart run comon_orm migrate rollback \
+  --schema schema.prisma \
+  --from prisma/migrations
+```
+
+Rollback uses:
+
+- local `before.prisma` artifacts when available
+- recorded schema snapshots from `_comon_orm_migrations` when local files are missing
+
+## `checksum-mismatch`
+
+This means the migration artifact on disk no longer matches what the database recorded.
+
+Safe response:
+
+1. stop before applying anything new
+2. restore the checked-in artifact if it was edited locally
+3. if the checked-in history is already wrong, create a new forward migration instead of editing old applied directories
+
+## Applied migration missing locally
+
+If `migrate status` reports `applied-migration-missing-locally`, the database history references a migration directory that is not present on disk.
+
+Safe response:
+
+1. recover the missing migration directory from version control if possible
+2. verify `before.prisma`, `after.prisma`, and `migration.sql`
+3. run `migrate status` again before applying anything else
+
+## Missing snapshots in older history
+
+If the history table lacks older schema snapshots, rollback can be more limited.
+
+That is a signal to:
+
+- recover old artifacts from version control
+- avoid blind rollback on important environments
+- prefer a forward migration that restores the desired state explicitly
+
+## Warning-gated rollback
+
+Rollback stops on warnings by default just like apply.
+
+Use `--allow-warnings` only after you review the implied data loss or rebuild consequences.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.1-alpha.2
+
+- Synced Flutter SQLite runtime behavior with the core query planner and include-strategy pipeline.
+- Kept generated-metadata runtime opening and local migration flows aligned with the latest core/sqlite package changes.
+- Prepared the package for the coordinated `0.0.1-alpha.2` dry-run publication set.
+
 ## 0.0.1-alpha.1
 
 - Added generated-metadata runtime opening through `openFromGeneratedSchema(...)` and generated Flutter SQLite client helpers.

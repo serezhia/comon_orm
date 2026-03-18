@@ -90,8 +90,8 @@ dart test
 - `packages/comon_orm_postgresql/lib/comon_orm_postgresql.dart`
 - `packages/comon_orm_sqlite/lib/comon_orm_sqlite.dart`
 - `README.md`
-- `MIGRATIONS.md`
-- `SCHEMA_REFERENCE.md`
+- `site/content/docs/migrations/index.mdx`
+- `site/content/docs/schema/reference.mdx`
 
 ## Status And Drift Interpretation
 

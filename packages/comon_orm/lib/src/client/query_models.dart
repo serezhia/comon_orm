@@ -413,6 +413,18 @@ class QueryCursor {
   final List<QueryPredicate> where;
 }
 
+/// Strategy an adapter should use to resolve include relations.
+enum IncludeStrategy {
+  /// Resolve each parent row individually.
+  perRow,
+
+  /// Resolve includes with JOIN-based eager loading.
+  join,
+
+  /// Resolve includes with batched follow-up queries.
+  batch,
+}
+
 @immutable
 /// Query object for fetching multiple records.
 class FindManyQuery {
@@ -425,6 +437,7 @@ class FindManyQuery {
     this.distinct = const <String>{},
     this.include,
     this.select,
+    this.includeStrategy,
     this.skip,
     this.take,
   });
@@ -450,11 +463,30 @@ class FindManyQuery {
   /// Scalar fields to project.
   final QuerySelect? select;
 
+  /// Preferred eager-loading strategy for [include].
+  final IncludeStrategy? includeStrategy;
+
   /// Number of matching rows to skip.
   final int? skip;
 
   /// Maximum number of rows to return.
   final int? take;
+
+  /// Returns a copy of this query with [includeStrategy] overridden.
+  FindManyQuery copyWithIncludeStrategy(IncludeStrategy? includeStrategy) {
+    return FindManyQuery(
+      model: model,
+      where: where,
+      cursor: cursor,
+      orderBy: orderBy,
+      distinct: distinct,
+      include: include,
+      select: select,
+      includeStrategy: includeStrategy,
+      skip: skip,
+      take: take,
+    );
+  }
 }
 
 @immutable
@@ -493,6 +525,7 @@ class FindFirstQuery {
     this.distinct = const <String>{},
     this.include,
     this.select,
+    this.includeStrategy,
     this.skip,
   });
 
@@ -517,8 +550,26 @@ class FindFirstQuery {
   /// Scalar fields to project.
   final QuerySelect? select;
 
+  /// Preferred eager-loading strategy for [include].
+  final IncludeStrategy? includeStrategy;
+
   /// Number of matches to skip before taking the first row.
   final int? skip;
+
+  /// Returns a copy of this query with [includeStrategy] overridden.
+  FindFirstQuery copyWithIncludeStrategy(IncludeStrategy? includeStrategy) {
+    return FindFirstQuery(
+      model: model,
+      where: where,
+      cursor: cursor,
+      orderBy: orderBy,
+      distinct: distinct,
+      include: include,
+      select: select,
+      includeStrategy: includeStrategy,
+      skip: skip,
+    );
+  }
 }
 
 @immutable

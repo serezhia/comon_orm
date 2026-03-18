@@ -1,0 +1,170 @@
+---
+title: Flutter local SQLite
+description: Choosing between reset, explicit app-side upgrades, and shared-database rollout.
+---
+
+# Flutter local SQLite
+
+Flutter local SQLite needs a separate decision from shared-database migrations.
+
+## The three valid cases
+
+1. Disposable local cache.
+2. Important offline-first local data.
+3. Shared backend database behind the app.
+
+## Disposable local cache
+
+If the local database is just a cache, reset is usually better than maintaining complex migration code.
+
+Typical reset strategy:
+
+1. delete the local file or clear the tables
+2. recreate the schema through your normal bootstrap path
+3. reopen the generated runtime
+
+## Important offline-first local data
+
+If the SQLite file contains user data that must survive upgrades, run explicit app-side migrations before normal runtime startup.
+
+```dart
+final migrator = SqliteFlutterMigrator(
+  currentVersion: 3,
+  migrations: <SqliteFlutterMigration>[
+    SqliteFlutterMigration.sql(
+      fromVersion: 1,
+      toVersion: 2,
+      debugName: 'add_user_names',
+      statements: <String>[
+        'ALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT "";',
+        'ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT "";',
+      ],
+    ),
+    SqliteFlutterMigration.schemaDiff(
+      fromVersion: 2,
+      toVersion: 3,
+      debugName: 'add_is_enabled_flag',
+      fromSchema: const SchemaParser().parse('''
+model User {
+  id Int @id
+  email String @unique
+}
+'''),
+      toSchema: const SchemaParser().parse('''
+model User {
+  id Int @id
+  email String @unique
+  isEnabled Boolean @default(true)
+}
+'''),
+    ),
+  ],
+);
+
+await upgradeSqliteFlutterDatabase(
+  databasePath: 'app.db',
+  migrator: migrator,
+);
+
+final db = await GeneratedComonOrmClientFlutterSqlite.open(
+  databasePath: 'app.db',
+);
+```
+
+Keep the order explicit:
+
+1. upgrade first
+2. runtime open second
+
+## Three migration constructors
+
+### `SqliteFlutterMigration.sql(...)`
+
+Use this for straightforward additive SQL steps.
+
+```dart
+SqliteFlutterMigration.sql(
+  fromVersion: 3,
+  toVersion: 4,
+  debugName: 'add_last_synced_at',
+  statements: <String>[
+    'ALTER TABLE todos ADD COLUMN last_synced_at TEXT;',
+  ],
+)
+```
+
+### `SqliteFlutterMigration.rebuildTable(...)`
+
+Use this when SQLite needs a recreate-copy-swap flow.
+
+```dart
+SqliteFlutterMigration.rebuildTable(
+  fromVersion: 4,
+  toVersion: 5,
+  debugName: 'rename_description_to_note',
+  tableName: 'todos',
+  createReplacementTableSql: '''
+    CREATE TABLE todos__new (
+      id INTEGER NOT NULL PRIMARY KEY,
+      title TEXT NOT NULL,
+      note TEXT,
+      is_done INTEGER NOT NULL DEFAULT 0
+    );
+  ''',
+  copyData: (tx, sourceTable, targetTable) async {
+    final rows = await tx.rawQuery(
+      'SELECT id, title, description, is_done FROM $sourceTable;',
+    );
+
+    for (final row in rows) {
+      await tx.insert(targetTable, <String, Object?>{
+        'id': row['id'],
+        'title': row['title'],
+        'note': row['description'],
+        'is_done': row['is_done'],
+      });
+    }
+  },
+)
+```
+
+### `SqliteFlutterMigration(...)`
+
+Use the plain constructor for custom async Dart logic.
+
+```dart
+const SqliteFlutterMigration(
+  fromVersion: 5,
+  toVersion: 6,
+  debugName: 'backfill_display_names',
+  run: _backfillDisplayNames,
+)
+
+Future<void> _backfillDisplayNames(Transaction tx) async {
+  await tx.execute(
+    '''
+    UPDATE users
+    SET display_name = email
+    WHERE display_name IS NULL OR display_name = '';
+    ''',
+  );
+}
+```
+
+## `schemaDiff(...)` path
+
+`SqliteFlutterMigration.schemaDiff(...)` is useful when the app owns both schema snapshots and wants the package to choose additive SQL versus rebuild behavior automatically.
+
+It still blocks on warnings by default unless you set `allowWarnings: true` after review.
+
+## Practical rules
+
+- keep version numbers strictly increasing
+- always run upgrades before normal runtime open
+- prefer `sql(...)` for simple additive changes
+- prefer `schemaDiff(...)` when the app owns both old and new schema definitions
+- use `rebuildTable(...)` or a custom migration when data has to be transformed during a SQLite rebuild
+
+## Shared backend database behind the app
+
+If the app talks to a shared PostgreSQL or shared SQLite database, the app is not the migration host. Use the reviewed CLI flow outside the app.

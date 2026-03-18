@@ -1,0 +1,153 @@
+---
+title: CLI commands
+description: The schema and migration commands, what each one does, and which artifacts they create.
+---
+
+# CLI commands
+
+The unified entry point is the `comon_orm` CLI.
+
+## Schema commands
+
+### `check`
+
+Validates `schema.prisma`.
+
+```bash
+dart run comon_orm check schema.prisma
+```
+
+Use it when:
+
+- editing models and relations
+- changing enums or native types
+- before `generate`
+
+`validate` is kept as an alias.
+
+The docs use `check` consistently so the command vocabulary stays uniform.
+
+### `format`
+
+Formats the schema file in place.
+
+```bash
+dart run comon_orm format schema.prisma
+```
+
+### `generate`
+
+Generates the Dart client from the schema.
+
+```bash
+dart run comon_orm generate schema.prisma
+```
+
+This writes the Dart client to the `output` path from the `generator` block.
+
+## Migration commands
+
+### `migrate diff`
+
+Compares the live database with the current schema and writes review artifacts on disk.
+
+```bash
+dart run comon_orm migrate diff \
+  --schema schema.prisma \
+  --name 20260318_add_post_status \
+  --out prisma/migrations
+```
+
+Artifacts created:
+
+- `migration.sql`
+- `warnings.txt`
+- `before.prisma`
+- `after.prisma`
+
+### `migrate status`
+
+Checks whether local migration artifacts and the database history still agree.
+
+```bash
+dart run comon_orm migrate status \
+  --schema schema.prisma \
+  --from prisma/migrations
+```
+
+Use this first whenever you suspect drift.
+
+Typical status findings include:
+
+- `checksum-mismatch`
+- `applied-migration-missing-locally`
+- `local-migration-not-applied`
+- `missing-db-snapshot`
+- `invalid-local-artifacts`
+
+### `migrate apply`
+
+Applies the current schema target to the live database and records the result in `_comon_orm_migrations`.
+
+```bash
+dart run comon_orm migrate apply \
+  --schema schema.prisma \
+  --name 20260318_add_post_status
+```
+
+Important behavior:
+
+- it recalculates the live plan from the current database to the current schema
+- it does not replay `migration.sql` verbatim
+- it stops on warnings by default
+
+### `migrate history`
+
+Shows the database-recorded migration history.
+
+```bash
+dart run comon_orm migrate history \
+  --schema schema.prisma
+```
+
+### `migrate rollback`
+
+Rolls back using local artifacts or the snapshots recorded in the history table.
+
+```bash
+dart run comon_orm migrate rollback \
+  --schema schema.prisma \
+  --from prisma/migrations
+```
+
+Use rollback carefully. For production systems, a forward fix is often safer.
+
+## Typical reviewed flow
+
+```bash
+dart run comon_orm check schema.prisma
+dart run comon_orm generate schema.prisma
+
+dart run comon_orm migrate diff \
+  --schema schema.prisma \
+  --name 20260318_add_post_status \
+  --out prisma/migrations
+
+dart run comon_orm migrate status \
+  --schema schema.prisma \
+  --from prisma/migrations
+
+dart run comon_orm migrate apply \
+  --schema schema.prisma \
+  --name 20260318_add_post_status
+```
+
+<Callout title="Warnings are blocking by default">
+If the planner detects destructive drops, lossy type transitions, enum shrinkage, or rebuild-heavy transitions, `apply` and `rollback` stop unless you pass `--allow-warnings` after review.
+</Callout>
+
+## Continue with
+
+- `/docs/migrations/shared-databases` for the reviewed rollout path
+- `/docs/migrations/flutter-local-sqlite` for device-local app upgrades
+- `/docs/migrations/rollback-and-recovery` for failure handling and forward-fix guidance
