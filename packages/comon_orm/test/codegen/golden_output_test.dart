@@ -43,7 +43,7 @@ void main() {
 
       if (Platform.environment['UPDATE_GOLDENS'] == '1') {
         goldenFile.createSync(recursive: true);
-        goldenFile.writeAsStringSync(output);
+        goldenFile.writeAsStringSync(_normalizeLineEndings(output));
         // ignore: avoid_print
         print('Golden file written: ${goldenFile.path}');
         return;
@@ -58,11 +58,12 @@ void main() {
         );
       }
 
-      final golden = goldenFile.readAsStringSync();
-      if (output == golden) return;
+      final normalizedOutput = _normalizeLineEndings(output);
+      final golden = _normalizeLineEndings(goldenFile.readAsStringSync());
+      if (normalizedOutput == golden) return;
 
       // Find the first differing line to make failures actionable.
-      final generatedLines = output.split('\n');
+      final generatedLines = normalizedOutput.split('\n');
       final goldenLines = golden.split('\n');
       final minLen = generatedLines.length < goldenLines.length
           ? generatedLines.length
@@ -88,4 +89,8 @@ void main() {
       );
     });
   });
+}
+
+String _normalizeLineEndings(String value) {
+  return value.replaceAll('\r\n', '\n');
 }

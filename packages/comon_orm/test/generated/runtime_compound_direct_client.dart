@@ -1,6 +1,6 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
-// schema-hash: abff99bae4fe5b8c65faef7d0a9e2b6dc364954f8db92827ba6d47b3d86e770c
+// schema-hash: 27a604ee617dacfb6749ecd0d4c461eb16563f81b9be73a7f495c0a0f8053f26
 import 'package:comon_orm/comon_orm.dart';
 
 class GeneratedComonOrmClient {

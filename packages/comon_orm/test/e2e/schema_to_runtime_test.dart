@@ -54,26 +54,23 @@ void main() {
       // Relation fields are parsed correctly.
       expect(schema.findModel('User')!.findField('posts')!.isList, isTrue);
       expect(
-        schema
-            .findModel('Post')!
-            .findField('user')!
-            .attribute('relation'),
+        schema.findModel('Post')!.findField('user')!.attribute('relation'),
         isNotNull,
       );
 
       // Compound id is recorded on Membership.
-      expect(
-        schema.findModel('Membership')!.attribute('id'),
-        isNotNull,
-      );
+      expect(schema.findModel('Membership')!.attribute('id'), isNotNull);
     });
 
     test('SchemaValidator reports no issues for the fixture schema', () {
       final schema = const SchemaParser().parse(_fixtureSchema);
       final issues = const SchemaValidator().validate(schema);
 
-      expect(issues, isEmpty,
-          reason: 'fixture schema should be valid but got: $issues');
+      expect(
+        issues,
+        isEmpty,
+        reason: 'fixture schema should be valid but got: $issues',
+      );
     });
 
     test('ClientGenerator produces expected structural output', () {
@@ -180,47 +177,43 @@ void main() {
       expect(remaining, isEmpty);
     });
 
-    test('nested create populates related posts and include returns them',
-        () async {
-      final user = await client.user.create(
-        data: UserCreateInput(
-          name: 'Eve',
-          email: 'eve@test.com',
-          posts: PostCreateNestedManyWithoutUserInput(
-            create: const <PostCreateWithoutUserInput>[
-              PostCreateWithoutUserInput(
-                title: 'Hello World',
-                content: 'First post content',
-                published: true,
-              ),
-              PostCreateWithoutUserInput(
-                title: 'Draft',
-                published: false,
-              ),
-            ],
+    test(
+      'nested create populates related posts and include returns them',
+      () async {
+        final user = await client.user.create(
+          data: UserCreateInput(
+            name: 'Eve',
+            email: 'eve@test.com',
+            posts: PostCreateNestedManyWithoutUserInput(
+              create: const <PostCreateWithoutUserInput>[
+                PostCreateWithoutUserInput(
+                  title: 'Hello World',
+                  content: 'First post content',
+                  published: true,
+                ),
+                PostCreateWithoutUserInput(title: 'Draft', published: false),
+              ],
+            ),
           ),
-        ),
-        include: const UserInclude(posts: true),
-      );
+          include: const UserInclude(posts: true),
+        );
 
-      expect(user.posts, hasLength(2));
-      final titles = user.posts!.map((p) => p.title).toList();
-      expect(titles, containsAll(<String?>['Hello World', 'Draft']));
+        expect(user.posts, hasLength(2));
+        final titles = user.posts!.map((p) => p.title).toList();
+        expect(titles, containsAll(<String?>['Hello World', 'Draft']));
 
-      // findMany with include should also return the related posts.
-      final allUsers = await client.user.findMany(
-        include: const UserInclude(posts: true),
-      );
-      expect(allUsers.single.posts, hasLength(2));
-    });
+        // findMany with include should also return the related posts.
+        final allUsers = await client.user.findMany(
+          include: const UserInclude(posts: true),
+        );
+        expect(allUsers.single.posts, hasLength(2));
+      },
+    );
 
     test('transaction commits on success', () async {
       await client.transaction((tx) async {
         await tx.user.create(
-          data: const UserCreateInput(
-            name: 'Frank',
-            email: 'frank@test.com',
-          ),
+          data: const UserCreateInput(name: 'Frank', email: 'frank@test.com'),
         );
         await tx.user.create(
           data: const UserCreateInput(name: 'Grace', email: 'grace@test.com'),
@@ -235,10 +228,7 @@ void main() {
       await expectLater(
         client.transaction((tx) async {
           await tx.user.create(
-            data: const UserCreateInput(
-              name: 'Hank',
-              email: 'hank@test.com',
-            ),
+            data: const UserCreateInput(name: 'Hank', email: 'hank@test.com'),
           );
           throw Exception('intentional failure');
         }),

@@ -46,8 +46,8 @@
 
 ```yaml
 dependencies:
-  comon_orm: ^0.0.1-alpha.1
-  comon_orm_sqlite_flutter: ^0.0.1-alpha.1
+  comon_orm: ^0.0.1-alpha.2
+  comon_orm_sqlite_flutter: ^0.0.1-alpha.2
 ```
 
 Открыть Flutter SQLite runtime напрямую через generated client helper:

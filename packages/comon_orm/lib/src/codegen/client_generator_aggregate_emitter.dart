@@ -372,7 +372,12 @@ extension on ClientGenerator {
       className: '${model.name}MaxAggregateOrderByInput',
       fields: comparableFields,
     );
-    _writeGroupByOrderByInputClass(buffer, schema, model, hasNumeric: hasNumeric);
+    _writeGroupByOrderByInputClass(
+      buffer,
+      schema,
+      model,
+      hasNumeric: hasNumeric,
+    );
     _writeGroupByRowClass(buffer, schema, model, hasNumeric: hasNumeric);
   }
 
@@ -652,10 +657,7 @@ extension on ClientGenerator {
 /// `Count`, `Avg` (if numeric fields exist), `Sum` (if numeric fields exist),
 /// `Min`, and `Max` aggregate-input classes in that order. The result can be
 /// used in tests to verify structure independently of rendered source.
-CodeUnit buildAggregateInputIr(
-  SchemaDocument schema,
-  ModelDefinition model,
-) {
+CodeUnit buildAggregateInputIr(SchemaDocument schema, ModelDefinition model) {
   final generator = const ClientGenerator();
   final scalarFields = generator._scalarFields(schema, model);
   final numericFields = generator._numericAggregateFields(schema, model);
@@ -669,7 +671,11 @@ CodeUnit buildAggregateInputIr(
             className: className,
             parameters: [
               for (final f in fields)
-                CodeParameter(name: f.name, isThis: true, defaultValue: 'false'),
+                CodeParameter(
+                  name: f.name,
+                  isThis: true,
+                  defaultValue: 'false',
+                ),
             ],
           ),
         ],

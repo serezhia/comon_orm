@@ -29,7 +29,7 @@ String discoverSchemaPath({String? explicitPath}) {
 
 /// Returns the default migrations directory for a given schema path.
 String defaultMigrationsDirectory(String schemaPath) {
-  final schemaDirectory = File(schemaPath).absolute.parent;
+  final schemaDirectory = File(schemaPath).parent;
   if (_baseName(schemaDirectory.path) == 'prisma') {
     return '${schemaDirectory.path}${Platform.pathSeparator}migrations';
   }
@@ -38,7 +38,7 @@ String defaultMigrationsDirectory(String schemaPath) {
 }
 
 String _baseName(String path) {
-  final normalized = path.replaceAll(RegExp(r'[\\/]+4'), '');
+  final normalized = path.replaceAll(RegExp(r'[\\/]+$'), '');
   final segments = normalized.split(RegExp(r'[\\/]'));
   return segments.isEmpty ? normalized : segments.last;
 }

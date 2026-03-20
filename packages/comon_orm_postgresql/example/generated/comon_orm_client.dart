@@ -1,6 +1,6 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
-// schema-hash: 5a90f28c64fa213c30e131b7677bb6862a9fe5fd6552f73153107e8868318d13
+// schema-hash: 2d06bbda8f3772708361973d63e6bf56a54fd92f8b7850221b8e72bd4e97c362
 import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
 import 'package:postgres/postgres.dart' as pg;

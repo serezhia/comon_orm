@@ -5,52 +5,40 @@ on:
     branches:
       - main
   pull_request:
-    branches:
-      - main
-
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        dart-channel:
-          - stable
-          - dev
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
       - name: Set up Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: ${{ matrix.dart-channel }}
+          sdk: 3.10.8
 
-      - name: Install workspace dependencies
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.9
+          channel: stable
+
+      - name: Resolve workspace dependencies
         run: dart pub get
 
-      - name: Analyze all packages
-        run: dart run tool/analyze_all.dart
+      - name: Bootstrap workspace
+        run: dart run melos bootstrap
 
-      - name: Run all tests
-        run: dart run tool/test_all.dart
+      - name: Analyze packages
+        run: dart run melos run analyze
 
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed tool packages examples
+        run: dart run melos run format -- --set-exit-if-changed
 
-      - name: Publish dry-run all packages
-        run: dart run tool/dry_run_all.dart
+      - name: Run Dart and Flutter tests
+        run: dart run melos run test
+
+      - name: Validate package publish surfaces
+        run: dart run melos run publish:dry-run

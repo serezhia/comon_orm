@@ -1,6 +1,6 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
-// schema-hash: b4fc93c9aa5c940a2e5e7097537aeb7f16d160c4d49259596348bd620b429d08
+// schema-hash: 5b1947af9971d9480810ae42d9db95975f9566bca0b04175a83525492e6651e5
 import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
 

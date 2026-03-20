@@ -96,3 +96,29 @@ Detailed documentation now lives in the Fumadocs site under `site/`.
 - `site/content/docs/schema`
 - `site/content/docs/dart`
 - `site/content/docs/migrations`
+
+## Workspace Commands
+
+Bootstrap the workspace from the repository root:
+
+```bash
+dart pub get
+dart run melos bootstrap
+```
+
+Common validation commands:
+
+```bash
+dart run melos run analyze
+dart run melos run test
+dart run melos run format
+dart run melos run publish:dry-run
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, validation, and pull request expectations.
+
+## License
+
+This repository is distributed under the MIT License. See [LICENSE](LICENSE).

@@ -203,7 +203,9 @@ class CodeRenderer {
   void _renderField(StringBuffer buf, CodeField field) {
     final modifier = field.isFinal ? 'final ' : '';
     if (field.defaultValue != null) {
-      buf.writeln('$indent$modifier${field.type} ${field.name} = ${field.defaultValue};');
+      buf.writeln(
+        '$indent$modifier${field.type} ${field.name} = ${field.defaultValue};',
+      );
     } else {
       buf.writeln('$indent$modifier${field.type} ${field.name};');
     }
@@ -262,7 +264,9 @@ class CodeRenderer {
 
   static String _renderParam(CodeParameter p) {
     final nameStr = p.isThis ? 'this.${p.name}' : p.name;
-    final typeStr = (!p.isThis && p.type != null) ? '${p.type} $nameStr' : nameStr;
+    final typeStr = (!p.isThis && p.type != null)
+        ? '${p.type} $nameStr'
+        : nameStr;
     final defaultStr = p.defaultValue != null ? ' = ${p.defaultValue}' : '';
     return '$typeStr$defaultStr';
   }

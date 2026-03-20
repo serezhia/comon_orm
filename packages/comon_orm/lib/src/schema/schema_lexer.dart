@@ -119,9 +119,7 @@ class SchemaLexer {
       }
 
       // ── Line comment ────────────────────────────────────────────────────
-      if (char == '/' &&
-          pos + 1 < source.length &&
-          source[pos + 1] == '/') {
+      if (char == '/' && pos + 1 < source.length && source[pos + 1] == '/') {
         while (pos < source.length && source[pos] != '\n') {
           pos++;
         }
@@ -148,7 +146,9 @@ class SchemaLexer {
           buf.write(source[pos]); // closing quote
           pos++;
         }
-        tokens.add(Token(TokenKind.string, buf.toString(), startLine, startCol));
+        tokens.add(
+          Token(TokenKind.string, buf.toString(), startLine, startCol),
+        );
         continue;
       }
 
@@ -159,15 +159,18 @@ class SchemaLexer {
           pos++;
         }
         tokens.add(
-          Token(TokenKind.integer, source.substring(start, pos), startLine, startCol),
+          Token(
+            TokenKind.integer,
+            source.substring(start, pos),
+            startLine,
+            startCol,
+          ),
         );
         continue;
       }
 
       // ── Double @@ ───────────────────────────────────────────────────────
-      if (char == '@' &&
-          pos + 1 < source.length &&
-          source[pos + 1] == '@') {
+      if (char == '@' && pos + 1 < source.length && source[pos + 1] == '@') {
         tokens.add(Token(TokenKind.doubleAt, '@@', startLine, startCol));
         pos += 2;
         continue;
@@ -184,7 +187,12 @@ class SchemaLexer {
           pos++;
         }
         tokens.add(
-          Token(TokenKind.identifier, source.substring(start, pos), startLine, startCol),
+          Token(
+            TokenKind.identifier,
+            source.substring(start, pos),
+            startLine,
+            startCol,
+          ),
         );
         continue;
       }

@@ -25,7 +25,7 @@
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
 ```
 
 Провалидируйте, отформатируйте и сгенерируйте client из схемы:

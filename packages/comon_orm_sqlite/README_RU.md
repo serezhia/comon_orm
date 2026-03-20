@@ -22,8 +22,8 @@
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
-	comon_orm_sqlite: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
+	comon_orm_sqlite: ^0.0.1-alpha.2
 ```
 
 Пример с generated client:

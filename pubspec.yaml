@@ -1,6 +1,7 @@
 name: _
 description: Root workspace for the comon_orm monorepo.
 publish_to: none
+repository: https://github.com/serezhia/comon_orm
 
 environment:
   sdk: ^3.9.0
@@ -14,4 +15,48 @@ workspace:
   - examples/flutter_sqlite
 
 dev_dependencies:
-  lints: ^5.1.1
+  melos: ^7.0.0
+
+melos:
+  repository: https://github.com/serezhia/comon_orm
+  categories:
+    dart-package:
+      - packages/comon_orm
+      - packages/comon_orm_postgresql
+      - packages/comon_orm_sqlite
+      - examples/postgres
+    flutter-package:
+      - packages/comon_orm_sqlite_flutter
+      - examples/flutter_sqlite
+  command:
+    bootstrap:
+      runPubGetInParallel: true
+    version:
+      branch: main
+      fetchTags: false
+      workspaceChangelog: true
+  scripts:
+    analyze:
+      description: Analyze all workspace packages and examples.
+      run: dart run melos exec --fail-fast -- "dart analyze ."
+    test:
+      description: Run Dart and Flutter package tests.
+      run: dart run melos run test:dart && dart run melos run test:flutter
+    test:dart:
+      description: Run tests for pure Dart packages.
+      run: dart run melos exec --fail-fast --category=dart-package --dir-exists=test -- "dart test"
+    test:flutter:
+      description: Run tests for Flutter packages.
+      run: dart run melos exec --fail-fast --category=flutter-package --dir-exists=test -- "flutter test"
+    format:
+      description: Format all workspace packages and examples.
+      run: dart run tool/format_all.dart
+    publish:
+      description: Validate publishability without uploading packages.
+      run: dart run melos exec --fail-fast --no-private -- "dart pub publish --dry-run"
+    publish:dry-run:
+      description: Validate publishability without uploading packages.
+      run: dart run melos run publish
+    publish:dry:
+      description: Backward-compatible alias for dry-run publish validation.
+      run: dart run melos run publish:dry-run

@@ -22,8 +22,8 @@ Add dependencies:
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
-	comon_orm_postgresql: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
+	comon_orm_postgresql: ^0.0.1-alpha.2
 ```
 
 Generated-client-first example:

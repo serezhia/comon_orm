@@ -1,0 +1,80 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Run package publication after dry-run validation
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.10.8
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.9
+          channel: stable
+
+      - name: Resolve workspace dependencies
+        run: dart pub get
+
+      - name: Bootstrap workspace
+        run: dart run melos bootstrap
+
+      - name: Analyze packages
+        run: dart run melos run analyze
+
+      - name: Verify formatting
+        run: dart run melos run format -- --set-exit-if-changed
+
+      - name: Run tests
+        run: dart run melos run test
+
+      - name: Dry-run publish validation
+        run: dart run melos run publish:dry-run
+
+      - name: Publish comon_orm
+        if: ${{ inputs.publish == 'true' }}
+        working-directory: packages/comon_orm
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+        run: dart pub publish --force
+
+      - name: Publish comon_orm_postgresql
+        if: ${{ inputs.publish == 'true' }}
+        working-directory: packages/comon_orm_postgresql
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+        run: dart pub publish --force
+
+      - name: Publish comon_orm_sqlite
+        if: ${{ inputs.publish == 'true' }}
+        working-directory: packages/comon_orm_sqlite
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+        run: dart pub publish --force
+
+      - name: Publish comon_orm_sqlite_flutter
+        if: ${{ inputs.publish == 'true' }}
+        working-directory: packages/comon_orm_sqlite_flutter
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+        run: flutter pub publish --force
