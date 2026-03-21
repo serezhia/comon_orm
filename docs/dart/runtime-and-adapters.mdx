@@ -1,0 +1,106 @@
+---
+title: Runtime and adapters
+description: Generated-metadata-first startup across PostgreSQL, SQLite, in-memory, and Flutter SQLite.
+---
+
+# Runtime and adapters
+
+Runtime startup should be driven by generated metadata.
+
+In these docs, `runtime` means normal application database access after the schema has already been prepared through rollout or local upgrade steps.
+
+## Preferred openers
+
+```dart
+final inMemory = GeneratedComonOrmClient.openInMemory();
+final sqlite = await GeneratedComonOrmClientSqlite.open();
+final postgres = await GeneratedComonOrmClientPostgresql.open();
+final flutterSqlite = await GeneratedComonOrmClientFlutterSqlite.open(
+  databasePath: 'app.db',
+);
+```
+
+The adapter-specific openers come from generated schema metadata. That keeps runtime behavior aligned with the generated client and avoids loading `schema.prisma` on normal startup.
+
+## Typical app shapes
+
+### Backend singleton or shared app service
+
+```dart
+class AppDatabase {
+  AppDatabase._();
+
+  static final AppDatabase instance = AppDatabase._();
+
+  GeneratedComonOrmClient? _client;
+
+  Future<GeneratedComonOrmClient> client() async {
+    return _client ??= await GeneratedComonOrmClientPostgresql.open();
+  }
+
+  Future<void> close() async {
+    await _client?.close();
+    _client = null;
+  }
+}
+```
+
+### Flutter local SQLite startup
+
+```dart
+await upgradeSqliteFlutterDatabase(
+  databasePath: 'app.db',
+  migrator: migrator,
+);
+
+final db = await GeneratedComonOrmClientFlutterSqlite.open(
+  databasePath: 'app.db',
+);
+```
+
+### Fast local tests
+
+```dart
+final db = GeneratedComonOrmClient.openInMemory();
+```
+
+## Explicit adapter path
+
+If you want direct control over adapter construction, open from generated runtime schema metadata:
+
+```dart
+final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+  schema: GeneratedComonOrmClient.runtimeSchema,
+);
+
+final db = GeneratedComonOrmClient(adapter: adapter);
+```
+
+The same pattern exists for SQLite and Flutter SQLite adapters.
+
+## Generated runtime metadata
+
+Generated clients expose runtime metadata so adapters and tests stay aligned with the generated code.
+
+Typical generated surface:
+
+- `GeneratedComonOrmClient.runtimeSchema`
+- `GeneratedComonOrmClient.runtimeSchemaView`
+- `GeneratedComonOrmClient.createInMemoryAdapter()`
+- `GeneratedComonOrmClient.openInMemory()`
+
+## Important split
+
+- runtime openers are for normal application usage
+- schema apply, bootstrap, and migration planning are tooling or explicit setup concerns
+- Flutter local upgrades should run before the normal runtime opens the database
+
+<Callout type="warning" title="Do not hide migration logic inside runtime startup">
+That pattern is convenient on day one and operationally expensive later. Use reviewed migrations for shared databases, and explicit upgrade code for important local SQLite files.
+</Callout>
+
+## Continue with
+
+- [Choosing a runtime](/docs/orm/core/choosing-a-runtime) for adapter selection
+- [Testing](/docs/orm/dart/testing) for in-memory and test-friendly setup
+- [Migrations](/docs/orm/migrations) for rollout and recovery guidance
