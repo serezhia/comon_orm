@@ -1,0 +1,23 @@
+name: comon_orm_otel
+description: OpenTelemetry tracing and metrics middleware for comon_orm.
+version: 0.0.1-alpha.2
+resolution: workspace
+homepage: https://github.com/serezhia/comon_orm
+repository: https://github.com/serezhia/comon_orm/tree/main/packages/comon_orm_otel
+issue_tracker: https://github.com/serezhia/comon_orm/issues
+topics:
+  - orm
+  - opentelemetry
+  - tracing
+  - metrics
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  comon_orm: ^0.0.1-alpha.2
+  comon_otel: ^0.0.1-alpha.1
+
+dev_dependencies:
+  lints: ^5.1.1
+  test: ^1.26.2

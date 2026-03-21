@@ -23,6 +23,7 @@ If you already know what you need, jump straight to the relevant section:
 
 - Schema: define models, relations, enums, maps, indexes, and native types
 - Dart: use the generated delegates for CRUD, filters, includes, transactions, and tests
+- OpenTelemetry: instrument queries, transactions, and database latency metrics
 - Migrations: draft, review, apply, diagnose, and recover schema changes
 - Core: understand package boundaries, platform support, and runtime choices
 
@@ -46,6 +47,11 @@ If you already know what you need, jump straight to the relevant section:
     title="Dart"
     href="/docs/orm/dart"
     description="Runtime setup, CRUD, filtering, relation writes, aggregates, transactions, and testing."
+  />
+  <Card
+    title="OpenTelemetry"
+    href="/docs/orm/otel"
+    description="Wrap ORM operations in spans and emit database metrics through `comon_otel`."
   />
   <Card
     title="Migrations"
@@ -96,6 +102,17 @@ Use that section for:
 - CRUD and filters
 - nested relation writes
 - transaction and testing patterns
+
+### I need traces and query metrics
+
+Start with [OpenTelemetry](/docs/orm/otel).
+
+Use that section for:
+
+- database spans per operation
+- transaction parent and child span structure
+- latency, throughput, and error metrics
+- SQL and parameter recording tradeoffs
 
 ### I need to change a database safely
 

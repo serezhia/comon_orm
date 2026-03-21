@@ -1,4 +1,12 @@
 {
   "title": "Documentation",
-  "pages": ["index", "quickstart", "core", "schema", "dart", "migrations"]
+  "pages": [
+    "index",
+    "quickstart",
+    "core",
+    "schema",
+    "dart",
+    "otel",
+    "migrations"
+  ]
 }

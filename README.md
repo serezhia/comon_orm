@@ -4,6 +4,8 @@
 
 The core idea is simple: define your models in `schema.prisma`, generate a typed Dart client, apply the schema to the database through the migration flow, and work through the generated API instead of hand-written maps and raw SQL strings.
 
+The workspace also includes an OpenTelemetry bridge package so query spans and database metrics can be exported through `comon_otel`.
+
 # AI Documentation
 
 [![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
@@ -90,6 +92,7 @@ Future<void> main() async {
 | Package | Purpose |
 | --- | --- |
 | `packages/comon_orm` | parser, validator, formatter, codegen, query models, in-memory adapter, migration metadata |
+| `packages/comon_orm_otel` | OpenTelemetry middleware for ORM spans, transaction nesting, and database metrics |
 | `packages/comon_orm_postgresql` | PostgreSQL runtime adapter, introspection, and migrations |
 | `packages/comon_orm_sqlite` | SQLite runtime adapter, introspection, and rebuild-aware migrations |
 | `packages/comon_orm_sqlite_flutter` | Flutter SQLite runtime adapter and app-side local upgrade helpers |
@@ -101,6 +104,7 @@ Detailed documentation now lives in the Fumadocs site under `site/`.
 - `site/content/docs/core`
 - `site/content/docs/schema`
 - `site/content/docs/dart`
+- `site/content/docs/otel`
 - `site/content/docs/migrations`
 
 ## Workspace Commands

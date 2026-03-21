@@ -8,6 +8,7 @@ environment:
 
 workspace:
   - packages/comon_orm
+  - packages/comon_orm_otel
   - packages/comon_orm_postgresql
   - packages/comon_orm_sqlite
   - packages/comon_orm_sqlite_flutter
@@ -22,6 +23,7 @@ melos:
   categories:
     dart-package:
       - packages/comon_orm
+      - packages/comon_orm_otel
       - packages/comon_orm_postgresql
       - packages/comon_orm_sqlite
       - examples/postgres

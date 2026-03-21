@@ -132,6 +132,15 @@ abstract interface class DatabaseMiddleware {
   FutureOr<void> afterQuery(DatabaseMiddlewareResult result);
 }
 
+/// Optional execution wrapper for middleware that must scope the query run.
+abstract interface class DatabaseExecutionMiddleware {
+  /// Runs [next] inside a middleware-defined execution scope.
+  Future<T> runQuery<T>({
+    required DatabaseMiddlewareContext context,
+    required Future<T> Function(DatabaseMiddlewareContext context) next,
+  });
+}
+
 /// Decorator that applies [DatabaseMiddleware] to a [DatabaseAdapter].
 class MiddlewareDatabaseAdapter implements DatabaseAdapter {
   /// Creates a middleware-decorated adapter.
@@ -152,9 +161,23 @@ class MiddlewareDatabaseAdapter implements DatabaseAdapter {
       await middleware.beforeQuery(context);
     }
 
+    Future<T> Function(DatabaseMiddlewareContext context) runExecution =
+        execute;
+
+    for (final middleware in _middlewares.reversed) {
+      if (middleware is! DatabaseExecutionMiddleware) {
+        continue;
+      }
+
+      final executionMiddleware = middleware as DatabaseExecutionMiddleware;
+      final next = runExecution;
+      runExecution = (currentContext) =>
+          executionMiddleware.runQuery<T>(context: currentContext, next: next);
+    }
+
     final stopwatch = Stopwatch()..start();
     try {
-      final result = await execute(context);
+      final result = await runExecution(context);
       stopwatch.stop();
       final middlewareResult = DatabaseMiddlewareResult(
         context: context,

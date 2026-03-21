@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:comon_orm/comon_orm.dart';
 import 'package:test/test.dart';
 
@@ -79,6 +81,24 @@ void main() {
       expect(rows.single['sql'], 'SELECT changed');
       expect(rows.single['parameters'], <Object?>['patched']);
     });
+
+    test('allows execution middleware to scope query execution', () async {
+      final middleware = _ZoneWrappingMiddleware();
+      final adapter = MiddlewareDatabaseAdapter(
+        adapter: _FakeDatabaseAdapter(),
+        middlewares: <DatabaseMiddleware>[middleware],
+      );
+
+      final rows = await adapter.findMany(
+        const FindManyQuery(model: 'User', where: <QueryPredicate>[]),
+      );
+
+      expect(rows.single['zoneValue'], 'otel-span');
+      expect(middleware.events, <String>[
+        'wrap:start:findMany',
+        'wrap:end:findMany',
+      ]);
+    });
   });
 }
 
@@ -97,6 +117,32 @@ class _RecordingMiddleware implements DatabaseMiddleware {
   @override
   Future<void> afterQuery(DatabaseMiddlewareResult result) async {
     events.add('after:${result.context.operation.name}:${result.isSuccess}');
+  }
+}
+
+class _ZoneWrappingMiddleware
+    implements DatabaseMiddleware, DatabaseExecutionMiddleware {
+  final List<String> events = <String>[];
+
+  @override
+  Future<void> beforeQuery(DatabaseMiddlewareContext context) async {}
+
+  @override
+  Future<void> afterQuery(DatabaseMiddlewareResult result) async {}
+
+  @override
+  Future<T> runQuery<T>({
+    required DatabaseMiddlewareContext context,
+    required Future<T> Function(DatabaseMiddlewareContext context) next,
+  }) {
+    events.add('wrap:start:${context.operation.name}');
+    return runZoned(() async {
+      try {
+        return await next(context);
+      } finally {
+        events.add('wrap:end:${context.operation.name}');
+      }
+    }, zoneValues: <Object?, Object?>{#middlewareExecution: 'otel-span'});
   }
 }
 
@@ -141,7 +187,10 @@ class _FakeDatabaseAdapter implements DatabaseAdapter {
   @override
   Future<List<Map<String, Object?>>> findMany(FindManyQuery query) async {
     return <Map<String, Object?>>[
-      <String, Object?>{'model': query.model},
+      <String, Object?>{
+        'model': query.model,
+        'zoneValue': Zone.current[#middlewareExecution],
+      },
     ];
   }
 

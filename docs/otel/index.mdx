@@ -1,0 +1,157 @@
+---
+title: OpenTelemetry
+description: Instrument comon_orm operations with spans and metrics through comon_otel.
+---
+
+# OpenTelemetry
+
+`comon_orm_otel` instruments `comon_orm` through middleware.
+
+It creates one span per ORM operation and records database-facing metrics such as duration, total operation count, active operation count, and failures.
+
+## What the package does
+
+- implements `OtelDatabaseMiddleware`
+- wraps query execution in an active OpenTelemetry span
+- preserves nesting so operations inside a transaction become child spans
+- records latency and count metrics through the `Meter` API
+- optionally attaches SQL text and parameters when explicitly enabled
+
+The implementation is built on top of `MiddlewareDatabaseAdapter`, so it composes with other `comon_orm` middleware instead of replacing the runtime adapter.
+
+## Install
+
+```bash
+dart pub add comon_orm_otel
+```
+
+You also need the main SDK package:
+
+```bash
+dart pub add comon_otel
+```
+
+## Minimal setup
+
+```dart
+import 'package:comon_orm/comon_orm.dart';
+import 'package:comon_orm_otel/comon_orm_otel.dart';
+import 'package:comon_otel/comon_otel.dart';
+
+Future<void> main() async {
+  await Otel.init(
+    serviceName: 'catalog-api',
+    exporter: OtelExporter.console,
+  );
+
+  final adapter = MiddlewareDatabaseAdapter(
+    adapter: InMemoryDatabaseAdapter(),
+    middlewares: <DatabaseMiddleware>[
+      OtelDatabaseMiddleware(dbSystem: 'sqlite', dbName: 'memory'),
+    ],
+  );
+
+  final db = ComonOrmClient(adapter: adapter);
+  await db.model('User').findMany(
+    const FindManyQuery(model: 'User', where: <QueryPredicate>[]),
+  );
+}
+```
+
+## Span model
+
+`comon_orm_otel` uses database-style operation names instead of leaking method names directly.
+
+| ORM operation | Span name example |
+| --- | --- |
+| `findMany(User)` | `SELECT User` |
+| `findUnique(User)` | `SELECT User` |
+| `create(User)` | `INSERT User` |
+| `update(User)` | `UPDATE User` |
+| `delete(User)` | `DELETE User` |
+| `count(User)` | `COUNT User` |
+| `transaction(...)` | `TRANSACTION` |
+| `rawQuery(...)` | `RAW_QUERY` |
+
+## Exported attributes
+
+The middleware emits standard database-oriented attributes where possible.
+
+| Attribute | Meaning |
+| --- | --- |
+| `db.system` | Database family such as `postgresql` or `sqlite` |
+| `db.namespace` | Database name or logical namespace |
+| `db.operation.name` | Operation class such as `SELECT`, `INSERT`, `UPDATE` |
+| `db.collection.name` | Model or collection name |
+| `db.statement` | SQL text when `recordSqlStatements` is enabled |
+| `db.query.parameter.count` | Number of bound parameters |
+| `db.response.rows` | Observed row or result count when available |
+
+## Metrics
+
+The middleware records four metric streams by default.
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `db.client.operation.duration` | Histogram | Operation latency in milliseconds |
+| `db.client.operation.count` | Counter | Total number of ORM operations |
+| `db.client.operation.error.count` | Counter | Number of failed operations |
+| `db.client.connection.active` | UpDownCounter | Number of active in-flight operations |
+
+These metrics are tagged by operation name and model where available, which is enough for dashboards such as:
+
+- p50, p95, and p99 latency per model
+- error rate by operation type
+- simple throughput views by `SELECT`, `INSERT`, `UPDATE`, and `DELETE`
+
+## Transactions and nesting
+
+The middleware wraps the actual execution scope, not only `beforeQuery` and `afterQuery` hooks. That matters because the active span must stay in context while nested ORM calls run.
+
+As a result, a transaction becomes a parent span and every query inside it becomes a child span.
+
+```text
+TRANSACTION
+├─ SELECT User
+├─ INSERT Post
+└─ UPDATE AuditLog
+```
+
+This also means logs exported through [Logger OpenTelemetry](/docs/logger/otel) inside the same execution path can correlate with the active database span automatically.
+
+## Sensitive data controls
+
+SQL and parameter values are not fully exported by default.
+
+```dart
+OtelDatabaseMiddleware(
+  dbSystem: 'postgresql',
+  dbName: 'app',
+  recordSqlStatements: true,
+  recordParameters: false,
+)
+```
+
+Use `recordSqlStatements` and especially `recordParameters` carefully in production because both can expose secrets or personal data.
+
+## Recommended placement
+
+Place `OtelDatabaseMiddleware` in the same `MiddlewareDatabaseAdapter` chain as your other middleware.
+
+```dart
+final adapter = MiddlewareDatabaseAdapter(
+  adapter: realAdapter,
+  middlewares: <DatabaseMiddleware>[
+    OtelDatabaseMiddleware(dbSystem: 'postgresql', dbName: 'app'),
+    myAuditMiddleware,
+  ],
+);
+```
+
+If middleware order matters for your own hooks, remember that `beforeQuery` runs in declaration order and `afterQuery` runs in reverse order.
+
+## Related docs
+
+- [OpenTelemetry core](/docs/otel/core) for exporter, processor, and propagator setup
+- [Logger OpenTelemetry](/docs/logger/otel) for log correlation inside traced operations
+- [Dart runtime usage](/docs/orm/dart) for normal generated-client patterns
