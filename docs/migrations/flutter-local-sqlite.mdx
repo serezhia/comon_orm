@@ -1,0 +1,350 @@
+---
+title: Flutter local SQLite
+description: Choosing between reset, explicit app-side upgrades, and shared-database rollout.
+---
+
+# Flutter local SQLite
+
+Flutter local SQLite needs a separate decision from shared-database migrations.
+
+## The three valid cases
+
+1. Disposable local cache.
+2. Important offline-first local data.
+3. Shared backend database behind the app.
+
+## Disposable local cache
+
+If the local database is just a cache, reset is usually better than maintaining complex migration code.
+
+Typical reset strategy:
+
+1. delete the local file or clear the tables
+2. recreate the schema through your normal bootstrap path
+3. reopen the generated runtime
+
+## Important offline-first local data
+
+If the SQLite file contains user data that must survive upgrades, run explicit app-side migrations before normal runtime startup.
+
+```dart
+final migrator = SqliteFlutterMigrator(
+  currentVersion: 3,
+  migrations: <SqliteFlutterMigration>[
+    SqliteFlutterMigration.schema(
+      fromVersion: 0,
+      toVersion: 1,
+      debugName: 'create_users',
+      run: (schema) {
+        schema.createTable('users', (table) {
+          table.id();
+          table.text('email').notNull().unique();
+          table.text('name');
+          table.boolean('active').notNull().defaultValue(true);
+          table.timestamps();
+        });
+      },
+    ),
+    SqliteFlutterMigration.schema(
+      fromVersion: 1,
+      toVersion: 2,
+      debugName: 'add_avatar_and_index',
+      run: (schema) {
+        schema.alterTable('users', (table) {
+          table.text('avatar_url');
+        });
+        schema.createIndex(
+          'idx_users_email',
+          on: 'users',
+          columns: ['email'],
+          unique: true,
+        );
+      },
+    ),
+    SqliteFlutterMigration.schema(
+      fromVersion: 2,
+      toVersion: 3,
+      debugName: 'rename_name_to_display_name',
+      run: (schema) {
+        schema.alterTable('users', (table) {
+          table.renameColumn('name', to: 'display_name');
+        });
+      },
+    ),
+  ],
+);
+
+await upgradeSqliteFlutterDatabase(
+  databasePath: 'app.db',
+  migrator: migrator,
+);
+
+final db = await GeneratedComonOrmClientFlutterSqlite.open(
+  databasePath: 'app.db',
+);
+```
+
+Keep the order explicit:
+
+1. upgrade first
+2. runtime open second
+
+## Dart-coded schema migrations
+
+`SqliteFlutterMigration.schema(...)` is the recommended way to write most migrations. It gives you a fluent Dart API instead of raw SQL strings.
+
+### Creating tables
+
+```dart
+SqliteFlutterMigration.schema(
+  fromVersion: 0,
+  toVersion: 1,
+  debugName: 'create_tables',
+  run: (schema) {
+    schema.createTable('users', (table) {
+      table.id();                                       // INTEGER PK AUTOINCREMENT
+      table.text('email').notNull().unique();
+      table.text('name');                               // nullable by default
+      table.boolean('active').notNull().defaultValue(true);
+      table.timestamps();                               // created_at + updated_at
+      table.softDeletes();                              // deleted_at (nullable)
+    });
+
+    schema.createTable('posts', (table) {
+      table.id();
+      table.text('title').notNull();
+      table.text('body');
+      table.integer('author_id')
+        .notNull()
+        .foreignKey('users', 'id', onDelete: 'CASCADE');
+    });
+  },
+)
+```
+
+### Column types
+
+| Method | SQLite type | Typical Dart use |
+| --- | --- | --- |
+| `integer(name)` | `INTEGER` | `int` |
+| `text(name)` | `TEXT` | `String` |
+| `real(name)` | `REAL` | `double` |
+| `blob(name)` | `BLOB` | `Uint8List` |
+| `boolean(name)` | `INTEGER` | `bool` stored as 0/1 |
+| `datetime(name)` | `TEXT` | ISO-8601 string |
+| `numeric(name)` | `NUMERIC` | flexible affinity |
+
+### Column constraints
+
+```dart
+table.text('email')
+  .notNull()           // NOT NULL
+  .unique()            // UNIQUE
+  .defaultValue('?')   // DEFAULT '?'
+  .check('"email" LIKE "%@%"');  // CHECK (...)
+```
+
+Supported constraint methods:
+
+| Method | Effect |
+| --- | --- |
+| `.notNull()` | adds `NOT NULL` |
+| `.nullable()` | removes `NOT NULL` (default) |
+| `.unique()` | adds `UNIQUE` |
+| `.primaryKey()` | inline `PRIMARY KEY` |
+| `.autoIncrement()` | `INTEGER PRIMARY KEY AUTOINCREMENT` |
+| `.defaultValue(v)` | `DEFAULT v` — renders `bool` as 0/1, numbers as-is, rest as quoted string |
+| `.check(expr)` | `CHECK (expr)` |
+| `.foreignKey(table, col)` | adds a `FOREIGN KEY` reference |
+
+### Convenience shortcuts
+
+```dart
+table.id();                     // integer('id').primaryKey().autoIncrement()
+table.id('custom_id');          // same but with a custom name
+table.timestamps();             // created_at + updated_at (TEXT NOT NULL)
+table.softDeletes();            // deleted_at (nullable TEXT)
+```
+
+### Compound keys and constraints
+
+```dart
+schema.createTable('post_tags', (table) {
+  table.integer('post_id').notNull()
+    .foreignKey('posts', 'id', onDelete: 'CASCADE');
+  table.integer('tag_id').notNull()
+    .foreignKey('tags', 'id', onDelete: 'CASCADE');
+  table.primaryKey(['post_id', 'tag_id']);   // compound PK
+  table.unique(['post_id', 'tag_id']);       // or compound UNIQUE
+});
+```
+
+### Altering tables
+
+Add columns, rename columns, and drop columns:
+
+```dart
+SqliteFlutterMigration.schema(
+  fromVersion: 1,
+  toVersion: 2,
+  debugName: 'reshape_todos',
+  run: (schema) {
+    schema.alterTable('todos', (table) {
+      table.text('status').notNull().defaultValue('pending'); // add
+      table.renameColumn('description', to: 'note');          // rename
+      table.dropColumn('legacy_field');                       // drop
+    });
+  },
+)
+```
+
+### Renaming and dropping tables
+
+```dart
+schema.renameTable('old_cache', to: 'cache');
+schema.dropTable('temp_data');
+schema.dropTableIfExists('maybe_exists');
+```
+
+### Indexes
+
+```dart
+schema.createIndex(
+  'idx_posts_author',
+  on: 'posts',
+  columns: ['author_id'],
+);
+
+schema.createIndex(
+  'idx_users_email',
+  on: 'users',
+  columns: ['email'],
+  unique: true,
+);
+
+schema.dropIndex('idx_old_index');
+```
+
+### Raw SQL and data operations
+
+Interleave structural and data operations freely:
+
+```dart
+SqliteFlutterMigration.schema(
+  fromVersion: 2,
+  toVersion: 3,
+  debugName: 'add_status_and_backfill',
+  run: (schema) {
+    schema.alterTable('todos', (table) {
+      table.text('status').notNull().defaultValue('pending');
+    });
+    schema.execute(
+      "UPDATE todos SET status = 'done' WHERE is_done = 1",
+    );
+  },
+)
+```
+
+## Other migration constructors
+
+### `SqliteFlutterMigration.sql(...)`
+
+Use this for straightforward raw SQL steps when you already know the exact statements.
+
+```dart
+SqliteFlutterMigration.sql(
+  fromVersion: 3,
+  toVersion: 4,
+  debugName: 'add_last_synced_at',
+  statements: <String>[
+    'ALTER TABLE todos ADD COLUMN last_synced_at TEXT;',
+  ],
+)
+```
+
+### `SqliteFlutterMigration.rebuildTable(...)`
+
+Use this when SQLite needs a recreate-copy-swap flow with custom data transformation.
+
+```dart
+SqliteFlutterMigration.rebuildTable(
+  fromVersion: 4,
+  toVersion: 5,
+  debugName: 'rename_description_to_note',
+  tableName: 'todos',
+  createReplacementTableSql: '''
+    CREATE TABLE todos__new (
+      id INTEGER NOT NULL PRIMARY KEY,
+      title TEXT NOT NULL,
+      note TEXT,
+      is_done INTEGER NOT NULL DEFAULT 0
+    );
+  ''',
+  copyData: (tx, sourceTable, targetTable) async {
+    final rows = await tx.rawQuery(
+      'SELECT id, title, description, is_done FROM $sourceTable;',
+    );
+
+    for (final row in rows) {
+      await tx.insert(targetTable, <String, Object?>{
+        'id': row['id'],
+        'title': row['title'],
+        'note': row['description'],
+        'is_done': row['is_done'],
+      });
+    }
+  },
+)
+```
+
+### `SqliteFlutterMigration(...)`
+
+Use the plain constructor for fully custom async Dart logic.
+
+```dart
+const SqliteFlutterMigration(
+  fromVersion: 5,
+  toVersion: 6,
+  debugName: 'backfill_display_names',
+  run: _backfillDisplayNames,
+)
+
+Future<void> _backfillDisplayNames(Transaction tx) async {
+  await tx.execute(
+    '''
+    UPDATE users
+    SET display_name = email
+    WHERE display_name IS NULL OR display_name = '';
+    ''',
+  );
+}
+```
+
+### `SqliteFlutterMigration.schemaDiff(...)`
+
+Useful when the app owns both schema snapshots and wants the package to choose additive SQL versus rebuild behavior automatically.
+
+It still blocks on warnings by default unless you set `allowWarnings: true` after review.
+
+## Choosing the right constructor
+
+| Situation | Recommended constructor |
+| --- | --- |
+| Create tables, add/rename/drop columns, indexes | `.schema(...)` |
+| Known raw SQL statements | `.sql(...)` |
+| Complex SQLite rebuild with data transformation | `.rebuildTable(...)` |
+| App owns both schema snapshots | `.schemaDiff(...)` |
+| Fully custom async logic | plain constructor |
+
+## Practical rules
+
+- keep version numbers strictly increasing
+- always run upgrades before normal runtime open
+- prefer `.schema(...)` for most structural changes
+- use `.sql(...)` when you need exact raw SQL control
+- use `.rebuildTable(...)` or a custom migration when data has to be transformed during a SQLite rebuild
+- all constructors can be mixed freely in the same `SqliteFlutterMigrator`
+
+## Shared backend database behind the app
+
+If the app talks to a shared PostgreSQL or shared SQLite database, the app is not the migration host. Use the reviewed CLI flow outside the app.

@@ -47,6 +47,17 @@ class SchemaDocument {
     return null;
   }
 
+  /// Finds a model definition by its mapped database table name.
+  ModelDefinition? findModelByDatabaseName(String databaseName) {
+    for (final model in models) {
+      if (model.databaseName == databaseName) {
+        return model;
+      }
+    }
+
+    return null;
+  }
+
   /// Finds an enum definition by [name].
   EnumDefinition? findEnum(String name) {
     for (final definition in enums) {
@@ -90,6 +101,19 @@ class SchemaDocument {
 
     return null;
   }
+
+  /// Returns a copy of the schema with `@ignore` / `@@ignore` members removed.
+  SchemaDocument withoutIgnored() {
+    return SchemaDocument(
+      models: models
+          .where((model) => !model.isIgnored)
+          .map((model) => model.withoutIgnoredFields())
+          .toList(growable: false),
+      enums: enums,
+      datasources: datasources,
+      generators: generators,
+    );
+  }
 }
 
 @immutable
@@ -100,6 +124,7 @@ class DatasourceDefinition {
     required this.name,
     required this.properties,
     this.line,
+    this.column,
   });
 
   /// Datasource block name.
@@ -110,6 +135,9 @@ class DatasourceDefinition {
 
   /// One-based source line where the datasource block starts, if known.
   final int? line;
+
+  /// One-based source column where the datasource block starts, if known.
+  final int? column;
 }
 
 @immutable
@@ -120,6 +148,7 @@ class GeneratorDefinition {
     required this.name,
     required this.properties,
     this.line,
+    this.column,
   });
 
   /// Generator block name.
@@ -130,6 +159,9 @@ class GeneratorDefinition {
 
   /// One-based source line where the generator block starts, if known.
   final int? line;
+
+  /// One-based source column where the generator block starts, if known.
+  final int? column;
 }
 
 @immutable
@@ -141,6 +173,7 @@ class EnumDefinition {
     required this.values,
     this.attributes = const <ModelAttribute>[],
     this.line,
+    this.column,
   });
 
   /// Enum name.
@@ -154,6 +187,9 @@ class EnumDefinition {
 
   /// One-based source line where the enum block starts, if known.
   final int? line;
+
+  /// One-based source column where the enum block starts, if known.
+  final int? column;
 
   /// Database type name after applying `@@map`, if present.
   String get databaseName =>
@@ -179,6 +215,7 @@ class ModelDefinition {
     required this.fields,
     this.attributes = const <ModelAttribute>[],
     this.line,
+    this.column,
   });
 
   /// Model name from the schema.
@@ -193,9 +230,15 @@ class ModelDefinition {
   /// One-based source line where the model block starts, if known.
   final int? line;
 
+  /// One-based source column where the model block starts, if known.
+  final int? column;
+
   /// Database table name after applying `@@map`, if present.
   String get databaseName =>
       _mappedIdentifier(attribute('map')?.arguments['value']) ?? name;
+
+  /// Whether this model is excluded with `@@ignore`.
+  bool get isIgnored => attribute('ignore') != null;
 
   /// Finds a field by its schema name.
   FieldDefinition? findField(String name) {
@@ -251,6 +294,27 @@ class ModelDefinition {
     );
   }
 
+  /// Returns a copy of this model without `@ignore` fields.
+  ModelDefinition withoutIgnoredFields() {
+    final visibleFields = fields
+        .where((field) => !field.isIgnored)
+        .toList(growable: false);
+    final declaredFieldNames = fields.map((field) => field.name).toSet();
+    final visibleFieldNames = visibleFields.map((field) => field.name).toSet();
+
+    return ModelDefinition(
+      name: name,
+      fields: visibleFields,
+      attributes: _filterIgnoredModelAttributes(
+        attributes,
+        declaredFieldNames,
+        visibleFieldNames,
+      ),
+      line: line,
+      column: column,
+    );
+  }
+
   /// Field names that make up the model primary key.
   List<String> get primaryKeyFields => attributeFieldNames('id');
 
@@ -271,6 +335,7 @@ class ModelAttribute {
     required this.name,
     required this.arguments,
     this.line,
+    this.column,
   });
 
   /// Attribute name without the `@@` prefix.
@@ -281,6 +346,9 @@ class ModelAttribute {
 
   /// One-based source line where the attribute appears, if known.
   final int? line;
+
+  /// One-based source column where the attribute appears, if known.
+  final int? column;
 }
 
 @immutable
@@ -294,6 +362,7 @@ class FieldDefinition {
     required this.isNullable,
     required this.attributes,
     this.line,
+    this.column,
   });
 
   /// Field name from the schema.
@@ -314,9 +383,15 @@ class FieldDefinition {
   /// One-based source line where the field appears, if known.
   final int? line;
 
+  /// One-based source column where the field appears, if known.
+  final int? column;
+
   /// Database column name after applying `@map`, if present.
   String get databaseName =>
       _mappedIdentifier(attribute('map')?.arguments['value']) ?? name;
+
+  /// Whether this field is excluded with `@ignore`.
+  bool get isIgnored => attribute('ignore') != null;
 
   /// Whether this field uses a known scalar type.
   bool get isScalar => kScalarTypes.contains(type);
@@ -361,6 +436,7 @@ class FieldAttribute {
     required this.name,
     required this.arguments,
     this.line,
+    this.column,
   });
 
   /// Attribute name without the `@` prefix.
@@ -371,6 +447,9 @@ class FieldAttribute {
 
   /// One-based source line where the attribute appears, if known.
   final int? line;
+
+  /// One-based source column where the attribute appears, if known.
+  final int? column;
 }
 
 @immutable
@@ -383,6 +462,7 @@ class ValidationIssue {
     this.fieldName,
     this.filePath,
     this.line,
+    this.column,
   });
 
   /// Human-readable issue message.
@@ -400,6 +480,9 @@ class ValidationIssue {
   /// One-based source line associated with the issue, if any.
   final int? line;
 
+  /// One-based source column associated with the issue, if any.
+  final int? column;
+
   @override
   String toString() {
     final buffer = StringBuffer();
@@ -408,10 +491,17 @@ class ValidationIssue {
       buffer.write(filePath);
       if (line != null) {
         buffer.write(':$line');
+        if (column != null) {
+          buffer.write(':$column');
+        }
       }
       buffer.write(': ');
     } else if (line != null) {
-      buffer.write('line $line: ');
+      buffer.write('line $line');
+      if (column != null) {
+        buffer.write(':$column');
+      }
+      buffer.write(': ');
     }
 
     if (modelName != null) {
@@ -447,6 +537,34 @@ String? _mappedIdentifier(String? rawValue) {
   }
 
   return trimmed;
+}
+
+List<ModelAttribute> _filterIgnoredModelAttributes(
+  List<ModelAttribute> attributes,
+  Set<String> declaredFieldNames,
+  Set<String> visibleFieldNames,
+) {
+  return attributes
+      .where((attribute) {
+        switch (attribute.name) {
+          case 'id':
+          case 'unique':
+          case 'index':
+            final fieldNames = _parseAttributeFieldList(
+              attribute.arguments['fields'] ??
+                  attribute.arguments['value'] ??
+                  '',
+            );
+            return !fieldNames.any(
+              (fieldName) =>
+                  declaredFieldNames.contains(fieldName) &&
+                  !visibleFieldNames.contains(fieldName),
+            );
+          default:
+            return true;
+        }
+      })
+      .toList(growable: false);
 }
 
 List<String> _parseAttributeFieldList(String rawValue) {

@@ -21,10 +21,10 @@ Correct path:
 
 - `check`
 - `generate`
-- `migrate diff`
+- `migrate dev`
 - review artifacts
 - `migrate status`
-- `migrate apply`
+- `migrate deploy`
 
 Do not use:
 

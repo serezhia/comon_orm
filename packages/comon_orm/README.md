@@ -2,8 +2,6 @@
 
 # comon_orm
 
-[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
-
 `comon_orm` is the provider-agnostic core of the package family: schema parsing, validation, formatting, code generation, query models, and the in-memory runtime.
 
 Use this package when you want to work with `schema.prisma`, generate a typed Dart client, or run fast schema-driven tests without starting a real database.
@@ -19,21 +17,29 @@ Use this package when you want to work with `schema.prisma`, generate a typed Da
 
 Use `comon_orm_postgresql` or `comon_orm_sqlite` when you need a real database adapter, introspection, or migration execution.
 
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## 🚀 Quick Start
 
 Add the dependency:
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
 ```
 
 Validate, format, and generate from a schema:
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm format schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm format
+dart run comon_orm generate
 ```
 
 `validate` is still available as an alias for `check`.

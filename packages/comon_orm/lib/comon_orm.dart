@@ -1,8 +1,14 @@
 export 'src/client/client_base.dart';
 export 'src/client/query_aggregates.dart';
 export 'src/client/query_models.dart';
+export 'src/cli/cli_output.dart';
+export 'src/cli/cli_paths.dart';
+export 'src/cli/cli_prompts.dart';
+export 'src/cli/generated_client_writer.dart';
 export 'src/codegen/client_generator.dart';
+export 'src/codegen/codegen_ir.dart';
 export 'src/engine/database_adapter.dart';
+export 'src/engine/database_middleware.dart';
 export 'src/engine/query_planner.dart';
 export 'src/engine/sqlite_query_support.dart';
 export 'src/migrations/migration_artifacts_web.dart'
@@ -14,6 +20,7 @@ export 'src/runtime_metadata/runtime_datasource_resolver.dart';
 export 'src/runtime_metadata/runtime_schema_view.dart';
 export 'src/schema/implicit_many_to_many.dart';
 export 'src/schema/schema_ast.dart';
+export 'src/schema/schema_lexer.dart';
 export 'src/schema/schema_parser.dart';
 export 'src/schema/schema_validator.dart';
 export 'src/schema/schema_workflow_web.dart'

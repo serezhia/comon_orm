@@ -1,0 +1,161 @@
+---
+title: CRUD
+description: Create, read, update, delete, batch writes, upsert, and count with concrete examples.
+---
+
+# CRUD
+
+The generated delegates are the main application-facing API.
+
+This page focuses on the method surface. Continue with [Filtering and sorting](/docs/orm/dart/filtering-and-sorting) for richer `where` trees and pagination, and [Relations and includes](/docs/orm/dart/relations-and-includes) for nested relation reads and writes.
+
+## Create one record
+
+```dart
+final user = await db.user.create(
+  data: const UserCreateInput(
+    email: 'alice@example.com',
+    name: 'Alice',
+  ),
+);
+```
+
+## Create with nested relations
+
+```dart
+final user = await db.user.create(
+  data: const UserCreateInput(
+    email: 'alice@example.com',
+    name: 'Alice',
+    posts: PostCreateNestedManyWithoutAuthorInput(
+      create: <PostCreateWithoutAuthorInput>[
+        PostCreateWithoutAuthorInput(title: 'First post'),
+      ],
+    ),
+  ),
+  include: const UserInclude(posts: true),
+);
+```
+
+## Create many
+
+```dart
+await db.tag.createMany(
+  data: const <TagCreateInput>[
+    TagCreateInput(name: 'docs'),
+    TagCreateInput(name: 'orm'),
+  ],
+  skipDuplicates: true,
+);
+```
+
+## Find unique
+
+```dart
+final user = await db.user.findUnique(
+  where: const UserWhereUniqueInput(email: 'alice@example.com'),
+);
+```
+
+Compound unique selectors become dedicated constructors:
+
+```dart
+final membership = await db.membership.findUnique(
+  where: const MembershipWhereUniqueInput.tenantIdUserId(
+    tenantId: 7,
+    userId: 42,
+  ),
+);
+```
+
+## Find first and find many
+
+```dart
+final firstPost = await db.post.findFirst(
+  where: const PostWhereInput(
+    title: StringFilter(startsWith: 'Quick'),
+  ),
+  orderBy: const <PostOrderByInput>[
+    PostOrderByInput(createdAt: SortOrder.desc),
+  ],
+);
+
+final posts = await db.post.findMany(
+  skip: 20,
+  take: 20,
+);
+```
+
+## Update one record
+
+```dart
+final updated = await db.post.update(
+  where: const PostWhereUniqueInput(id: 1),
+  data: const PostUpdateInput(
+    title: 'Updated title',
+    viewsOps: IntFieldUpdateOperationsInput(increment: 1),
+  ),
+);
+```
+
+## Update many records
+
+```dart
+await db.post.updateMany(
+  where: const PostWhereInput(
+    status: EnumFilter<PostStatus>(equals: PostStatus.draft),
+  ),
+  data: const PostUpdateInput(
+    status: PostStatus.published,
+  ),
+);
+```
+
+## Upsert
+
+```dart
+final user = await db.user.upsert(
+  where: const UserWhereUniqueInput(email: 'alice@example.com'),
+  create: const UserCreateInput(
+    email: 'alice@example.com',
+    name: 'Alice',
+  ),
+  update: const UserUpdateInput(
+    name: 'Alice Updated',
+  ),
+);
+```
+
+## Delete and deleteMany
+
+```dart
+await db.post.delete(
+  where: const PostWhereUniqueInput(id: 1),
+);
+
+await db.post.deleteMany(
+  where: const PostWhereInput(
+    status: EnumFilter<PostStatus>(equals: PostStatus.draft),
+  ),
+);
+```
+
+## Count
+
+```dart
+final publishedCount = await db.post.count(
+  where: const PostWhereInput(
+    status: EnumFilter<PostStatus>(equals: PostStatus.published),
+  ),
+);
+```
+
+<Callout title="Generated methods are relation-aware">
+The delegate methods operate on generated inputs, not raw maps. That is what gives you typed selectors, nested relation writes, and provider-aligned runtime behavior.
+</Callout>
+
+## Continue with
+
+- [Filtering and sorting](/docs/orm/dart/filtering-and-sorting) for `WhereInput`, `orderBy`, `distinct`, and cursor pagination
+- [Relations and includes](/docs/orm/dart/relations-and-includes) for `include`, `select`, `connect`, `disconnect`, and `connectOrCreate`
+- [Transactions](/docs/orm/dart/transactions) for multi-step units of work

@@ -99,6 +99,46 @@ class _DuplicateOnCreateAdapter implements DatabaseAdapter {
   Future<int> updateMany(UpdateManyQuery query) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<Map<String, Object?>> upsert(UpsertQuery query) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<int> createMany(CreateManyQuery query) async {
+    var count = 0;
+    for (final row in query.data) {
+      final email = row['email'] as String?;
+      if (email != null && createdEmails.contains(email)) {
+        if (query.skipDuplicates) {
+          continue;
+        }
+        throw const _FakeDuplicateServerException();
+      }
+      if (email != null) {
+        createdEmails.add(email);
+      }
+      count++;
+    }
+    return count;
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> rawQuery(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<int> rawExecute(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) {
+    throw UnimplementedError();
+  }
 }
 
 class _FakeDuplicateServerException implements Exception {
@@ -3988,5 +4028,148 @@ model Membership {
         expect(remaining.single.role, 'owner');
       },
     );
+  });
+
+  group('InMemoryDatabaseAdapter — adapter-level upsert / createMany', () {
+    late InMemoryDatabaseAdapter adapter;
+
+    setUp(() {
+      adapter = InMemoryDatabaseAdapter();
+    });
+
+    test('upsert creates a record when none exists', () async {
+      final result = await adapter.upsert(
+        const UpsertQuery(
+          model: 'User',
+          where: <QueryPredicate>[
+            QueryPredicate(field: 'id', operator: 'equals', value: 1),
+          ],
+          create: <String, Object?>{'id': 1, 'name': 'Alice'},
+          update: <String, Object?>{'name': 'Alice Updated'},
+        ),
+      );
+      expect(result['name'], 'Alice');
+      final all = await adapter.findMany(const FindManyQuery(model: 'User'));
+      expect(all, hasLength(1));
+    });
+
+    test('upsert updates a record when one exists', () async {
+      await adapter.create(
+        const CreateQuery(
+          model: 'User',
+          data: <String, Object?>{'id': 1, 'name': 'Alice'},
+        ),
+      );
+      final result = await adapter.upsert(
+        const UpsertQuery(
+          model: 'User',
+          where: <QueryPredicate>[
+            QueryPredicate(field: 'id', operator: 'equals', value: 1),
+          ],
+          create: <String, Object?>{'id': 1, 'name': 'Should Not Create'},
+          update: <String, Object?>{'name': 'Alice Updated'},
+        ),
+      );
+      expect(result['name'], 'Alice Updated');
+      final all = await adapter.findMany(const FindManyQuery(model: 'User'));
+      expect(all, hasLength(1));
+    });
+
+    test('createMany inserts multiple records', () async {
+      final count = await adapter.createMany(
+        const CreateManyQuery(
+          model: 'User',
+          data: <Map<String, Object?>>[
+            <String, Object?>{'id': 1, 'name': 'Alice'},
+            <String, Object?>{'id': 2, 'name': 'Bob'},
+          ],
+        ),
+      );
+      expect(count, 2);
+      final all = await adapter.findMany(const FindManyQuery(model: 'User'));
+      expect(all, hasLength(2));
+    });
+
+    test('createMany returns 0 for empty data list', () async {
+      final count = await adapter.createMany(
+        const CreateManyQuery(model: 'User', data: <Map<String, Object?>>[]),
+      );
+      expect(count, 0);
+    });
+
+    test('findMany and findFirst honor low-level cursor queries', () async {
+      await adapter.createMany(
+        const CreateManyQuery(
+          model: 'User',
+          data: <Map<String, Object?>>[
+            <String, Object?>{'id': 1, 'name': 'Alice', 'email': 'a@prisma.io'},
+            <String, Object?>{'id': 2, 'name': 'Bob', 'email': 'b@prisma.io'},
+            <String, Object?>{
+              'id': 3,
+              'name': 'Charlie',
+              'email': 'c@prisma.io',
+            },
+          ],
+        ),
+      );
+
+      final page = await adapter.findMany(
+        const FindManyQuery(
+          model: 'User',
+          cursor: QueryCursor(
+            where: <QueryPredicate>[
+              QueryPredicate(
+                field: 'email',
+                operator: 'equals',
+                value: 'b@prisma.io',
+              ),
+            ],
+          ),
+          orderBy: <QueryOrderBy>[
+            QueryOrderBy(field: 'name', direction: SortOrder.asc),
+          ],
+          skip: 1,
+          take: 1,
+        ),
+      );
+
+      expect(page, hasLength(1));
+      expect(page.single['name'], 'Charlie');
+
+      final first = await adapter.findFirst(
+        const FindFirstQuery(
+          model: 'User',
+          cursor: QueryCursor(
+            where: <QueryPredicate>[
+              QueryPredicate(
+                field: 'email',
+                operator: 'equals',
+                value: 'b@prisma.io',
+              ),
+            ],
+          ),
+          orderBy: <QueryOrderBy>[
+            QueryOrderBy(field: 'name', direction: SortOrder.asc),
+          ],
+        ),
+      );
+
+      expect(first, isNotNull);
+      expect(first!['name'], 'Bob');
+    });
+
+    test('rawQuery throws UnsupportedError', () async {
+      expect(
+        () => adapter.rawQuery('SELECT 1'),
+        throwsA(isA<UnsupportedError>()),
+      );
+    });
+
+    test('rawExecute throws UnsupportedError', () async {
+      expect(
+        () => adapter.rawExecute('UPDATE User SET id = 1'),
+        throwsA(isA<UnsupportedError>()),
+      );
+    });
   });
 }

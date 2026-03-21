@@ -22,8 +22,8 @@
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
-	comon_orm_postgresql: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
+	comon_orm_postgresql: ^0.0.1-alpha.2
 ```
 
 Пример с generated client:
@@ -62,6 +62,62 @@ final db = await GeneratedComonOrmClientPostgresql.open();
 
 - Runtime path: `GeneratedComonOrmClientPostgresql.open(...)`
 - Tooling/setup path: schema-driven migrate/apply flow через CLI и schema tools
+- и generated-helper openers, и `PostgresqlDatabaseAdapter.openFrom...(...)` внутри используют pooled sessions из `package:postgres`
+
+## Pooling подключений
+
+PostgreSQL runtime paths в этом пакете по умолчанию используют pool.
+
+- `GeneratedComonOrmClientPostgresql.open(...)` резолвит metadata и открывает pooled adapter для generated client
+- `PostgresqlDatabaseAdapter.openFromUrl(...)` и `openFromGeneratedSchema(...)` тоже создают внутренний `package:postgres` pool
+- `PostgresqlDatabaseAdapter.connect(...)` подходит, когда удобнее передать структурированный host/database/user/SSL config вместо URL
+
+Пример с явным созданием pooled adapter:
+
+```dart
+import 'dart:io';
+
+import 'package:comon_orm/comon_orm.dart';
+import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
+
+import 'generated/comon_orm_client.dart';
+
+Future<void> main() async {
+	final connectionUrl = Platform.environment['DATABASE_URL'];
+	if (connectionUrl == null || connectionUrl.isEmpty) {
+		stderr.writeln('Set DATABASE_URL before running this example.');
+		exitCode = 64;
+		return;
+	}
+
+	final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+		schema: GeneratedComonOrmClient.runtimeSchema,
+		connectionUrl: connectionUrl,
+	);
+	final db = GeneratedComonOrmClient(adapter: adapter);
+
+	try {
+		final users = await db.user.findMany();
+		print(users.length);
+	} finally {
+		await db.close();
+	}
+}
+```
+
+Пример со структурированными настройками подключения:
+
+```dart
+final adapter = await PostgresqlDatabaseAdapter.connect(
+	config: const PostgresqlConnectionConfig(
+		host: 'localhost',
+		database: 'app',
+		username: 'postgres',
+		password: 'postgres',
+	),
+	schema: yourSchemaDocument,
+);
+```
 
 ## 🎯 Ключевые фичи
 
@@ -90,9 +146,11 @@ final db = await GeneratedComonOrmClientPostgresql.open();
 Обычно миграции лучше запускать через unified CLI из core-пакета:
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations
+dart run comon_orm check
+dart run comon_orm generate
+dart run comon_orm migrate dev --name 20260315_init
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
 ```
 
 Важно:
@@ -101,6 +159,7 @@ dart run comon_orm migrate status --schema schema.prisma --from prisma/migration
 - preferred application runtime path теперь это `GeneratedComonOrmClient.runtimeSchema` плюс `openFromGeneratedSchema(...)`
 - schema apply остается в tooling/setup flow, а не в runtime adapter convenience API
 - destructive enum transitions и другие рискованные изменения требуют ручной проверки
+- `db push` подходит для прототипов или disposable database, но для shared PostgreSQL flow лучше использовать `migrate dev` и `migrate deploy`
 
 ## 📱 Платформы
 

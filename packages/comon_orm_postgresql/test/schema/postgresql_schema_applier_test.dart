@@ -158,8 +158,13 @@ datasource db {
 
 model User {
   id         Int      @id @default(autoincrement())
+  rank       Int      @db.SmallInt
+  total      BigInt   @db.BigInt
+  rating     Float    @db.DoublePrecision
   name       String   @db.VarChar(255)
+  code       String   @db.Char(4)
   bio        String?  @db.Text
+  document   String?  @db.Xml
   payload    Json     @db.JsonB
   metadata   Json?    @db.Json
   blob       Bytes    @db.ByteA
@@ -175,8 +180,13 @@ model User {
       );
 
       expect(statements, hasLength(1));
+      expect(statements.single, contains('"rank" SMALLINT NOT NULL'));
+      expect(statements.single, contains('"total" BIGINT NOT NULL'));
+      expect(statements.single, contains('"rating" DOUBLE PRECISION NOT NULL'));
       expect(statements.single, contains('"name" VARCHAR(255) NOT NULL'));
+      expect(statements.single, contains('"code" CHAR(4) NOT NULL'));
       expect(statements.single, contains('"bio" TEXT'));
+      expect(statements.single, contains('"document" XML'));
       expect(statements.single, contains('"payload" JSONB NOT NULL'));
       expect(statements.single, contains('"metadata" JSON'));
       expect(statements.single, contains('"blob" BYTEA NOT NULL'));

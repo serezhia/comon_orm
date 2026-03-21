@@ -32,6 +32,34 @@ model Post {
       );
     });
 
+    test('ignores ignored models and fields during planning', () {
+      final from = const SchemaParser().parse('''
+model User {
+  id Int @id @default(autoincrement())
+  name String
+}
+''');
+      final to = const SchemaParser().parse('''
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  scratch String @ignore
+}
+
+model AuditLog {
+  id Int @id
+
+  @@ignore
+}
+''');
+
+      final plan = const SqliteMigrationPlanner().plan(from: from, to: to);
+
+      expect(plan.statements, isEmpty);
+      expect(plan.warnings, isEmpty);
+      expect(plan.requiresRebuild, isFalse);
+    });
+
     test('adds compatible columns to existing tables', () {
       final from = const SchemaParser().parse('''
 model User {
@@ -566,6 +594,61 @@ model Tag {
       );
     });
 
+    test(
+      'creates synthetic join table for added implicit many-to-many with compound ids',
+      () {
+        final from = const SchemaParser().parse('''
+model User {
+  tenantId Int
+  slug     String
+
+  @@id([tenantId, slug])
+}
+
+model Tag {
+  scope String
+  code  String
+
+  @@id([scope, code])
+}
+''');
+        final to = const SchemaParser().parse('''
+model User {
+  tenantId Int
+  slug     String
+  tags     Tag[]
+
+  @@id([tenantId, slug])
+}
+
+model Tag {
+  scope String
+  code  String
+  users User[]
+
+  @@id([scope, code])
+}
+''');
+
+        final storage = collectImplicitManyToManyStorages(to).single;
+        final plan = const SqliteMigrationPlanner().plan(from: from, to: to);
+
+        expect(plan.warnings, isEmpty);
+        expect(plan.requiresRebuild, isFalse);
+        expect(plan.statements, hasLength(1));
+        expect(
+          plan.statements.single,
+          contains('CREATE TABLE IF NOT EXISTS "${storage.tableName}"'),
+        );
+        expect(
+          plan.statements.single,
+          contains(
+            'PRIMARY KEY ("${[...storage.sourceJoinColumns, ...storage.targetJoinColumns].join('", "')}")',
+          ),
+        );
+      },
+    );
+
     test('introspects synthetic join tables back into implicit relations', () {
       final schema = const SchemaParser().parse('''
 model User {
@@ -589,5 +672,52 @@ model Tag {
 
       database.close();
     });
+
+    test(
+      'introspects compound-id synthetic join tables back into implicit relations',
+      () {
+        final schema = const SchemaParser().parse('''
+model User {
+  tenantId Int
+  slug     String
+  tags     Tag[]
+
+  @@id([tenantId, slug])
+}
+
+model Tag {
+  scope String
+  code  String
+  users User[]
+
+  @@id([scope, code])
+}
+''');
+        final database = sqlite.sqlite3.openInMemory();
+        const SqliteSchemaApplier().apply(database, schema);
+
+        final introspected = const SqliteSchemaIntrospector().introspect(
+          database,
+        );
+        expect(
+          introspected.findModel('User')?.findField('tags')?.isList,
+          isTrue,
+        );
+        expect(
+          introspected.findModel('Tag')?.findField('users')?.isList,
+          isTrue,
+        );
+        expect(introspected.findModel('User')?.primaryKeyFields, <String>[
+          'tenantId',
+          'slug',
+        ]);
+        expect(introspected.findModel('Tag')?.primaryKeyFields, <String>[
+          'scope',
+          'code',
+        ]);
+
+        database.close();
+      },
+    );
   });
 }

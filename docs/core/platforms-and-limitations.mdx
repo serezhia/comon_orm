@@ -1,0 +1,71 @@
+---
+title: Platforms and limitations
+description: Supported environments, intended workflows, and current boundaries.
+---
+
+# Platforms and limitations
+
+## Current platform focus
+
+| Platform | Status | Notes |
+| --- | --- | --- |
+| Dart CLI and backend | Primary target | The main platform for generation, runtime adapters, and reviewed migration tooling |
+| Flutter mobile and desktop | Supported with caveats | Best fit is local SQLite through `comon_orm_sqlite_flutter`; direct PostgreSQL is niche |
+| Flutter web and Dart web | Partial | Core is import-safe on web, and Flutter SQLite has the intended local runtime path; PostgreSQL is not a browser runtime |
+
+## What comon_orm does well today
+
+- schema-first client generation
+- typed generated Dart client with CRUD, relations, filters, aggregate, and group-by support
+- PostgreSQL and SQLite runtime adapters
+- reviewed migration workflows for PostgreSQL and SQLite
+- explicit app-side local SQLite upgrades for Flutter
+
+## Provider parity at a glance
+
+| Capability | PostgreSQL | SQLite (VM) | Flutter SQLite |
+| --- | --- | --- | --- |
+| Generated client shape | Yes | Yes | Yes |
+| `Generated...open(...)` helper | Yes | Yes | Yes |
+| Reviewed CLI migrations | Yes | Yes | No |
+| App-side versioned upgrade path | Not the normal path | Possible but not the primary story | Yes |
+| Native enum storage | Yes | No | No |
+| Provider-native `@db.*` subset | Richer | Narrower | Narrower SQLite subset |
+| In-place migration coverage | Stronger | More rebuild-prone | Local upgrade code owns the hard cases |
+| Browser runtime target | No | Partial through broader web-safe core package goals | Intended local runtime path for Flutter/web-adjacent app logic, not shared DB rollout |
+
+## Query capability boundaries
+
+The generated query layer covers a lot of application CRUD and relation work, but there are still explicit boundaries.
+
+Good fit:
+
+- CRUD and nested relation writes
+- typed filtering, ordering, pagination, aggregate, and group-by
+- provider-backed upsert and batch write paths where supported
+
+Not the intended abstraction:
+
+- hand-authored multi-CTE reports
+- window-function heavy ranking queries
+- ad hoc SQL analytics with provider-specific syntax
+- browser-native PostgreSQL connections
+
+## Terminology used in these docs
+
+- `runtime`: normal application reads and writes through the generated client
+- `rollout`: preparing or changing a real database schema
+- `reviewed migration`: a shared-database change that is drafted, inspected, and then applied
+- `local upgrade`: app-side versioned migration code for device-local Flutter SQLite files
+
+## Boundaries to keep in mind
+
+- this is not full Prisma parity across every edge case
+- provider-native `@db.*` coverage is selective and provider-specific
+- browser PostgreSQL runtime is not a goal
+- migration rollout for shared databases and app-local SQLite upgrades are intentionally different workflows
+- heavy analytical SQL composition still belongs to manual SQL or dedicated reporting paths
+
+<Callout type="warning" title="Avoid category mistakes">
+The most common mistakes come from mixing tooling flows with runtime flows. `generate` does not migrate a real database, and a Flutter local device database is not the same thing as a reviewed shared-database rollout target.
+</Callout>

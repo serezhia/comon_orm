@@ -8,15 +8,20 @@ class SqliteSchemaApplier {
 
   /// Returns table creation statements for every model in [schema].
   List<String> createTableStatements(SchemaDocument schema) {
-    return schema.models
-        .map((model) => createTableStatementForModel(model, schema: schema))
+    final effectiveSchema = schema.withoutIgnored();
+    return effectiveSchema.models
+        .map(
+          (model) =>
+              createTableStatementForModel(model, schema: effectiveSchema),
+        )
         .toList(growable: false);
   }
 
   /// Returns creation statements for implicit many-to-many tables.
   List<String> createImplicitManyToManyTableStatements(SchemaDocument schema) {
+    final effectiveSchema = schema.withoutIgnored();
     return collectImplicitManyToManyStorages(
-      schema,
+      effectiveSchema,
     ).map(createImplicitManyToManyTableStatement).toList(growable: false);
   }
 
@@ -55,11 +60,14 @@ class SqliteSchemaApplier {
 
   /// Applies the schema to [database] using create-if-missing semantics.
   void apply(sqlite.Database database, SchemaDocument schema) {
+    final effectiveSchema = schema.withoutIgnored();
     database.execute('PRAGMA foreign_keys = ON');
-    for (final statement in createTableStatements(schema)) {
+    for (final statement in createTableStatements(effectiveSchema)) {
       database.execute(statement);
     }
-    for (final statement in createImplicitManyToManyTableStatements(schema)) {
+    for (final statement in createImplicitManyToManyTableStatements(
+      effectiveSchema,
+    )) {
       database.execute(statement);
     }
   }

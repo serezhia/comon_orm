@@ -16,14 +16,22 @@ Use it when your schema declares `provider = "sqlite"` and you want an embedded 
 - migration planning, apply, rollback, history, and status helpers
 - generated-metadata-first runtime bootstrap for file-backed and in-memory adapters
 
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## 🚀 Quick Start
 
 Add dependencies:
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
-	comon_orm_sqlite: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
+	comon_orm_sqlite: ^0.0.1-alpha.2
 ```
 
 Generated-client-first example:
@@ -62,6 +70,12 @@ final db = await GeneratedComonOrmClientSqlite.open();
 
 - Runtime path: `GeneratedComonOrmClient.openInMemory()` or `GeneratedComonOrmClientSqlite.open(...)`
 - Tooling/setup path: schema-driven migrate/apply flows through the CLI and schema tools
+- runtime opens performed by this package enable SQLite foreign key enforcement with `PRAGMA foreign_keys = ON` by default
+
+## Internal Runtime Layout
+
+- `sqlite_database_adapter.dart` currently owns the public adapter surface together with SQL clause building, relation loading, and savepoint-based transaction coordination
+- the public runtime entry points stay `GeneratedComonOrmClient.openInMemory()` and `GeneratedComonOrmClientSqlite.open(...)`, even as internal adapter responsibilities are split over time
 
 ## 🎯 Key Features
 
@@ -90,9 +104,11 @@ final db = await GeneratedComonOrmClientSqlite.open();
 The preferred flow is the unified core CLI:
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate rollback --schema schema.prisma --from prisma/migrations
+dart run comon_orm check
+dart run comon_orm generate
+dart run comon_orm migrate dev --name 20260315_init
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
 ```
 
 Important:
@@ -101,6 +117,7 @@ Important:
 - the preferred application runtime path is `GeneratedComonOrmClient.runtimeSchema` plus `openFromGeneratedSchema(...)`
 - schema apply stays in tooling/setup flows instead of runtime adapter convenience APIs
 - some schema transitions require rebuilds because SQLite cannot express them with `ALTER TABLE`
+- `db push` or `migrate reset` can be fine for disposable local databases, but shared or long-lived SQLite should still use reviewed migrations
 
 ## 📱 Platform Notes
 

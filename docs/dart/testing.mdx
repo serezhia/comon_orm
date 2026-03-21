@@ -1,0 +1,97 @@
+---
+title: Testing
+description: Test generated clients quickly with in-memory adapters and generated runtime metadata.
+---
+
+# Testing
+
+The fastest way to test generated-client behavior is usually the in-memory runtime.
+
+## Fastest path
+
+If you already generated a client, open it in memory:
+
+```dart
+final db = GeneratedComonOrmClient.openInMemory();
+```
+
+That gives you:
+
+- generated delegates
+- generated input and output types
+- relation-aware behavior
+- runtime schema metadata bound automatically
+
+## Basic test example
+
+```dart
+test('creates a user and reads it back', () async {
+  final db = GeneratedComonOrmClient.openInMemory();
+
+  final user = await db.user.create(
+    data: const UserCreateInput(
+      email: 'alice@example.com',
+      name: 'Alice',
+    ),
+  );
+
+  final rows = await db.user.findMany();
+
+  expect(user.email, 'alice@example.com');
+  expect(rows, hasLength(1));
+
+  await db.close();
+});
+```
+
+## When to use `InMemoryDatabaseAdapter` directly
+
+Use the adapter directly when you are testing lower-level runtime paths instead of the generated client.
+
+```dart
+final schema = const SchemaParser().parse('''
+model User {
+  id Int @id @default(autoincrement())
+  name String
+}
+''');
+
+final client = ComonOrmClient(
+  adapter: InMemoryDatabaseAdapter(schema: schema),
+);
+```
+
+That pattern is useful when:
+
+- testing runtime semantics before generation
+- exercising `ComonOrmClient` directly
+- validating custom low-level query behavior
+
+## Generated runtime helpers
+
+Generated clients usually expose helper utilities such as:
+
+- `GeneratedComonOrmClient.createInMemoryAdapter()`
+- `GeneratedComonOrmClient.openInMemory()`
+- `GeneratedComonOrmClient.runtimeSchema`
+
+Use those helpers when you want tests to stay aligned with the generated schema metadata.
+
+## What to test where
+
+Use in-memory tests for:
+
+- delegate shape and relation semantics
+- nested writes
+- filter logic
+- pagination and aggregate behavior
+
+Use provider-backed tests for:
+
+- PostgreSQL-specific native types
+- SQLite migration behavior and rebuild paths
+- provider-specific performance or SQL translation issues
+
+<Callout title="Start in memory, then add provider-specific coverage only where it matters">
+Most application logic can be verified against the generated client in memory. Reach for PostgreSQL or SQLite integration tests when the behavior depends on the provider rather than the generated query shape.
+</Callout>

@@ -1,0 +1,6 @@
+{
+  "title": "Dart",
+  "description": "Client and runtime.",
+  "root": true,
+  "pages": ["index", "runtime-and-adapters", "crud", "filtering-and-sorting", "relations-and-includes", "aggregations", "transactions", "testing", "generated-client"]
+}

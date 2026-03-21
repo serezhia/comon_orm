@@ -15,6 +15,34 @@ class QueryPlanner {
           const <String>[],
       selectedFields:
           query.select?.fields.toList(growable: false) ?? const <String>[],
+      includeStrategy: _includeStrategy(query.include),
+    );
+  }
+
+  /// Creates a plan for a `findUnique` query.
+  PlannedOperation planFindUnique(FindUniqueQuery query) {
+    return PlannedOperation(
+      model: query.model,
+      action: PlannedAction.findUnique,
+      includeRelations:
+          query.include?.relations.keys.toList(growable: false) ??
+          const <String>[],
+      selectedFields:
+          query.select?.fields.toList(growable: false) ?? const <String>[],
+    );
+  }
+
+  /// Creates a plan for a `findFirst` query.
+  PlannedOperation planFindFirst(FindFirstQuery query) {
+    return PlannedOperation(
+      model: query.model,
+      action: PlannedAction.findFirst,
+      includeRelations:
+          query.include?.relations.keys.toList(growable: false) ??
+          const <String>[],
+      selectedFields:
+          query.select?.fields.toList(growable: false) ?? const <String>[],
+      includeStrategy: _includeStrategy(query.include),
     );
   }
 
@@ -31,6 +59,111 @@ class QueryPlanner {
           .toList(growable: false),
     );
   }
+
+  /// Creates a plan for a `createMany` query.
+  PlannedOperation planCreateMany(CreateManyQuery query) {
+    return PlannedOperation(
+      model: query.model,
+      action: PlannedAction.createMany,
+    );
+  }
+
+  /// Creates a plan for an `update` query.
+  PlannedOperation planUpdate(UpdateQuery query) {
+    return PlannedOperation(
+      model: query.model,
+      action: PlannedAction.update,
+      includeRelations:
+          query.include?.relations.keys.toList(growable: false) ??
+          const <String>[],
+      selectedFields:
+          query.select?.fields.toList(growable: false) ?? const <String>[],
+    );
+  }
+
+  /// Creates a plan for an `updateMany` query.
+  PlannedOperation planUpdateMany(UpdateManyQuery query) {
+    return PlannedOperation(
+      model: query.model,
+      action: PlannedAction.updateMany,
+    );
+  }
+
+  /// Creates a plan for an `upsert` query.
+  PlannedOperation planUpsert(UpsertQuery query) {
+    return PlannedOperation(
+      model: query.model,
+      action: PlannedAction.upsert,
+      includeRelations:
+          query.include?.relations.keys.toList(growable: false) ??
+          const <String>[],
+      selectedFields:
+          query.select?.fields.toList(growable: false) ?? const <String>[],
+    );
+  }
+
+  /// Creates a plan for a `delete` query.
+  PlannedOperation planDelete(DeleteQuery query) {
+    return PlannedOperation(model: query.model, action: PlannedAction.delete);
+  }
+
+  /// Creates a plan for a `deleteMany` query.
+  PlannedOperation planDeleteMany(DeleteManyQuery query) {
+    return PlannedOperation(
+      model: query.model,
+      action: PlannedAction.deleteMany,
+    );
+  }
+
+  /// Returns the preferred include resolution strategy for the given include.
+  /// JOIN is preferred for shallow direct singular chains, batch for relation
+  /// graphs that remain batchable, and per-row is reserved for unsupported
+  /// complex include shapes.
+  IncludeStrategy _includeStrategy(QueryInclude? include) {
+    if (include == null || include.relations.isEmpty) {
+      return IncludeStrategy.perRow;
+    }
+    if (_canUseJoinStrategy(include, depth: 1)) {
+      return IncludeStrategy.join;
+    }
+    if (_canUseBatchStrategy(include)) {
+      return IncludeStrategy.batch;
+    }
+    return IncludeStrategy.perRow;
+  }
+
+  bool _canUseJoinStrategy(QueryInclude include, {required int depth}) {
+    if (depth > 3) {
+      return false;
+    }
+    for (final entry in include.relations.values) {
+      final relation = entry.relation;
+      if (relation.cardinality != QueryRelationCardinality.one ||
+          relation.storageKind != QueryRelationStorageKind.direct ||
+          relation.localKeyFields.length != 1 ||
+          relation.targetKeyFields.length != 1) {
+        return false;
+      }
+      final nested = entry.include;
+      if (nested != null && !_canUseJoinStrategy(nested, depth: depth + 1)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _canUseBatchStrategy(QueryInclude include) {
+    for (final entry in include.relations.values) {
+      final relation = entry.relation;
+      if (relation.storageKind == QueryRelationStorageKind.implicitManyToMany) {
+        continue;
+      }
+      if (relation.localKeyFields.length != 1) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
 /// Describes the high-level operation an adapter should perform.
@@ -38,8 +171,32 @@ enum PlannedAction {
   /// Read many matching records.
   findMany,
 
+  /// Read one record by unique predicate.
+  findUnique,
+
+  /// Read the first matching record.
+  findFirst,
+
   /// Create a new record.
   create,
+
+  /// Batch-insert multiple records.
+  createMany,
+
+  /// Update a single matching record.
+  update,
+
+  /// Update all matching records.
+  updateMany,
+
+  /// Create or update a record (upsert).
+  upsert,
+
+  /// Delete a single matching record.
+  delete,
+
+  /// Delete all matching records.
+  deleteMany,
 }
 
 /// Provider-agnostic execution plan derived from query input.
@@ -51,6 +208,7 @@ class PlannedOperation {
     this.includeRelations = const <String>[],
     this.selectedFields = const <String>[],
     this.nestedWriteRelations = const <QueryRelation>[],
+    this.includeStrategy = IncludeStrategy.perRow,
   });
 
   /// Model name targeted by the operation.
@@ -67,4 +225,7 @@ class PlannedOperation {
 
   /// Nested relation writes to execute as part of a create operation.
   final List<QueryRelation> nestedWriteRelations;
+
+  /// Preferred strategy for loading included relations.
+  final IncludeStrategy includeStrategy;
 }

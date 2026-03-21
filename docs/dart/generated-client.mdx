@@ -1,0 +1,66 @@
+---
+title: Generated client
+description: The generated delegate API, common query patterns, and relation-aware writes.
+---
+
+# Generated client
+
+The generated client is the main application-facing API.
+
+## Core query surface
+
+- `findUnique`, `findFirst`, `findMany`, `count`
+- `create`, `createMany`, `update`, `updateMany`, `upsert`
+- `delete`, `deleteMany`
+- `transaction`
+- `aggregate` and `groupBy`
+
+## Common query features
+
+- `select` and `include`
+- nested create and update inputs
+- compound `WhereUniqueInput` selectors
+- `distinct`, `orderBy`, `skip`, and `take`
+- cursor pagination on `findMany(...)` and `findFirst(...)`
+
+## Example
+
+```dart
+final user = await db.user.create(
+  data: const UserCreateInput(
+    email: 'alice@example.com',
+    posts: PostCreateNestedManyWithoutUserInput(
+      create: <PostCreateWithoutUserInput>[
+        PostCreateWithoutUserInput(title: 'First post'),
+      ],
+    ),
+  ),
+  include: const UserInclude(posts: true),
+);
+
+final authors = await db.user.findMany(
+  where: UserWhereInput(
+    posts: PostListRelationFilter(
+      some: PostWhereInput(title: StringFilter(contains: 'First')),
+    ),
+  ),
+  orderBy: const <UserOrderByInput>[
+    UserOrderByInput(email: SortOrder.asc),
+  ],
+);
+```
+
+## Runtime behavior notes
+
+- the generated layer targets semantic parity first
+- PostgreSQL and SQLite own the main SQL-native fast paths for bulk writes, upsert, and cursor pushdown
+- middleware works by wrapping the adapter, not by changing generated code
+
+## Detailed guides
+
+- [CRUD](/docs/orm/dart/crud) for write and read operations
+- [Filtering and sorting](/docs/orm/dart/filtering-and-sorting) for `WhereInput`, `orderBy`, and pagination
+- [Relations and includes](/docs/orm/dart/relations-and-includes) for nested writes and read shaping
+- [Aggregations](/docs/orm/dart/aggregations) for `aggregate()` and `groupBy()`
+- [Transactions](/docs/orm/dart/transactions) for multi-step writes
+- [Testing](/docs/orm/dart/testing) for in-memory and generated-runtime test patterns

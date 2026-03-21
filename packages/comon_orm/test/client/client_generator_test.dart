@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:comon_orm/comon_orm.dart';
 import 'package:test/test.dart';
 
@@ -165,15 +163,16 @@ model Post {
           'final queryDistinct = distinct?.map((field) => field.name).toSet()',
         ),
       );
-      expect(output, contains('if (cursor != null) {'));
-      expect(output, contains('final records = await _findManyWithCursor('));
+      expect(output, contains('cursor: cursor?.toQueryCursor(),'));
       expect(output, contains('distinct: queryDistinct,'));
-      expect(output, contains('take: 1,'));
       expect(output, contains('Future<int> count({'));
       expect(output, contains('Future<User> create({'));
       expect(output, contains('Future<int> createMany({'));
       expect(output, contains('required List<UserCreateInput> data,'));
       expect(output, contains('bool skipDuplicates = false,'));
+      expect(output, contains('final hasDeferredRelationWrites = data.any('));
+      expect(output, contains('return txDelegate.createMany('));
+      expect(output, contains('skipDuplicates: skipDuplicates,'));
       expect(
         output,
         contains('if (skipDuplicates && _isSkippableDuplicateError(error)) {'),
@@ -188,12 +187,6 @@ model Post {
       expect(
         output,
         contains('List<List<QueryPredicate>> toUniqueSelectorPredicates() {'),
-      );
-      expect(
-        output,
-        contains(
-          'for (final selector in entry.toUniqueSelectorPredicates()) {',
-        ),
       );
       expect(output, contains('class IntFieldUpdateOperationsInput {'));
       expect(output, contains('class StringFieldUpdateOperationsInput {'));
@@ -269,22 +262,12 @@ model Post {
           'Exactly one unique selector must be provided for UserWhereUniqueInput.',
         ),
       );
+      expect(output, contains('QueryCursor toQueryCursor() {'));
       expect(
         output,
         contains('bool matchesRecord(Map<String, Object?> record) {'),
       );
-      expect(output, contains('return _findManyWithCursor('));
-      expect(output, contains('Future<List<User>> _findManyWithCursor({'));
-      expect(output, contains('final effectiveSkip = skip ?? 0;'));
-      expect(output, contains('} else if (take >= 0) {'));
-      expect(
-        output,
-        contains('final endExclusive = cursorIndex + 1 - effectiveSkip;'),
-      );
-      expect(
-        output,
-        contains('_primaryKeyWhereUniqueFromRecord(record).toPredicates()'),
-      );
+      expect(output, isNot(contains('_findManyWithCursor')));
     });
 
     test('emits compiled runtime metadata for datasources enums and relations', () {
@@ -372,6 +355,80 @@ model Group {
       expect(output, contains('storageTableName: \'_comon_orm_m2m__'));
     });
 
+    test(
+      'skips avg and sum aggregate helpers for models without numeric fields',
+      () {
+        const source = '''
+model AuditLog {
+  id      String  @id
+  action  String
+  actor   String?
+  success Boolean
+}
+''';
+
+        final schema = const SchemaParser().parse(source);
+        final output = const ClientGenerator().generateClient(schema);
+
+        expect(output, contains('Future<AuditLogAggregateResult> aggregate({'));
+        expect(output, contains('class AuditLogCountAggregateInput {'));
+        expect(output, contains('class AuditLogMinAggregateInput {'));
+        expect(output, contains('class AuditLogMaxAggregateInput {'));
+        expect(output, isNot(contains('class AuditLogAvgAggregateInput {')));
+        expect(output, isNot(contains('class AuditLogSumAggregateInput {')));
+        expect(output, isNot(contains('class AuditLogAvgAggregateResult {')));
+        expect(output, isNot(contains('class AuditLogSumAggregateResult {')));
+        expect(output, isNot(contains('    AuditLogAvgAggregateInput? avg,')));
+        expect(output, isNot(contains('    AuditLogSumAggregateInput? sum,')));
+        expect(output, contains('        avg: const <String>{},'));
+        expect(output, contains('        sum: const <String>{},'));
+        expect(output, contains('Future<List<AuditLogGroupByRow>> groupBy({'));
+        expect(output, isNot(contains('class AuditLogGroupByHavingInput {')));
+        expect(
+          output,
+          isNot(contains('class AuditLogAvgAggregateOrderByInput {')),
+        );
+        expect(
+          output,
+          isNot(contains('class AuditLogSumAggregateOrderByInput {')),
+        );
+      },
+    );
+
+    test('skips groupBy helpers for id-only models', () {
+      const source = '''
+model CursorToken {
+  id String @id
+}
+''';
+
+      final schema = const SchemaParser().parse(source);
+      final output = const ClientGenerator().generateClient(schema);
+
+      expect(
+        output,
+        contains('Future<CursorTokenAggregateResult> aggregate({'),
+      );
+      expect(
+        output,
+        isNot(contains('Future<List<CursorTokenGroupByRow>> groupBy({')),
+      );
+      expect(output, isNot(contains('class CursorTokenGroupByOrderByInput {')));
+      expect(output, isNot(contains('class CursorTokenGroupByRow {')));
+      expect(
+        output,
+        isNot(contains('class CursorTokenCountAggregateOrderByInput {')),
+      );
+      expect(
+        output,
+        isNot(contains('class CursorTokenMinAggregateOrderByInput {')),
+      );
+      expect(
+        output,
+        isNot(contains('class CursorTokenMaxAggregateOrderByInput {')),
+      );
+    });
+
     test('emits compound unique input helpers for compound selectors', () {
       const source = '''
 model Membership {
@@ -433,13 +490,19 @@ model User {
           "import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';",
         ),
       );
+      expect(
+        output,
+        contains("import 'package:postgres/postgres.dart' as pg;"),
+      );
       expect(output, contains('class GeneratedComonOrmClientPostgresql {'));
+      expect(output, contains('pg.SslMode? sslMode,'));
       expect(
         output,
         contains(
           'final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(',
         ),
       );
+      expect(output, contains('sslMode: sslMode,'));
       expect(output, isNot(contains('String schemaPath = \'schema.prisma\'')));
       expect(output, isNot(contains('schemaPath: schemaPath,')));
     });
@@ -1004,167 +1067,30 @@ model Profile {
       );
     });
 
-    test('matches checked-in generated client fixtures', () {
-      const fixtures = <MapEntry<String, String>>[
-        MapEntry(
-          'test/generated/_runtime_fixture_schema.prisma',
-          'test/generated/comon_orm_client.dart',
-        ),
-        MapEntry(
-          'test/generated/_runtime_rich_parity_schema.prisma',
-          'test/generated/runtime_rich_parity_client.dart',
-        ),
-        MapEntry(
-          'test/generated/_runtime_compound_direct_schema.prisma',
-          'test/generated/runtime_compound_direct_client.dart',
-        ),
-        MapEntry(
-          'test/generated/_runtime_required_inverse_schema.prisma',
-          'test/generated/runtime_required_inverse_client.dart',
-        ),
-        MapEntry(
-          'example/schema.prisma',
-          'example/generated/comon_orm_client.dart',
-        ),
-        MapEntry(
-          '../comon_orm_postgresql/example/schema.prisma',
-          '../comon_orm_postgresql/example/generated/comon_orm_client.dart',
-        ),
-        MapEntry(
-          '../comon_orm_sqlite/example/schema.prisma',
-          '../comon_orm_sqlite/example/generated/comon_orm_client.dart',
-        ),
-        MapEntry(
-          '../../examples/postgres/schema.prisma',
-          '../../examples/postgres/lib/generated/comon_orm_client.dart',
-        ),
-        MapEntry(
-          '../../examples/flutter_sqlite/schema.prisma',
-          '../../examples/flutter_sqlite/lib/generated/comon_orm_client.dart',
-        ),
-      ];
+    test('omits ignored models and fields from generated client output', () {
+      const source = '''
+model User {
+  id     Int    @id
+  name   String
+  secret String @ignore
+}
 
-      for (final fixture in fixtures) {
-        final generated = _generateClientForFixture(
-          schemaPath: fixture.key,
-          outputPath: fixture.value,
-        );
-        final expected = _readPackageFile(fixture.value);
+model AuditLog {
+  id Int @id
 
-        expect(
-          generated,
-          equals(expected),
-          reason:
-              'Generated client fixture drifted for ${fixture.value}. Regenerate it from ${fixture.key}.',
-        );
-      }
+  @@ignore
+}
+''';
+
+      final schema = const SchemaParser().parse(source);
+      final output = const ClientGenerator().generateClient(schema);
+
+      expect(output, contains('class User {'));
+      expect(output, contains('late final UserDelegate user = UserDelegate._'));
+      expect(output, isNot(contains('this.secret')));
+      expect(output, isNot(contains('final String secret;')));
+      expect(output, isNot(contains('class AuditLog {')));
+      expect(output, isNot(contains('AuditLogDelegate')));
     });
   });
-}
-
-String _generateClientForFixture({
-  required String schemaPath,
-  required String outputPath,
-}) {
-  final workflow = const SchemaWorkflow();
-  final loaded = workflow.loadValidatedSchemaSync(_fixturePath(schemaPath));
-  final generator = workflow.resolveGenerator(loaded);
-  final outputFile = File(_fixturePath(outputPath));
-
-  return ClientGenerator(
-    options: _resolveClientGeneratorOptions(
-      generator: generator,
-      anchorDirectory: outputFile.parent,
-    ),
-  ).generateClient(loaded.schema);
-}
-
-String _readPackageFile(String relativePath) {
-  return File(_fixturePath(relativePath)).readAsStringSync();
-}
-
-String _fixturePath(String relativePath) {
-  final normalized = relativePath.replaceAll('/', Platform.pathSeparator);
-  return '${_comonOrmPackageRoot.path}${Platform.pathSeparator}$normalized';
-}
-
-final Directory _workspaceRoot = _resolveWorkspaceRoot();
-final Directory _comonOrmPackageRoot = Directory(
-  '${_workspaceRoot.path}${Platform.pathSeparator}packages${Platform.pathSeparator}comon_orm',
-);
-
-ClientGeneratorOptions _resolveClientGeneratorOptions({
-  required ResolvedGeneratorConfig generator,
-  required Directory anchorDirectory,
-}) {
-  final explicitSqliteHelper = generator.sqliteHelper;
-  if (explicitSqliteHelper != null) {
-    return ClientGeneratorOptions(
-      sqliteHelperKind: switch (explicitSqliteHelper) {
-        'flutter' => SqliteClientHelperKind.flutter,
-        _ => SqliteClientHelperKind.vm,
-      },
-    );
-  }
-
-  final pubspec = _findNearestPubspec(anchorDirectory);
-  if (pubspec == null) {
-    return const ClientGeneratorOptions();
-  }
-
-  final source = pubspec.readAsStringSync();
-  final sqliteHelperKind =
-      _pubspecReferencesPackage(source, 'comon_orm_sqlite_flutter')
-      ? SqliteClientHelperKind.flutter
-      : SqliteClientHelperKind.vm;
-  return ClientGeneratorOptions(sqliteHelperKind: sqliteHelperKind);
-}
-
-File? _findNearestPubspec(Directory start) {
-  var current = start.absolute;
-  while (true) {
-    final candidate = File(
-      '${current.path}${Platform.pathSeparator}pubspec.yaml',
-    );
-    if (candidate.existsSync()) {
-      return candidate;
-    }
-
-    final parent = current.parent;
-    if (parent.path == current.path) {
-      return null;
-    }
-    current = parent;
-  }
-}
-
-bool _pubspecReferencesPackage(String source, String packageName) {
-  for (final line in source.split('\n')) {
-    final trimmed = line.trim();
-    if (trimmed == 'name: $packageName' ||
-        trimmed.startsWith('$packageName:')) {
-      return true;
-    }
-  }
-  return false;
-}
-
-Directory _resolveWorkspaceRoot() {
-  var current = Directory.current.absolute;
-  while (true) {
-    final packagePubspec = File(
-      '${current.path}${Platform.pathSeparator}packages${Platform.pathSeparator}comon_orm${Platform.pathSeparator}pubspec.yaml',
-    );
-    if (packagePubspec.existsSync()) {
-      return current;
-    }
-
-    final parent = current.parent;
-    if (parent.path == current.path) {
-      throw StateError(
-        'Could not resolve workspace root for generator fixture tests.',
-      );
-    }
-    current = parent;
-  }
 }

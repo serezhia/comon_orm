@@ -6,6 +6,16 @@ import 'package:comon_orm/comon_orm.dart';
 import 'package:postgres/postgres.dart' as pg;
 
 import 'postgresql_connection.dart';
+import 'postgresql_relation_materializer.dart';
+import 'postgresql_sql_builder.dart';
+import 'postgresql_transaction.dart';
+
+typedef _PostgresqlBuildContext = PostgresqlSqlBuildContext;
+typedef _PostgresqlClause = PostgresqlSqlClause;
+typedef _SelectedRow = PostgresqlSelectedRow;
+typedef _ImplicitManyToManyBatchRow = PostgresqlImplicitManyToManyBatchRow;
+typedef _RelationKey = PostgresqlRelationKey;
+typedef _SessionBackedQueryExecutor = PostgresqlSessionQueryExecutor;
 
 /// Factory signature used by runtime-metadata open helpers.
 typedef PostgresqlRuntimeAdapterFactory =
@@ -13,29 +23,6 @@ typedef PostgresqlRuntimeAdapterFactory =
       required String connectionUrl,
       required RuntimeSchemaView schema,
     });
-
-/// Query execution surface used by the PostgreSQL adapter runtime.
-abstract interface class PostgresqlQueryExecutor {
-  /// Runs a query and returns rows as string-keyed maps.
-  Future<List<Map<String, Object?>>> query(
-    String sql, {
-    List<Object?> parameters = const <Object?>[],
-  });
-
-  /// Runs a statement and returns the affected row count.
-  Future<int> execute(
-    String sql, {
-    List<Object?> parameters = const <Object?>[],
-  });
-
-  /// Runs [action] inside a PostgreSQL transaction.
-  Future<T> transaction<T>(
-    Future<T> Function(PostgresqlQueryExecutor tx) action,
-  );
-
-  /// Releases any resources owned by the executor.
-  Future<void> close();
-}
 
 /// PostgreSQL `DatabaseAdapter` implementation backed by `package:postgres`.
 class PostgresqlDatabaseAdapter implements DatabaseAdapter {
@@ -75,6 +62,21 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
   final PostgresqlQueryExecutor _executor;
   final RuntimeSchemaView _schema;
   final Future<void> Function()? _closeCallback;
+  late final PostgresqlSqlBuilder _sqlBuilder = PostgresqlSqlBuilder(
+    buildRelationClause: _buildRelationClause,
+    normalizeValueForStorage: _normalizeValueForStorage,
+    parameterWithCast: _parameterWithCast,
+    qualifiedField: _qualifiedField,
+  );
+  late final PostgresqlRelationMaterializer _relationMaterializer =
+      PostgresqlRelationMaterializer(
+        recordContainsAllRelationKeyFields: _recordContainsAllRelationKeyFields,
+        selectImplicitManyToManyRows: _selectImplicitManyToManyRows,
+        selectImplicitManyToManyRowsBatch: _selectImplicitManyToManyRowsBatch,
+        selectRows: _selectRows,
+      );
+  late final PostgresqlTransactionManager _transactionManager =
+      PostgresqlTransactionManager(_executor);
 
   /// Clock used for automatic field values such as `@updatedAt`.
   DateTime Function() now = () => DateTime.now().toUtc();
@@ -100,8 +102,12 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
   static Future<PostgresqlDatabaseAdapter> openFromUrl({
     required String connectionUrl,
     required SchemaDocument schema,
+    pg.SslMode? sslMode,
   }) async {
-    final pg.SessionExecutor pool = pg.Pool<Object?>.withUrl(connectionUrl);
+    final pg.SessionExecutor pool = _poolFromUrl(
+      connectionUrl,
+      sslMode: sslMode,
+    );
     final executor = _RetryingSessionExecutorBackedQueryExecutor(pool);
     return PostgresqlDatabaseAdapter(
       executor: executor,
@@ -114,8 +120,12 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
   static Future<PostgresqlDatabaseAdapter> openFromUrlAndRuntimeSchema({
     required String connectionUrl,
     required RuntimeSchemaView schema,
+    pg.SslMode? sslMode,
   }) async {
-    final pg.SessionExecutor pool = pg.Pool<Object?>.withUrl(connectionUrl);
+    final pg.SessionExecutor pool = _poolFromUrl(
+      connectionUrl,
+      sslMode: sslMode,
+    );
     final executor = _RetryingSessionExecutorBackedQueryExecutor(pool);
     return PostgresqlDatabaseAdapter.fromRuntimeSchema(
       executor: executor,
@@ -128,10 +138,12 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
   static Future<PostgresqlDatabaseAdapter> openFromUrlAndGeneratedSchema({
     required String connectionUrl,
     required GeneratedRuntimeSchema schema,
+    pg.SslMode? sslMode,
   }) {
     return openFromUrlAndRuntimeSchema(
       connectionUrl: connectionUrl,
       schema: runtimeSchemaViewFromGeneratedSchema(schema),
+      sslMode: sslMode,
     );
   }
 
@@ -141,6 +153,7 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     String schemaPath = 'schema.prisma',
     String? connectionUrl,
     String? datasourceName,
+    pg.SslMode? sslMode,
     RuntimeDatasourceResolver resolver = const RuntimeDatasourceResolver(),
     PostgresqlRuntimeAdapterFactory? adapterFactory,
   }) async {
@@ -155,16 +168,18 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
             )
             .url;
 
-    final PostgresqlRuntimeAdapterFactory factory =
-        adapterFactory ??
-        ({required String connectionUrl, required RuntimeSchemaView schema}) {
-          return PostgresqlDatabaseAdapter.openFromUrlAndRuntimeSchema(
-            connectionUrl: connectionUrl,
-            schema: schema,
-          );
-        };
+    if (adapterFactory != null) {
+      return adapterFactory(
+        connectionUrl: resolvedConnectionUrl,
+        schema: schema,
+      );
+    }
 
-    return factory(connectionUrl: resolvedConnectionUrl, schema: schema);
+    return PostgresqlDatabaseAdapter.openFromUrlAndRuntimeSchema(
+      connectionUrl: resolvedConnectionUrl,
+      schema: schema,
+      sslMode: sslMode,
+    );
   }
 
   /// Resolves datasource metadata and opens an adapter from generated metadata.
@@ -173,6 +188,7 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     String schemaPath = 'schema.prisma',
     String? connectionUrl,
     String? datasourceName,
+    pg.SslMode? sslMode,
     RuntimeDatasourceResolver resolver = const RuntimeDatasourceResolver(),
     PostgresqlRuntimeAdapterFactory? adapterFactory,
   }) {
@@ -181,9 +197,59 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
       schemaPath: schemaPath,
       connectionUrl: connectionUrl,
       datasourceName: datasourceName,
+      sslMode: sslMode,
       resolver: resolver,
       adapterFactory: adapterFactory,
     );
+  }
+
+  static pg.SessionExecutor _poolFromUrl(
+    String connectionUrl, {
+    pg.SslMode? sslMode,
+  }) {
+    if (sslMode == null) {
+      return pg.Pool<Object?>.withUrl(connectionUrl);
+    }
+
+    return pg.Pool<Object?>.withUrl(
+      _connectionUrlWithSslMode(connectionUrl, sslMode),
+    );
+  }
+
+  static String _connectionUrlWithSslMode(
+    String connectionUrl,
+    pg.SslMode sslMode,
+  ) {
+    final fragmentIndex = connectionUrl.indexOf('#');
+    final fragment = fragmentIndex >= 0
+        ? connectionUrl.substring(fragmentIndex)
+        : '';
+    final withoutFragment = fragmentIndex >= 0
+        ? connectionUrl.substring(0, fragmentIndex)
+        : connectionUrl;
+    final queryIndex = withoutFragment.indexOf('?');
+    final base = queryIndex >= 0
+        ? withoutFragment.substring(0, queryIndex)
+        : withoutFragment;
+    final existingQuery = queryIndex >= 0
+        ? withoutFragment.substring(queryIndex + 1)
+        : '';
+    final filteredParams = existingQuery
+        .split('&')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .where((part) => !part.toLowerCase().startsWith('sslmode='))
+        .toList(growable: true);
+    filteredParams.add('sslmode=${_sslModeQueryValue(sslMode)}');
+    return '$base?${filteredParams.join('&')}$fragment';
+  }
+
+  static String _sslModeQueryValue(pg.SslMode sslMode) {
+    return switch (sslMode) {
+      pg.SslMode.disable => 'disable',
+      pg.SslMode.require => 'require',
+      pg.SslMode.verifyFull => 'verify-full',
+    };
   }
 
   /// Closes the underlying executor or pool if one was supplied.
@@ -537,16 +603,190 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
   }
 
   @override
+  Future<Map<String, Object?>> upsert(UpsertQuery query) async {
+    final conflictFields = _resolveUpsertConflictFields(
+      query.model,
+      query.where,
+    );
+    final selectorValues = _extractEqualityPredicateValues(
+      query.model,
+      query.where,
+      requiredFields: conflictFields,
+    );
+    final createData = _mergeUpsertCreateData(
+      query.model,
+      query.create,
+      selectorValues,
+    );
+    final insertData = _applyAutomaticFieldValues(
+      query.model,
+      createData,
+      isCreate: true,
+    );
+    final updateData = _applyAutomaticFieldValues(
+      query.model,
+      query.update,
+      isCreate: false,
+    );
+
+    final insertEntries = insertData.entries.toList(growable: false);
+    if (insertEntries.isEmpty) {
+      throw StateError(
+        'PostgreSQL upsert for ${query.model} requires insert data.',
+      );
+    }
+
+    final context = _PostgresqlBuildContext();
+    final columns = insertEntries
+        .map((entry) => _columnIdentifier(query.model, entry.key))
+        .join(', ');
+    final insertPlaceholders = <String>[];
+    final parameters = <Object?>[];
+    for (final entry in insertEntries) {
+      final placeholder = context.nextParameter();
+      insertPlaceholders.add(
+        _parameterWithCast(query.model, entry.key, placeholder),
+      );
+      parameters.add(
+        _normalizeValueForStorage(query.model, entry.key, entry.value),
+      );
+    }
+
+    final assignments = <String>[];
+    if (updateData.isEmpty) {
+      final noOpField = conflictFields.first;
+      assignments.add(
+        '${_columnIdentifier(query.model, noOpField)} = EXCLUDED.${_columnIdentifier(query.model, noOpField)}',
+      );
+    } else {
+      for (final entry in updateData.entries) {
+        final placeholder = context.nextParameter();
+        assignments.add(
+          '${_columnIdentifier(query.model, entry.key)} = ${_parameterWithCast(query.model, entry.key, placeholder)}',
+        );
+        parameters.add(
+          _normalizeValueForStorage(query.model, entry.key, entry.value),
+        );
+      }
+    }
+
+    final conflictTarget = conflictFields
+        .map((field) => _columnIdentifier(query.model, field))
+        .join(', ');
+    final rows = await _executor.query(
+      'INSERT INTO ${_quoteIdentifier(_mappedTableName(query.model))} ($columns) '
+      'VALUES (${insertPlaceholders.join(', ')}) '
+      'ON CONFLICT ($conflictTarget) DO UPDATE '
+      'SET ${assignments.join(', ')} '
+      'RETURNING *',
+      parameters: parameters,
+    );
+    final record = _normalizeRecordFromStorage(query.model, rows.single);
+    return Map<String, Object?>.unmodifiable(
+      await _materializeRecord(
+        query.model,
+        record,
+        include: query.include,
+        select: query.select,
+      ),
+    );
+  }
+
+  @override
+  Future<int> createMany(CreateManyQuery query) async {
+    if (query.data.isEmpty) {
+      return 0;
+    }
+    final processedRows = query.data
+        .map(
+          (row) => _applyAutomaticFieldValues(query.model, row, isCreate: true),
+        )
+        .toList(growable: false);
+
+    // Collect the union of all column names so every row has the same shape.
+    final allColumns = <String>{};
+    for (final row in processedRows) {
+      allColumns.addAll(row.keys);
+    }
+    final columnList = allColumns.toList(growable: false);
+
+    final context = _PostgresqlBuildContext();
+    final tableName = _quoteIdentifier(_mappedTableName(query.model));
+    final columns = columnList
+        .map((col) => _columnIdentifier(query.model, col))
+        .join(', ');
+    final valueSets = <String>[];
+    final parameters = <Object?>[];
+
+    for (final row in processedRows) {
+      final placeholders = columnList.map((col) {
+        final p = context.nextParameter();
+        parameters.add(_normalizeValueForStorage(query.model, col, row[col]));
+        return _parameterWithCast(query.model, col, p);
+      }).toList();
+      valueSets.add('(${placeholders.join(', ')})');
+    }
+
+    final conflictClause = query.skipDuplicates
+        ? ' ON CONFLICT DO NOTHING'
+        : '';
+
+    return _executor.execute(
+      'INSERT INTO $tableName ($columns) VALUES ${valueSets.join(', ')}$conflictClause',
+      parameters: parameters,
+    );
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> rawQuery(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) {
+    return _executor.query(sql, parameters: parameters);
+  }
+
+  @override
+  Future<int> rawExecute(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) {
+    return _executor.execute(sql, parameters: parameters);
+  }
+
+  @override
   Future<Map<String, Object?>?> findFirst(FindFirstQuery query) async {
-    if (query.distinct.isNotEmpty) {
+    if (query.includeStrategy == IncludeStrategy.join &&
+        query.cursor == null &&
+        query.distinct.isEmpty) {
       final records = await findMany(
         FindManyQuery(
           model: query.model,
           where: query.where,
           orderBy: query.orderBy,
+          include: query.include,
+          select: query.select,
+          includeStrategy: query.includeStrategy,
+          skip: query.skip,
+          take: 1,
+        ),
+      );
+      if (records.isEmpty) {
+        return null;
+      }
+      return records.first;
+    }
+
+    if (query.cursor != null || query.distinct.isNotEmpty) {
+      final records = await findMany(
+        FindManyQuery(
+          model: query.model,
+          where: query.where,
+          cursor: query.cursor,
+          orderBy: query.orderBy,
           distinct: query.distinct,
           include: query.include,
           select: query.select,
+          includeStrategy: query.includeStrategy,
           skip: query.skip,
           take: 1,
         ),
@@ -579,6 +819,25 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
 
   @override
   Future<List<Map<String, Object?>>> findMany(FindManyQuery query) async {
+    if (query.distinct.isNotEmpty) {
+      return _findManyWithDistinctPushdown(query);
+    }
+
+    if (query.cursor != null) {
+      return _findManyWithCursor(query);
+    }
+
+    if (query.distinct.isEmpty &&
+        (query.includeStrategy == null ||
+            query.includeStrategy == IncludeStrategy.join)) {
+      final joined = await _findManyWithSimpleSingularIncludeJoins(query);
+      if (joined != null) {
+        return List<Map<String, Object?>>.unmodifiable(
+          joined.map(Map<String, Object?>.unmodifiable),
+        );
+      }
+    }
+
     final rows = await _selectRows(
       model: query.model,
       where: query.where,
@@ -587,36 +846,384 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
       offset: query.distinct.isEmpty ? query.skip : null,
     );
 
-    final records = query.distinct.isEmpty
-        ? rows.map((row) => row.record).toList(growable: false)
-        : () {
-            final distinct = applyDistinctRecords(
-              rows.map((row) => row.record),
-              query.distinct,
-            );
-            final skipped = query.skip == null
-                ? distinct
-                : distinct.skip(query.skip!).toList(growable: false);
-            final taken = query.take == null
-                ? skipped
-                : skipped.take(query.take!).toList(growable: false);
-            return List<Map<String, Object?>>.unmodifiable(taken);
-          }();
+    final List<Map<String, Object?>> rawRecords;
+    if (query.distinct.isEmpty) {
+      rawRecords = rows.map((row) => row.record).toList(growable: false);
+    } else {
+      final distinct = applyDistinctRecords(
+        rows.map((row) => row.record),
+        query.distinct,
+      );
+      final skipped = query.skip == null
+          ? distinct
+          : distinct.skip(query.skip!).toList(growable: false);
+      final taken = query.take == null
+          ? skipped
+          : skipped.take(query.take!).toList(growable: false);
+      rawRecords = List<Map<String, Object?>>.unmodifiable(taken);
+    }
 
-    final materialized = <Map<String, Object?>>[];
-    for (final record in records) {
-      materialized.add(
-        Map<String, Object?>.unmodifiable(
-          await _materializeRecord(
+    final materialized = query.includeStrategy == IncludeStrategy.perRow
+        ? await Future.wait(
+            rawRecords.map(
+              (raw) => _materializeRecord(
+                query.model,
+                raw,
+                include: query.include,
+                select: query.select,
+              ),
+            ),
+          )
+        : await _materializeRecordsBatch(
             query.model,
-            record,
+            rawRecords,
             include: query.include,
             select: query.select,
+          );
+    return List<Map<String, Object?>>.unmodifiable(
+      materialized.map(Map<String, Object?>.unmodifiable),
+    );
+  }
+
+  Future<List<Map<String, Object?>>> _findManyWithDistinctPushdown(
+    FindManyQuery query,
+  ) async {
+    final cursor = query.cursor;
+    final orderBy = cursor == null
+        ? query.orderBy
+        : _cursorOrderBy(query.model, query.orderBy);
+    final forward = cursor == null || query.take == null || query.take! >= 0;
+
+    _SelectedRow? cursorRow;
+    if (cursor != null) {
+      cursorRow = await _selectSingleDistinctRow(
+        model: query.model,
+        baseWhere: query.where,
+        outerWhere: cursor.where,
+        distinctFields: query.distinct,
+        orderBy: orderBy,
+      );
+      if (cursorRow == null) {
+        return const <Map<String, Object?>>[];
+      }
+    }
+
+    final rows = await _selectDistinctRows(
+      model: query.model,
+      baseWhere: query.where,
+      outerWhere: const <QueryPredicate>[],
+      distinctFields: query.distinct,
+      orderBy: orderBy,
+      additionalOuterWhere: cursorRow == null
+          ? null
+          : _buildCursorWindowClause(
+              query.model,
+              orderBy,
+              cursorRow.record,
+              forward: forward,
+            ),
+      resultOrderBy: cursor != null && !forward
+          ? _reverseOrderBy(orderBy)
+          : orderBy,
+      limit: cursor == null ? query.take : query.take?.abs(),
+      offset: query.skip,
+    );
+
+    var rawRecords = rows.map((row) => row.record).toList(growable: false);
+    if (cursor != null && !forward) {
+      rawRecords = rawRecords.reversed.toList(growable: false);
+    }
+
+    final materialized = query.includeStrategy == IncludeStrategy.perRow
+        ? await Future.wait(
+            rawRecords.map(
+              (raw) => _materializeRecord(
+                query.model,
+                raw,
+                include: query.include,
+                select: query.select,
+              ),
+            ),
+          )
+        : await _materializeRecordsBatch(
+            query.model,
+            rawRecords,
+            include: query.include,
+            select: query.select,
+          );
+    return List<Map<String, Object?>>.unmodifiable(
+      materialized.map(Map<String, Object?>.unmodifiable),
+    );
+  }
+
+  Future<List<Map<String, Object?>>?> _findManyWithSimpleSingularIncludeJoins(
+    FindManyQuery query,
+  ) async {
+    final context = _PostgresqlBuildContext();
+    final alias = context.nextAlias();
+    final joins = _simpleSingularIncludeJoins(
+      sourceModel: query.model,
+      parentAlias: alias,
+      include: query.include,
+      context: context,
+      depth: 1,
+    );
+    if (joins == null || joins.isEmpty) {
+      return null;
+    }
+    final flatJoins = _flattenSimpleSingularIncludeJoins(joins);
+
+    final whereClause = _buildWhereClause(
+      context,
+      query.model,
+      alias,
+      query.where,
+    );
+    final orderClause = _buildOrderByClause(alias, query.model, query.orderBy);
+    final sql = StringBuffer()
+      ..write(
+        'SELECT ${_quoteIdentifier(alias)}.ctid::text AS ${_quoteIdentifier(_ctidColumn)}, ${_quoteIdentifier(alias)}.*',
+      );
+    for (final join in flatJoins) {
+      for (final field in _storedFields(join.relation.targetModel)) {
+        sql.write(
+          ', ${_qualifiedField(join.alias, join.relation.targetModel, field.name)} AS ${_quoteIdentifier(join.columnAlias(field.name))}',
+        );
+      }
+    }
+    sql.write(' FROM ${_tableReference(query.model, alias)}');
+    for (final join in flatJoins) {
+      sql.write(
+        ' LEFT JOIN ${_tableReference(join.relation.targetModel, join.alias)} '
+        'ON ${_qualifiedField(join.parentAlias, join.sourceModel, join.relation.localKeyField)} = '
+        '${_qualifiedField(join.alias, join.relation.targetModel, join.relation.targetKeyField)}',
+      );
+    }
+    sql.write(' WHERE ${whereClause.sql}');
+
+    final parameters = <Object?>[...whereClause.parameters];
+    if (query.orderBy.isNotEmpty) {
+      sql.write(' ORDER BY $orderClause');
+    }
+    if (query.take != null) {
+      final placeholder = '\$${parameters.length + 1}';
+      sql.write(' LIMIT $placeholder');
+      parameters.add(query.take);
+    }
+    if (query.skip != null) {
+      final placeholder = '\$${parameters.length + 1}';
+      sql.write(' OFFSET $placeholder');
+      parameters.add(query.skip);
+    }
+
+    final rows = await _executor.query(sql.toString(), parameters: parameters);
+    return rows
+        .map(
+          (row) => _materializeJoinedFindManyRow(
+            query.model,
+            row,
+            joins: joins,
+            select: query.select,
           ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<Map<String, Object?>>> _findManyWithCursor(
+    FindManyQuery query,
+  ) async {
+    final cursor = query.cursor;
+    if (cursor == null) {
+      return findMany(
+        FindManyQuery(
+          model: query.model,
+          where: query.where,
+          orderBy: query.orderBy,
+          distinct: query.distinct,
+          include: query.include,
+          select: query.select,
+          skip: query.skip,
+          take: query.take,
         ),
       );
     }
-    return List<Map<String, Object?>>.unmodifiable(materialized);
+
+    final cursorRow = await _selectSingleRow(
+      model: query.model,
+      where: cursor.where,
+      orderBy: const <QueryOrderBy>[],
+    );
+    if (cursorRow == null) {
+      return const <Map<String, Object?>>[];
+    }
+
+    final orderBy = _cursorOrderBy(query.model, query.orderBy);
+    final forward = query.take == null || query.take! >= 0;
+    final rows = await _selectRows(
+      model: query.model,
+      where: query.where,
+      additionalWhere: _buildCursorWindowClause(
+        query.model,
+        orderBy,
+        cursorRow.record,
+        forward: forward,
+      ),
+      orderBy: forward ? orderBy : _reverseOrderBy(orderBy),
+      limit: query.take?.abs(),
+      offset: query.skip,
+    );
+
+    var rawRecords = rows.map((row) => row.record).toList(growable: false);
+    if (!forward) {
+      rawRecords = rawRecords.reversed.toList(growable: false);
+    }
+
+    final materialized = await _materializeRecordsBatch(
+      query.model,
+      rawRecords,
+      include: query.include,
+      select: query.select,
+    );
+    return List<Map<String, Object?>>.unmodifiable(
+      materialized.map(Map<String, Object?>.unmodifiable),
+    );
+  }
+
+  Map<String, Object?> _materializeJoinedFindManyRow(
+    String model,
+    Map<String, Object?> row, {
+    required List<_SimpleSingularIncludeJoin> joins,
+    required QuerySelect? select,
+  }) {
+    final record = _normalizeBaseJoinedRecord(model, row);
+    final base = _selectJoinedRecordFields(record, select);
+
+    for (final join in joins) {
+      base[join.includeKey] = _materializeJoinedIncludeRecord(join, row);
+    }
+    return base;
+  }
+
+  Map<String, Object?> _normalizeBaseJoinedRecord(
+    String model,
+    Map<String, Object?> row,
+  ) {
+    final storageRow = <String, Object?>{};
+    for (final field in _storedFields(model)) {
+      if (row.containsKey(field.databaseName)) {
+        storageRow[field.databaseName] = row[field.databaseName];
+      }
+    }
+    return _normalizeRecordFromStorage(model, storageRow);
+  }
+
+  Map<String, Object?>? _materializeJoinedIncludeRecord(
+    _SimpleSingularIncludeJoin join,
+    Map<String, Object?> row,
+  ) {
+    if (row[join.columnAlias(join.relation.targetKeyField)] == null) {
+      return null;
+    }
+
+    final record = <String, Object?>{};
+    for (final field in _storedFields(join.relation.targetModel)) {
+      record[field.name] = _normalizeValueFromStorage(
+        join.relation.targetModel,
+        field.name,
+        row[join.columnAlias(field.name)],
+      );
+    }
+
+    final selected = _selectJoinedRecordFields(record, join.entry.select);
+    for (final child in join.children) {
+      selected[child.includeKey] = _materializeJoinedIncludeRecord(child, row);
+    }
+    return Map<String, Object?>.unmodifiable(selected);
+  }
+
+  List<_SimpleSingularIncludeJoin>? _simpleSingularIncludeJoins({
+    required String sourceModel,
+    required String parentAlias,
+    required QueryInclude? include,
+    required _PostgresqlBuildContext context,
+    required int depth,
+  }) {
+    if (include == null || include.relations.isEmpty) {
+      return const <_SimpleSingularIncludeJoin>[];
+    }
+    if (depth > 3) {
+      return null;
+    }
+
+    final joins = <_SimpleSingularIncludeJoin>[];
+    for (final relationEntry in include.relations.entries) {
+      final entry = relationEntry.value;
+      final relation = entry.relation;
+      if (relation.cardinality != QueryRelationCardinality.one ||
+          relation.storageKind != QueryRelationStorageKind.direct ||
+          relation.localKeyFields.length != 1 ||
+          relation.targetKeyFields.length != 1) {
+        return null;
+      }
+
+      final alias = context.nextAlias();
+      final children = _simpleSingularIncludeJoins(
+        sourceModel: relation.targetModel,
+        parentAlias: alias,
+        include: entry.include,
+        context: context,
+        depth: depth + 1,
+      );
+      if (children == null) {
+        return null;
+      }
+
+      joins.add(
+        _SimpleSingularIncludeJoin(
+          alias: alias,
+          parentAlias: parentAlias,
+          sourceModel: sourceModel,
+          includeKey: relationEntry.key,
+          entry: entry,
+          children: children,
+        ),
+      );
+    }
+    return joins;
+  }
+
+  List<_SimpleSingularIncludeJoin> _flattenSimpleSingularIncludeJoins(
+    List<_SimpleSingularIncludeJoin> joins,
+  ) {
+    final flat = <_SimpleSingularIncludeJoin>[];
+
+    void visit(List<_SimpleSingularIncludeJoin> nested) {
+      for (final join in nested) {
+        flat.add(join);
+        visit(join.children);
+      }
+    }
+
+    visit(joins);
+    return flat;
+  }
+
+  Map<String, Object?> _selectJoinedRecordFields(
+    Map<String, Object?> record,
+    QuerySelect? select,
+  ) {
+    final selected = <String, Object?>{};
+    if (select == null || select.fields.isEmpty) {
+      selected.addAll(record);
+      return selected;
+    }
+
+    for (final field in select.fields) {
+      if (record.containsKey(field)) {
+        selected[field] = record[field];
+      }
+    }
+    return selected;
   }
 
   @override
@@ -642,13 +1249,12 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
 
   @override
   Future<T> transaction<T>(Future<T> Function(DatabaseAdapter tx) action) {
-    return _executor.transaction(
-      (tx) => action(
-        PostgresqlDatabaseAdapter.fromRuntimeSchema(
-          executor: tx,
-          schema: _schema,
-        )..now = now,
-      ),
+    return _transactionManager.run(
+      action,
+      (tx) => PostgresqlDatabaseAdapter.fromRuntimeSchema(
+        executor: tx,
+        schema: _schema,
+      )..now = now,
     );
   }
 
@@ -770,6 +1376,92 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     return nextData;
   }
 
+  List<String> _resolveUpsertConflictFields(
+    String model,
+    List<QueryPredicate> where,
+  ) {
+    final selectorValues = _extractEqualityPredicateValues(model, where);
+    final selectorFields = selectorValues.keys.toSet();
+    final modelDefinition = _schema.findModel(model);
+    if (modelDefinition == null) {
+      throw StateError('Unknown model $model for PostgreSQL upsert.');
+    }
+
+    final candidateFieldSets = <List<String>>[];
+    if (modelDefinition.primaryKeyFields.isNotEmpty) {
+      candidateFieldSets.add(modelDefinition.primaryKeyFields);
+    }
+    for (final field in modelDefinition.fields) {
+      if ((field.isId || field.isUnique) && !field.isList) {
+        candidateFieldSets.add(<String>[field.name]);
+      }
+    }
+    candidateFieldSets.addAll(modelDefinition.compoundUniqueFieldSets);
+
+    for (final candidate in candidateFieldSets) {
+      if (candidate.length != selectorFields.length) {
+        continue;
+      }
+      if (candidate.every(selectorFields.contains)) {
+        return candidate;
+      }
+    }
+
+    throw StateError(
+      'PostgreSQL upsert for $model requires where to match exactly one unique selector.',
+    );
+  }
+
+  Map<String, Object?> _extractEqualityPredicateValues(
+    String model,
+    List<QueryPredicate> where, {
+    List<String>? requiredFields,
+  }) {
+    final values = <String, Object?>{};
+    for (final predicate in where) {
+      if (predicate.operator != 'equals') {
+        throw StateError(
+          'PostgreSQL upsert for $model only supports equals predicates in where.',
+        );
+      }
+      if (values.containsKey(predicate.field)) {
+        throw StateError(
+          'PostgreSQL upsert for $model received duplicate predicates for ${predicate.field}.',
+        );
+      }
+      values[predicate.field] = predicate.value;
+    }
+
+    if (requiredFields != null) {
+      for (final field in requiredFields) {
+        if (!values.containsKey(field)) {
+          throw StateError(
+            'PostgreSQL upsert for $model requires where to include $field.',
+          );
+        }
+      }
+    }
+
+    return values;
+  }
+
+  Map<String, Object?> _mergeUpsertCreateData(
+    String model,
+    Map<String, Object?> create,
+    Map<String, Object?> selectorValues,
+  ) {
+    final merged = Map<String, Object?>.from(create);
+    for (final entry in selectorValues.entries) {
+      if (merged.containsKey(entry.key) && merged[entry.key] != entry.value) {
+        throw StateError(
+          'PostgreSQL upsert for $model requires create.${entry.key} to match where.${entry.key}.',
+        );
+      }
+      merged[entry.key] = entry.value;
+    }
+    return merged;
+  }
+
   Iterable<RuntimeFieldView> _updatedAtFields(String model) {
     final modelDefinition = _schema.findModel(model);
     if (modelDefinition == null) {
@@ -783,30 +1475,37 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     required String model,
     required List<QueryPredicate> where,
     required List<QueryOrderBy> orderBy,
+    _PostgresqlClause? additionalWhere,
     int? limit,
     int? offset,
   }) async {
     final context = _PostgresqlBuildContext();
     final alias = context.nextAlias();
     final whereClause = _buildWhereClause(context, model, alias, where);
+    final combinedWhere = additionalWhere == null
+        ? whereClause
+        : _combineClauses(<_PostgresqlClause>[
+            whereClause,
+            additionalWhere,
+          ], 'AND');
     final orderClause = _buildOrderByClause(alias, model, orderBy);
     final sql = StringBuffer()
       ..write(
         'SELECT ${_quoteIdentifier(alias)}.ctid::text AS ${_quoteIdentifier(_ctidColumn)}, ${_quoteIdentifier(alias)}.* '
         'FROM ${_tableReference(model, alias)} '
-        'WHERE ${whereClause.sql}',
+        'WHERE ${combinedWhere.sql}',
       );
-    final parameters = <Object?>[...whereClause.parameters];
+    final parameters = <Object?>[...combinedWhere.parameters];
     if (orderBy.isNotEmpty) {
       sql.write(' ORDER BY $orderClause');
     }
     if (limit != null) {
-      final placeholder = context.nextParameter();
+      final placeholder = '\$${parameters.length + 1}';
       sql.write(' LIMIT $placeholder');
       parameters.add(limit);
     }
     if (offset != null) {
-      final placeholder = context.nextParameter();
+      final placeholder = '\$${parameters.length + 1}';
       sql.write(' OFFSET $placeholder');
       parameters.add(offset);
     }
@@ -815,6 +1514,129 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     return rows
         .map((row) => _resultRowToSelectedRow(model, row))
         .toList(growable: false);
+  }
+
+  Future<List<_SelectedRow>> _selectDistinctRows({
+    required String model,
+    required List<QueryPredicate> baseWhere,
+    required List<QueryPredicate> outerWhere,
+    required Set<String> distinctFields,
+    required List<QueryOrderBy> orderBy,
+    _PostgresqlClause? additionalOuterWhere,
+    List<QueryOrderBy>? resultOrderBy,
+    int? limit,
+    int? offset,
+  }) async {
+    final baseContext = _PostgresqlBuildContext();
+    const baseAlias = 'b0';
+    final baseWhereClause = _buildWhereClause(
+      baseContext,
+      model,
+      baseAlias,
+      baseWhere,
+    );
+
+    final outerContext = _PostgresqlBuildContext();
+    const outerAlias = 't0';
+    final outerWhereClause = _buildWhereClause(
+      outerContext,
+      model,
+      outerAlias,
+      outerWhere,
+    );
+    final combinedOuterWhere = additionalOuterWhere == null
+        ? outerWhereClause
+        : _combineClauses(<_PostgresqlClause>[
+            outerWhereClause,
+            additionalOuterWhere,
+          ], 'AND');
+    final shiftedOuterWhere = _shiftClauseParameters(
+      combinedOuterWhere,
+      baseWhereClause.parameters.length,
+    );
+
+    const baseCte = '_distinct_base';
+    const rankedCte = '_distinct_ranked';
+    const distinctCte = '_distinct';
+    const rankedAlias = 'd0';
+    final rowNumberOrderClause = _buildDistinctWindowOrderByClause(
+      rankedAlias,
+      model,
+      orderBy,
+      rowLocatorColumn: _ctidColumn,
+    );
+    final partitionClause = distinctFields
+        .map((field) => _qualifiedField(rankedAlias, model, field))
+        .join(', ');
+
+    final sql = StringBuffer()
+      ..write(
+        'WITH ${_quoteIdentifier(baseCte)} AS ('
+        'SELECT ${_quoteIdentifier(baseAlias)}.ctid::text AS ${_quoteIdentifier(_ctidColumn)}, ${_quoteIdentifier(baseAlias)}.* '
+        'FROM ${_tableReference(model, baseAlias)} '
+        'WHERE ${baseWhereClause.sql}'
+        '), ${_quoteIdentifier(rankedCte)} AS ('
+        'SELECT ${_quoteIdentifier(rankedAlias)}.*, '
+        'ROW_NUMBER() OVER ('
+        'PARTITION BY $partitionClause '
+        'ORDER BY $rowNumberOrderClause'
+        ') AS ${_quoteIdentifier(_distinctRowNumberColumn)} '
+        'FROM ${_rawTableReference(baseCte, rankedAlias)}'
+        '), ${_quoteIdentifier(distinctCte)} AS ('
+        'SELECT * FROM ${_quoteIdentifier(rankedCte)} '
+        'WHERE ${_quoteIdentifier(_distinctRowNumberColumn)} = 1'
+        ') '
+        'SELECT ${_quoteIdentifier(outerAlias)}.* '
+        'FROM ${_rawTableReference(distinctCte, outerAlias)} '
+        'WHERE ${shiftedOuterWhere.sql}',
+      );
+
+    final parameters = <Object?>[
+      ...baseWhereClause.parameters,
+      ...shiftedOuterWhere.parameters,
+    ];
+    final effectiveOrderBy = resultOrderBy ?? orderBy;
+    if (effectiveOrderBy.isNotEmpty) {
+      sql.write(
+        ' ORDER BY ${_buildOrderByClause(outerAlias, model, effectiveOrderBy)}',
+      );
+    }
+    if (limit != null) {
+      final placeholder = '\$${parameters.length + 1}';
+      sql.write(' LIMIT $placeholder');
+      parameters.add(limit);
+    }
+    if (offset != null) {
+      final placeholder = '\$${parameters.length + 1}';
+      sql.write(' OFFSET $placeholder');
+      parameters.add(offset);
+    }
+
+    final rows = await _executor.query(sql.toString(), parameters: parameters);
+    return rows
+        .map((row) => _resultRowToSelectedRow(model, row))
+        .toList(growable: false);
+  }
+
+  Future<_SelectedRow?> _selectSingleDistinctRow({
+    required String model,
+    required List<QueryPredicate> baseWhere,
+    required List<QueryPredicate> outerWhere,
+    required Set<String> distinctFields,
+    required List<QueryOrderBy> orderBy,
+  }) async {
+    final rows = await _selectDistinctRows(
+      model: model,
+      baseWhere: baseWhere,
+      outerWhere: outerWhere,
+      distinctFields: distinctFields,
+      orderBy: orderBy,
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    return rows.single;
   }
 
   Future<_SelectedRow?> _selectSingleRow({
@@ -835,6 +1657,187 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     }
     return rows.single;
   }
+
+  List<QueryOrderBy> _cursorOrderBy(String model, List<QueryOrderBy> orderBy) {
+    if (orderBy.isNotEmpty) {
+      return orderBy;
+    }
+    final primaryKeyFields =
+        _schema.findModel(model)?.primaryKeyFields ?? const <String>[];
+    return primaryKeyFields
+        .map((field) => QueryOrderBy(field: field, direction: SortOrder.asc))
+        .toList(growable: false);
+  }
+
+  List<QueryOrderBy> _reverseOrderBy(List<QueryOrderBy> orderBy) {
+    return orderBy
+        .map(
+          (entry) => QueryOrderBy(
+            field: entry.field,
+            direction: entry.direction == SortOrder.asc
+                ? SortOrder.desc
+                : SortOrder.asc,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  String _buildDistinctWindowOrderByClause(
+    String alias,
+    String model,
+    List<QueryOrderBy> orderBy, {
+    required String rowLocatorColumn,
+  }) {
+    final parts = <String>[];
+    if (orderBy.isNotEmpty) {
+      parts.add(_buildOrderByClause(alias, model, orderBy));
+    }
+    parts.add('${_qualifiedRawField(alias, rowLocatorColumn)} ASC');
+    return parts.join(', ');
+  }
+
+  _PostgresqlClause _buildCursorWindowClause(
+    String model,
+    List<QueryOrderBy> orderBy,
+    Map<String, Object?> cursorRecord, {
+    required bool forward,
+  }) {
+    if (orderBy.isEmpty) {
+      return const _PostgresqlClause(sql: 'TRUE', parameters: <Object?>[]);
+    }
+
+    const alias = 't0';
+    final branches = <_PostgresqlClause>[];
+    for (var index = 0; index < orderBy.length; index++) {
+      final branchParts = <String>[];
+      final branchParameters = <Object?>[];
+      for (var prefixIndex = 0; prefixIndex < index; prefixIndex++) {
+        final equality = _cursorEqualityClause(
+          alias,
+          model,
+          orderBy[prefixIndex].field,
+          cursorRecord[orderBy[prefixIndex].field],
+        );
+        branchParts.add(equality.sql);
+        branchParameters.addAll(equality.parameters);
+      }
+      final comparison = _cursorComparisonClause(
+        alias,
+        model,
+        orderBy[index],
+        cursorRecord[orderBy[index].field],
+        forward: forward,
+      );
+      branchParts.add(comparison.sql);
+      branchParameters.addAll(comparison.parameters);
+      branches.add(
+        _PostgresqlClause(
+          sql: branchParts.map((part) => '($part)').join(' AND '),
+          parameters: branchParameters,
+        ),
+      );
+    }
+
+    final equalityParts = <String>[];
+    final equalityParameters = <Object?>[];
+    for (final entry in orderBy) {
+      final equality = _cursorEqualityClause(
+        alias,
+        model,
+        entry.field,
+        cursorRecord[entry.field],
+      );
+      equalityParts.add(equality.sql);
+      equalityParameters.addAll(equality.parameters);
+    }
+    branches.add(
+      _PostgresqlClause(
+        sql: equalityParts.map((part) => '($part)').join(' AND '),
+        parameters: equalityParameters,
+      ),
+    );
+
+    return _combineClauses(branches, 'OR');
+  }
+
+  _PostgresqlClause _cursorEqualityClause(
+    String alias,
+    String model,
+    String field,
+    Object? value,
+  ) {
+    final qualifiedField = _qualifiedField(alias, model, field);
+    if (value == null) {
+      return const _PostgresqlClause(sql: 'FALSE', parameters: <Object?>[]);
+    }
+    return _PostgresqlClause(
+      sql: '$qualifiedField = ${_nextCursorParameterPlaceholder(1)}',
+      parameters: <Object?>[_normalizeValueForStorage(model, field, value)],
+    );
+  }
+
+  _PostgresqlClause _cursorComparisonClause(
+    String alias,
+    String model,
+    QueryOrderBy orderBy,
+    Object? value, {
+    required bool forward,
+  }) {
+    final qualifiedField = _qualifiedField(alias, model, orderBy.field);
+    if (value == null) {
+      return const _PostgresqlClause(sql: 'FALSE', parameters: <Object?>[]);
+    }
+    final ascending = orderBy.direction == SortOrder.asc;
+    final operator = forward
+        ? (ascending ? '>' : '<')
+        : (ascending ? '<' : '>');
+    return _PostgresqlClause(
+      sql: '$qualifiedField $operator ${_nextCursorParameterPlaceholder(1)}',
+      parameters: <Object?>[
+        _normalizeValueForStorage(model, orderBy.field, value),
+      ],
+    );
+  }
+
+  _PostgresqlClause _combineClauses(
+    List<_PostgresqlClause> clauses,
+    String operator,
+  ) {
+    if (clauses.isEmpty) {
+      return const _PostgresqlClause(sql: 'TRUE', parameters: <Object?>[]);
+    }
+    if (clauses.length == 1) {
+      return clauses.single;
+    }
+
+    final sql = StringBuffer();
+    final parameters = <Object?>[];
+    for (var index = 0; index < clauses.length; index++) {
+      if (index > 0) {
+        sql.write(' $operator ');
+      }
+      final shifted = _shiftClauseParameters(clauses[index], parameters.length);
+      sql.write('(${shifted.sql})');
+      parameters.addAll(shifted.parameters);
+    }
+    return _PostgresqlClause(sql: sql.toString(), parameters: parameters);
+  }
+
+  _PostgresqlClause _shiftClauseParameters(
+    _PostgresqlClause clause,
+    int offset,
+  ) {
+    if (offset == 0 || clause.parameters.isEmpty) {
+      return clause;
+    }
+    final sql = clause.sql.replaceAllMapped(
+      RegExp(r'\$(\d+)'),
+      (match) => '\$${int.parse(match.group(1)!) + offset}',
+    );
+    return _PostgresqlClause(sql: sql, parameters: clause.parameters);
+  }
+
+  String _nextCursorParameterPlaceholder(int index) => '\$$index';
 
   _SelectedRow _resultRowToSelectedRow(String model, Map<String, Object?> row) {
     final locator = row[_ctidColumn];
@@ -886,108 +1889,28 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     required QueryInclude? include,
     required QuerySelect? select,
   }) async {
-    final base = <String, Object?>{};
-
-    if (select == null || select.fields.isEmpty) {
-      base.addAll(record);
-    } else {
-      for (final field in select.fields) {
-        if (record.containsKey(field)) {
-          base[field] = record[field];
-        }
-      }
-    }
-
-    if (include != null) {
-      for (final entry in include.relations.entries) {
-        base[entry.key] = await _resolveInclude(model, record, entry.value);
-      }
-    }
-
-    return base;
+    return _relationMaterializer.materializeRecord(
+      model,
+      record,
+      include: include,
+      select: select,
+    );
   }
 
-  Future<Object?> _resolveInclude(
-    String sourceModel,
-    Map<String, Object?> sourceRecord,
-    QueryIncludeEntry entry,
-  ) async {
-    if (entry.relation.storageKind ==
-        QueryRelationStorageKind.implicitManyToMany) {
-      final relatedRows = await _selectImplicitManyToManyRows(
-        sourceModel: sourceModel,
-        sourceRecord: sourceRecord,
-        relation: entry.relation,
-      );
-      final materialized = <Map<String, Object?>>[];
-      for (final row in relatedRows) {
-        materialized.add(
-          Map<String, Object?>.unmodifiable(
-            await _materializeRecord(
-              entry.relation.targetModel,
-              row.record,
-              include: entry.include,
-              select: entry.select,
-            ),
-          ),
-        );
-      }
-
-      return materialized;
-    }
-
-    if (!_recordContainsAllRelationKeyFields(
-      sourceRecord,
-      entry.relation.localKeyFields,
-    )) {
-      return entry.relation.cardinality == QueryRelationCardinality.many
-          ? const <Map<String, Object?>>[]
-          : null;
-    }
-
-    final wherePredicates = <QueryPredicate>[];
-    for (
-      var index = 0;
-      index < entry.relation.targetKeyFields.length;
-      index++
-    ) {
-      wherePredicates.add(
-        QueryPredicate(
-          field: entry.relation.targetKeyFields[index],
-          operator: 'equals',
-          value: sourceRecord[entry.relation.localKeyFields[index]],
-        ),
-      );
-    }
-
-    final relatedRows = await _selectRows(
-      model: entry.relation.targetModel,
-      where: wherePredicates,
-      orderBy: const <QueryOrderBy>[],
+  /// Materializes a batch of records, resolving includes with a single query
+  /// per relation level instead of one query per parent row (N+1 avoidance).
+  Future<List<Map<String, Object?>>> _materializeRecordsBatch(
+    String model,
+    List<Map<String, Object?>> rawRecords, {
+    required QueryInclude? include,
+    required QuerySelect? select,
+  }) async {
+    return _relationMaterializer.materializeRecordsBatch(
+      model,
+      rawRecords,
+      include: include,
+      select: select,
     );
-
-    final materialized = <Map<String, Object?>>[];
-    for (final row in relatedRows) {
-      materialized.add(
-        Map<String, Object?>.unmodifiable(
-          await _materializeRecord(
-            entry.relation.targetModel,
-            row.record,
-            include: entry.include,
-            select: entry.select,
-          ),
-        ),
-      );
-    }
-
-    if (entry.relation.cardinality == QueryRelationCardinality.one) {
-      if (materialized.isEmpty) {
-        return null;
-      }
-      return materialized.first;
-    }
-
-    return materialized;
   }
 
   _PostgresqlClause _buildWhereClause(
@@ -996,231 +1919,7 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     String alias,
     List<QueryPredicate> predicates,
   ) {
-    if (predicates.isEmpty) {
-      return const _PostgresqlClause(sql: '1 = 1', parameters: <Object?>[]);
-    }
-
-    final clauses = predicates
-        .map(
-          (predicate) =>
-              _buildPredicateClause(context, model, alias, predicate),
-        )
-        .toList(growable: false);
-    return _joinClauses(clauses, 'AND');
-  }
-
-  _PostgresqlClause _buildPredicateClause(
-    _PostgresqlBuildContext context,
-    String model,
-    String alias,
-    QueryPredicate predicate,
-  ) {
-    switch (predicate.operator) {
-      case 'logicalAnd':
-        final group = predicate.value as QueryLogicalGroup;
-        if (group.branches.isEmpty) {
-          return const _PostgresqlClause(sql: '1 = 1', parameters: <Object?>[]);
-        }
-        return _joinClauses(
-          group.branches
-              .map((branch) => _buildWhereClause(context, model, alias, branch))
-              .toList(growable: false),
-          'AND',
-        );
-      case 'logicalOr':
-        final group = predicate.value as QueryLogicalGroup;
-        if (group.branches.isEmpty) {
-          return const _PostgresqlClause(sql: '1 = 0', parameters: <Object?>[]);
-        }
-        return _joinClauses(
-          group.branches
-              .map((branch) => _buildWhereClause(context, model, alias, branch))
-              .toList(growable: false),
-          'OR',
-        );
-      case 'logicalNot':
-        final group = predicate.value as QueryLogicalGroup;
-        if (group.branches.isEmpty) {
-          return const _PostgresqlClause(sql: '1 = 1', parameters: <Object?>[]);
-        }
-        final negated = group.branches
-            .map((branch) => _buildWhereClause(context, model, alias, branch))
-            .map(
-              (branchClause) => _PostgresqlClause(
-                sql: 'NOT (${branchClause.sql})',
-                parameters: branchClause.parameters,
-              ),
-            )
-            .toList(growable: false);
-        return _joinClauses(negated, 'AND');
-      case 'relationSome':
-      case 'relationNone':
-      case 'relationEvery':
-      case 'relationIs':
-      case 'relationIsNot':
-        return _buildRelationClause(
-          context,
-          model,
-          alias,
-          predicate.operator,
-          predicate.value as QueryRelationFilter,
-        );
-      case 'equals':
-        return _binaryClause(
-          context,
-          alias,
-          predicate.field,
-          '=',
-          predicate.value,
-          model,
-        );
-      case 'not':
-        if (predicate.value == null) {
-          return _PostgresqlClause(
-            sql:
-                '${_qualifiedField(alias, model, predicate.field)} IS NOT NULL',
-            parameters: const <Object?>[],
-          );
-        }
-        return _binaryClause(
-          context,
-          alias,
-          predicate.field,
-          '!=',
-          predicate.value,
-          model,
-        );
-      case 'contains':
-        return _stringPatternClause(
-          context,
-          alias,
-          predicate.field,
-          '%${predicate.value}%',
-          model,
-        );
-      case 'startsWith':
-        return _stringPatternClause(
-          context,
-          alias,
-          predicate.field,
-          '${predicate.value}%',
-          model,
-        );
-      case 'endsWith':
-        return _stringPatternClause(
-          context,
-          alias,
-          predicate.field,
-          '%${predicate.value}',
-          model,
-        );
-      case 'containsInsensitive':
-        return _ilikeClause(
-          context,
-          alias,
-          predicate.field,
-          '%${predicate.value}%',
-          model,
-        );
-      case 'startsWithInsensitive':
-        return _ilikeClause(
-          context,
-          alias,
-          predicate.field,
-          '${predicate.value}%',
-          model,
-        );
-      case 'endsWithInsensitive':
-        return _ilikeClause(
-          context,
-          alias,
-          predicate.field,
-          '%${predicate.value}',
-          model,
-        );
-      case 'in':
-        final values = predicate.value as List<Object?>;
-        if (values.isEmpty) {
-          return const _PostgresqlClause(sql: '1 = 0', parameters: <Object?>[]);
-        }
-        final parameters = <Object?>[];
-        final placeholders = <String>[];
-        for (final value in values) {
-          final placeholder = context.nextParameter();
-          placeholders.add(
-            _parameterWithCast(model, predicate.field, placeholder),
-          );
-          parameters.add(
-            _normalizeValueForStorage(model, predicate.field, value),
-          );
-        }
-        return _PostgresqlClause(
-          sql:
-              '${_qualifiedField(alias, model, predicate.field)} IN (${placeholders.join(', ')})',
-          parameters: parameters,
-        );
-      case 'notIn':
-        final notInValues = predicate.value as List<Object?>;
-        if (notInValues.isEmpty) {
-          return const _PostgresqlClause(sql: '1 = 1', parameters: <Object?>[]);
-        }
-        final notInParameters = <Object?>[];
-        final notInPlaceholders = <String>[];
-        for (final value in notInValues) {
-          final placeholder = context.nextParameter();
-          notInPlaceholders.add(
-            _parameterWithCast(model, predicate.field, placeholder),
-          );
-          notInParameters.add(
-            _normalizeValueForStorage(model, predicate.field, value),
-          );
-        }
-        return _PostgresqlClause(
-          sql:
-              '${_qualifiedField(alias, model, predicate.field)} NOT IN (${notInPlaceholders.join(', ')})',
-          parameters: notInParameters,
-        );
-      case 'gt':
-        return _binaryClause(
-          context,
-          alias,
-          predicate.field,
-          '>',
-          predicate.value,
-          model,
-        );
-      case 'gte':
-        return _binaryClause(
-          context,
-          alias,
-          predicate.field,
-          '>=',
-          predicate.value,
-          model,
-        );
-      case 'lt':
-        return _binaryClause(
-          context,
-          alias,
-          predicate.field,
-          '<',
-          predicate.value,
-          model,
-        );
-      case 'lte':
-        return _binaryClause(
-          context,
-          alias,
-          predicate.field,
-          '<=',
-          predicate.value,
-          model,
-        );
-      default:
-        throw UnsupportedError(
-          'Unsupported predicate operator ${predicate.operator}.',
-        );
-    }
+    return _sqlBuilder.buildWhereClause(context, model, alias, predicates);
   }
 
   _PostgresqlClause _buildRelationClause(
@@ -1411,6 +2110,85 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
         .toList(growable: false);
   }
 
+  Future<List<_ImplicitManyToManyBatchRow>> _selectImplicitManyToManyRowsBatch({
+    required String sourceModel,
+    required List<Map<String, Object?>> sourceRecords,
+    required QueryRelation relation,
+  }) async {
+    if (sourceRecords.isEmpty) {
+      return const <_ImplicitManyToManyBatchRow>[];
+    }
+
+    final storage = _implicitManyToManyStorage(sourceModel, relation);
+    final context = _PostgresqlBuildContext();
+    final targetAlias = context.nextAlias();
+    final joinAlias = context.nextAlias();
+    final parameters = <Object?>[];
+    final whereBranches = <String>[];
+    for (final sourceRecord in sourceRecords) {
+      final branchClauses = <String>[];
+      for (var index = 0; index < storage.sourceJoinColumns.length; index++) {
+        final placeholder = context.nextParameter();
+        branchClauses.add(
+          '${_qualifiedRawField(joinAlias, storage.sourceJoinColumns[index])} = $placeholder',
+        );
+        parameters.add(
+          _normalizeValueForStorage(
+            sourceModel,
+            relation.localKeyFields[index],
+            sourceRecord[relation.localKeyFields[index]],
+          ),
+        );
+      }
+      whereBranches.add('(${branchClauses.join(' AND ')})');
+    }
+
+    final sourceSelects = <String>[];
+    for (var index = 0; index < storage.sourceJoinColumns.length; index++) {
+      sourceSelects.add(
+        '${_qualifiedRawField(joinAlias, storage.sourceJoinColumns[index])} AS ${_quoteIdentifier('__src_$index')}',
+      );
+    }
+
+    final rows = await _executor.query(
+      'SELECT ${sourceSelects.join(', ')}, ${_quoteIdentifier(targetAlias)}.* '
+      'FROM ${_tableReference(relation.targetModel, targetAlias)} '
+      'JOIN ${_rawTableReference(storage.tableName, joinAlias)} '
+      'ON ${_qualifiedFieldEqualityClause(leftAlias: joinAlias, leftModel: relation.targetModel, leftFields: storage.targetJoinColumns, leftRaw: true, rightAlias: targetAlias, rightModel: relation.targetModel, rightFields: relation.targetKeyFields)} '
+      'WHERE ${whereBranches.join(' OR ')}',
+      parameters: parameters,
+    );
+
+    return rows
+        .map((row) {
+          final sourceKey = _RelationKey(
+            List<Object?>.generate(
+              storage.sourceJoinColumns.length,
+              (index) => _normalizeValueFromStorage(
+                sourceModel,
+                relation.localKeyFields[index],
+                row['__src_$index'],
+              ),
+              growable: false,
+            ),
+          );
+          final targetStorageRow = <String, Object?>{};
+          for (final field in _storedFields(relation.targetModel)) {
+            if (row.containsKey(field.databaseName)) {
+              targetStorageRow[field.databaseName] = row[field.databaseName];
+            }
+          }
+          return _ImplicitManyToManyBatchRow(
+            sourceKey: sourceKey,
+            record: _normalizeRecordFromStorage(
+              relation.targetModel,
+              targetStorageRow,
+            ),
+          );
+        })
+        .toList(growable: false);
+  }
+
   _PostgresqlClause _buildImplicitManyToManyRelationClause(
     _PostgresqlBuildContext context,
     String sourceModel,
@@ -1541,30 +2319,6 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
       comparisons.add('$left = $right');
     }
     return comparisons.join(' AND ');
-  }
-
-  _PostgresqlClause _binaryClause(
-    _PostgresqlBuildContext context,
-    String alias,
-    String field,
-    String operator,
-    Object? value,
-    String model,
-  ) {
-    if (value == null && operator == '=') {
-      return _PostgresqlClause(
-        sql: '${_qualifiedField(alias, model, field)} IS NULL',
-        parameters: const <Object?>[],
-      );
-    }
-
-    final placeholder = context.nextParameter();
-    return _PostgresqlClause(
-      sql:
-          '${_qualifiedField(alias, model, field)} $operator '
-          '${_parameterWithCast(model, field, placeholder)}',
-      parameters: <Object?>[_normalizeValueForStorage(model, field, value)],
-    );
   }
 
   /// Returns SQL aggregate expressions for SELECT (without table alias for CTE
@@ -1781,58 +2535,12 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     return null;
   }
 
-  _PostgresqlClause _stringPatternClause(
-    _PostgresqlBuildContext context,
-    String alias,
-    String field,
-    String pattern,
-    String model,
-  ) {
-    final placeholder = context.nextParameter();
-    return _PostgresqlClause(
-      sql: '${_qualifiedField(alias, model, field)} LIKE $placeholder',
-      parameters: <Object?>[_normalizeValueForStorage(model, field, pattern)],
-    );
-  }
-
-  _PostgresqlClause _ilikeClause(
-    _PostgresqlBuildContext context,
-    String alias,
-    String field,
-    String pattern,
-    String model,
-  ) {
-    final placeholder = context.nextParameter();
-    return _PostgresqlClause(
-      sql: '${_qualifiedField(alias, model, field)} ILIKE $placeholder',
-      parameters: <Object?>[_normalizeValueForStorage(model, field, pattern)],
-    );
-  }
-
-  _PostgresqlClause _joinClauses(List<_PostgresqlClause> clauses, String glue) {
-    if (clauses.isEmpty) {
-      return const _PostgresqlClause(sql: '1 = 1', parameters: <Object?>[]);
-    }
-
-    return _PostgresqlClause(
-      sql: clauses.map((clause) => '(${clause.sql})').join(' $glue '),
-      parameters: clauses
-          .expand((clause) => clause.parameters)
-          .toList(growable: false),
-    );
-  }
-
   String _buildOrderByClause(
     String alias,
     String model,
     List<QueryOrderBy> orderBy,
   ) {
-    return orderBy
-        .map(
-          (entry) =>
-              '${_qualifiedField(alias, model, entry.field)} ${entry.direction == SortOrder.asc ? 'ASC' : 'DESC'}',
-        )
-        .join(', ');
+    return _sqlBuilder.buildOrderByClause(alias, model, orderBy);
   }
 
   String _rawTableReference(String tableName, String alias) {
@@ -1859,6 +2567,12 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
       );
     }
     return record;
+  }
+
+  Iterable<RuntimeFieldView> _storedFields(String model) {
+    return _modelDefinition(
+      model,
+    ).fields.where((field) => field.kind != RuntimeFieldKind.relation);
   }
 
   Object? _normalizeValueForStorage(String model, String field, Object? value) {
@@ -1906,6 +2620,7 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
     }
 
     return switch (fieldDefinition.type) {
+      'String' => value is pg.UndecodedBytes ? value.asString : value,
       'BigInt' =>
         value is BigInt
             ? value
@@ -2027,12 +2742,28 @@ class PostgresqlDatabaseAdapter implements DatabaseAdapter {
 }
 
 const String _ctidColumn = '__ctid__';
+const String _distinctRowNumberColumn = '__distinct_row_number__';
 
-class _SelectedRow {
-  const _SelectedRow({required this.rowLocator, required this.record});
+class _SimpleSingularIncludeJoin {
+  const _SimpleSingularIncludeJoin({
+    required this.alias,
+    required this.parentAlias,
+    required this.sourceModel,
+    required this.includeKey,
+    required this.entry,
+    required this.children,
+  });
 
-  final String rowLocator;
-  final Map<String, Object?> record;
+  final String alias;
+  final String parentAlias;
+  final String sourceModel;
+  final String includeKey;
+  final QueryIncludeEntry entry;
+  final List<_SimpleSingularIncludeJoin> children;
+
+  QueryRelation get relation => entry.relation;
+
+  String columnAlias(String field) => '__join_${alias}_$field';
 }
 
 class _RetryingSessionExecutorBackedQueryExecutor
@@ -2113,60 +2844,4 @@ class _RetryingSessionExecutorBackedQueryExecutor
     return message.contains('connection is not open') ||
         message.contains('connection is closing down');
   }
-}
-
-class _SessionBackedQueryExecutor implements PostgresqlQueryExecutor {
-  const _SessionBackedQueryExecutor(this._session);
-
-  final pg.Session _session;
-
-  @override
-  Future<void> close() async {}
-
-  @override
-  Future<int> execute(
-    String sql, {
-    List<Object?> parameters = const <Object?>[],
-  }) async {
-    final result = await _session.execute(
-      sql,
-      parameters: parameters,
-      ignoreRows: true,
-    );
-    return result.affectedRows;
-  }
-
-  @override
-  Future<List<Map<String, Object?>>> query(
-    String sql, {
-    List<Object?> parameters = const <Object?>[],
-  }) async {
-    final result = await _session.execute(sql, parameters: parameters);
-    return result
-        .map((row) => Map<String, Object?>.from(row.toColumnMap()))
-        .toList(growable: false);
-  }
-
-  @override
-  Future<T> transaction<T>(
-    Future<T> Function(PostgresqlQueryExecutor tx) action,
-  ) async {
-    return action(this);
-  }
-}
-
-class _PostgresqlBuildContext {
-  int _aliasCounter = 0;
-  int _parameterCounter = 0;
-
-  String nextAlias() => 't${_aliasCounter++}';
-
-  String nextParameter() => '\$${++_parameterCounter}';
-}
-
-class _PostgresqlClause {
-  const _PostgresqlClause({required this.sql, required this.parameters});
-
-  final String sql;
-  final List<Object?> parameters;
 }

@@ -19,21 +19,29 @@
 
 Когда нужен реальный database adapter, introspection или выполнение миграций, используйте `comon_orm_postgresql` или `comon_orm_sqlite`.
 
+# AI Документация
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Документация
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## 🚀 Быстрый старт
 
 Добавьте зависимость:
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
 ```
 
 Провалидируйте, отформатируйте и сгенерируйте client из схемы:
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm format schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm format
+dart run comon_orm generate
 ```
 
 `validate` по-прежнему доступен как alias для `check`.

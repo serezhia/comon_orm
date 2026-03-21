@@ -1,21 +1,23 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
+// schema-hash: 103cfa960ef080b83d9f425f6c34036e44282b071ec4b0ed3b1bd7f448ac0d60
 import 'package:comon_orm/comon_orm.dart';
 
 class GeneratedComonOrmClient {
   GeneratedComonOrmClient({required DatabaseAdapter adapter})
-    : _client = ComonOrmClient(adapter: adapter);
+    : _client = ComonOrmClient(adapter: adapter, schemaView: runtimeSchemaView);
 
   GeneratedComonOrmClient._fromClient(this._client);
 
-  static const GeneratedRuntimeSchema runtimeSchema =
-      GeneratedComonOrmMetadata.schema;
+  static const GeneratedRuntimeSchema runtimeSchema = GeneratedComonOrmMetadata.schema;
 
   static final RuntimeSchemaView runtimeSchemaView =
       runtimeSchemaViewFromGeneratedSchema(runtimeSchema);
 
   static InMemoryDatabaseAdapter createInMemoryAdapter() {
-    return InMemoryDatabaseAdapter.fromGeneratedSchema(schema: runtimeSchema);
+    return InMemoryDatabaseAdapter.fromGeneratedSchema(
+      schema: runtimeSchema,
+    );
   }
 
   factory GeneratedComonOrmClient.openInMemory() {
@@ -26,16 +28,12 @@ class GeneratedComonOrmClient {
   late final UserDelegate user = UserDelegate._(_client);
   late final ProfileDelegate profile = ProfileDelegate._(_client);
   late final AccountDelegate account = AccountDelegate._(_client);
-  late final AccountProfileDelegate accountProfile = AccountProfileDelegate._(
-    _client,
-  );
+  late final AccountProfileDelegate accountProfile = AccountProfileDelegate._(_client);
 
   Future<T> transaction<T>(
     Future<T> Function(GeneratedComonOrmClient tx) action,
   ) {
-    return _client.transaction(
-      (tx) => action(GeneratedComonOrmClient._fromClient(tx)),
-    );
+    return _client.transaction((tx) => action(GeneratedComonOrmClient._fromClient(tx)));
   }
 
   Future<void> close() async {
@@ -47,8 +45,10 @@ class GeneratedComonOrmMetadata {
   const GeneratedComonOrmMetadata._();
 
   static const GeneratedRuntimeSchema schema = GeneratedRuntimeSchema(
-    datasources: <GeneratedDatasourceMetadata>[],
-    enums: <GeneratedEnumMetadata>[],
+    datasources: <GeneratedDatasourceMetadata>[
+    ],
+    enums: <GeneratedEnumMetadata>[
+    ],
     models: <GeneratedModelMetadata>[
       GeneratedModelMetadata(
         name: 'User',
@@ -66,9 +66,7 @@ class GeneratedComonOrmMetadata {
             isId: true,
             isUnique: false,
             isUpdatedAt: false,
-            defaultValue: GeneratedFieldDefaultMetadata(
-              kind: GeneratedRuntimeDefaultKind.autoincrement,
-            ),
+            defaultValue: GeneratedFieldDefaultMetadata(kind: GeneratedRuntimeDefaultKind.autoincrement),
           ),
           GeneratedFieldMetadata(
             name: 'email',
@@ -92,13 +90,13 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'Profile',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['id'],
-              targetFields: <String>['userId'],
-              inverseField: 'user',
-            ),
+            targetModel: 'Profile',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['id'],
+            targetFields: <String>['userId'],
+            inverseField: 'user',
+          ),
           ),
         ],
       ),
@@ -152,13 +150,13 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'User',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['userId'],
-              targetFields: <String>['id'],
-              inverseField: 'profile',
-            ),
+            targetModel: 'User',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['userId'],
+            targetFields: <String>['id'],
+            inverseField: 'profile',
+          ),
           ),
         ],
       ),
@@ -201,13 +199,13 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'AccountProfile',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['tenantId', 'slug'],
-              targetFields: <String>['tenantId', 'accountSlug'],
-              inverseField: 'account',
-            ),
+            targetModel: 'AccountProfile',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['tenantId', 'slug'],
+            targetFields: <String>['tenantId', 'accountSlug'],
+            inverseField: 'account',
+          ),
           ),
         ],
       ),
@@ -215,9 +213,7 @@ class GeneratedComonOrmMetadata {
         name: 'AccountProfile',
         databaseName: 'AccountProfile',
         primaryKeyFields: <String>['id'],
-        compoundUniqueFieldSets: <List<String>>[
-          <String>['tenantId', 'accountSlug'],
-        ],
+        compoundUniqueFieldSets: <List<String>>[<String>['tenantId', 'accountSlug']],
         fields: <GeneratedFieldMetadata>[
           GeneratedFieldMetadata(
             name: 'id',
@@ -274,13 +270,13 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'Account',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['tenantId', 'accountSlug'],
-              targetFields: <String>['tenantId', 'slug'],
-              inverseField: 'profile',
-            ),
+            targetModel: 'Account',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['tenantId', 'accountSlug'],
+            targetFields: <String>['tenantId', 'slug'],
+            inverseField: 'profile',
+          ),
           ),
         ],
       ),
@@ -329,11 +325,7 @@ class JsonFieldUpdateOperationsInput {
 }
 
 class IntFieldUpdateOperationsInput {
-  const IntFieldUpdateOperationsInput({
-    this.set = _undefined,
-    this.increment,
-    this.decrement,
-  });
+  const IntFieldUpdateOperationsInput({this.set = _undefined, this.increment, this.decrement});
 
   final Object? set;
   final int? increment;
@@ -341,19 +333,11 @@ class IntFieldUpdateOperationsInput {
 
   bool get hasSet => !identical(set, _undefined);
   bool get hasComputedUpdate => increment != null || decrement != null;
-  bool get hasMultipleOperations =>
-      (hasSet ? 1 : 0) +
-          (increment != null ? 1 : 0) +
-          (decrement != null ? 1 : 0) >
-      1;
+  bool get hasMultipleOperations => (hasSet ? 1 : 0) + (increment != null ? 1 : 0) + (decrement != null ? 1 : 0) > 1;
 }
 
 class DoubleFieldUpdateOperationsInput {
-  const DoubleFieldUpdateOperationsInput({
-    this.set = _undefined,
-    this.increment,
-    this.decrement,
-  });
+  const DoubleFieldUpdateOperationsInput({this.set = _undefined, this.increment, this.decrement});
 
   final Object? set;
   final double? increment;
@@ -361,19 +345,11 @@ class DoubleFieldUpdateOperationsInput {
 
   bool get hasSet => !identical(set, _undefined);
   bool get hasComputedUpdate => increment != null || decrement != null;
-  bool get hasMultipleOperations =>
-      (hasSet ? 1 : 0) +
-          (increment != null ? 1 : 0) +
-          (decrement != null ? 1 : 0) >
-      1;
+  bool get hasMultipleOperations => (hasSet ? 1 : 0) + (increment != null ? 1 : 0) + (decrement != null ? 1 : 0) > 1;
 }
 
 class BigIntFieldUpdateOperationsInput {
-  const BigIntFieldUpdateOperationsInput({
-    this.set = _undefined,
-    this.increment,
-    this.decrement,
-  });
+  const BigIntFieldUpdateOperationsInput({this.set = _undefined, this.increment, this.decrement});
 
   final Object? set;
   final BigInt? increment;
@@ -381,11 +357,7 @@ class BigIntFieldUpdateOperationsInput {
 
   bool get hasSet => !identical(set, _undefined);
   bool get hasComputedUpdate => increment != null || decrement != null;
-  bool get hasMultipleOperations =>
-      (hasSet ? 1 : 0) +
-          (increment != null ? 1 : 0) +
-          (decrement != null ? 1 : 0) >
-      1;
+  bool get hasMultipleOperations => (hasSet ? 1 : 0) + (increment != null ? 1 : 0) + (decrement != null ? 1 : 0) > 1;
 }
 
 class EnumFieldUpdateOperationsInput<T extends Enum> {
@@ -397,7 +369,7 @@ class EnumFieldUpdateOperationsInput<T extends Enum> {
 }
 
 class User {
-  const User({this.id, this.email, this.profile});
+  const User({this.id, this.email, this.profile, });
 
   final int? id;
   final String? email;
@@ -407,9 +379,7 @@ class User {
     return User(
       id: record['id'] as int?,
       email: record['email'] as String?,
-      profile: record['profile'] == null
-          ? null
-          : Profile.fromRecord(record['profile'] as Map<String, Object?>),
+      profile: record['profile'] == null ? null : Profile.fromRecord(record['profile'] as Map<String, Object?>),
     );
   }
 
@@ -417,9 +387,7 @@ class User {
     return User(
       id: json['id'] as int?,
       email: json['email'] as String?,
-      profile: json['profile'] == null
-          ? null
-          : Profile.fromJson(json['profile'] as Map<String, Object?>),
+      profile: json['profile'] == null ? null : Profile.fromJson(json['profile'] as Map<String, Object?>),
     );
   }
 
@@ -470,9 +438,9 @@ class User {
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is User &&
-            _deepEquals(id, other.id) &&
-            _deepEquals(email, other.email) &&
-            _deepEquals(profile, other.profile);
+        _deepEquals(id, other.id) &&
+        _deepEquals(email, other.email) &&
+        _deepEquals(profile, other.profile);
   }
 
   @override
@@ -485,7 +453,7 @@ class User {
 }
 
 class Profile {
-  const Profile({this.id, this.userId, this.bio, this.user});
+  const Profile({this.id, this.userId, this.bio, this.user, });
 
   final int? id;
   final int? userId;
@@ -497,9 +465,7 @@ class Profile {
       id: record['id'] as int?,
       userId: record['userId'] as int?,
       bio: record['bio'] as String?,
-      user: record['user'] == null
-          ? null
-          : User.fromRecord(record['user'] as Map<String, Object?>),
+      user: record['user'] == null ? null : User.fromRecord(record['user'] as Map<String, Object?>),
     );
   }
 
@@ -508,9 +474,7 @@ class Profile {
       id: json['id'] as int?,
       userId: json['userId'] as int?,
       bio: json['bio'] as String?,
-      user: json['user'] == null
-          ? null
-          : User.fromJson(json['user'] as Map<String, Object?>),
+      user: json['user'] == null ? null : User.fromJson(json['user'] as Map<String, Object?>),
     );
   }
 
@@ -563,17 +527,16 @@ class Profile {
   }
 
   @override
-  String toString() =>
-      'Profile(id: $id, userId: $userId, bio: $bio, user: $user)';
+  String toString() => 'Profile(id: $id, userId: $userId, bio: $bio, user: $user)';
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is Profile &&
-            _deepEquals(id, other.id) &&
-            _deepEquals(userId, other.userId) &&
-            _deepEquals(bio, other.bio) &&
-            _deepEquals(user, other.user);
+        _deepEquals(id, other.id) &&
+        _deepEquals(userId, other.userId) &&
+        _deepEquals(bio, other.bio) &&
+        _deepEquals(user, other.user);
   }
 
   @override
@@ -587,7 +550,7 @@ class Profile {
 }
 
 class Account {
-  const Account({this.tenantId, this.slug, this.profile});
+  const Account({this.tenantId, this.slug, this.profile, });
 
   final int? tenantId;
   final String? slug;
@@ -597,11 +560,7 @@ class Account {
     return Account(
       tenantId: record['tenantId'] as int?,
       slug: record['slug'] as String?,
-      profile: record['profile'] == null
-          ? null
-          : AccountProfile.fromRecord(
-              record['profile'] as Map<String, Object?>,
-            ),
+      profile: record['profile'] == null ? null : AccountProfile.fromRecord(record['profile'] as Map<String, Object?>),
     );
   }
 
@@ -609,9 +568,7 @@ class Account {
     return Account(
       tenantId: json['tenantId'] as int?,
       slug: json['slug'] as String?,
-      profile: json['profile'] == null
-          ? null
-          : AccountProfile.fromJson(json['profile'] as Map<String, Object?>),
+      profile: json['profile'] == null ? null : AccountProfile.fromJson(json['profile'] as Map<String, Object?>),
     );
   }
 
@@ -623,9 +580,7 @@ class Account {
     return Account(
       tenantId: tenantId == _undefined ? this.tenantId : tenantId as int?,
       slug: slug == _undefined ? this.slug : slug as String?,
-      profile: profile == _undefined
-          ? this.profile
-          : profile as AccountProfile?,
+      profile: profile == _undefined ? this.profile : profile as AccountProfile?,
     );
   }
 
@@ -658,16 +613,15 @@ class Account {
   }
 
   @override
-  String toString() =>
-      'Account(tenantId: $tenantId, slug: $slug, profile: $profile)';
+  String toString() => 'Account(tenantId: $tenantId, slug: $slug, profile: $profile)';
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is Account &&
-            _deepEquals(tenantId, other.tenantId) &&
-            _deepEquals(slug, other.slug) &&
-            _deepEquals(profile, other.profile);
+        _deepEquals(tenantId, other.tenantId) &&
+        _deepEquals(slug, other.slug) &&
+        _deepEquals(profile, other.profile);
   }
 
   @override
@@ -680,13 +634,7 @@ class Account {
 }
 
 class AccountProfile {
-  const AccountProfile({
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-    this.account,
-  });
+  const AccountProfile({this.id, this.tenantId, this.accountSlug, this.bio, this.account, });
 
   final int? id;
   final int? tenantId;
@@ -700,9 +648,7 @@ class AccountProfile {
       tenantId: record['tenantId'] as int?,
       accountSlug: record['accountSlug'] as String?,
       bio: record['bio'] as String?,
-      account: record['account'] == null
-          ? null
-          : Account.fromRecord(record['account'] as Map<String, Object?>),
+      account: record['account'] == null ? null : Account.fromRecord(record['account'] as Map<String, Object?>),
     );
   }
 
@@ -712,9 +658,7 @@ class AccountProfile {
       tenantId: json['tenantId'] as int?,
       accountSlug: json['accountSlug'] as String?,
       bio: json['bio'] as String?,
-      account: json['account'] == null
-          ? null
-          : Account.fromJson(json['account'] as Map<String, Object?>),
+      account: json['account'] == null ? null : Account.fromJson(json['account'] as Map<String, Object?>),
     );
   }
 
@@ -728,9 +672,7 @@ class AccountProfile {
     return AccountProfile(
       id: id == _undefined ? this.id : id as int?,
       tenantId: tenantId == _undefined ? this.tenantId : tenantId as int?,
-      accountSlug: accountSlug == _undefined
-          ? this.accountSlug
-          : accountSlug as String?,
+      accountSlug: accountSlug == _undefined ? this.accountSlug : accountSlug as String?,
       bio: bio == _undefined ? this.bio : bio as String?,
       account: account == _undefined ? this.account : account as Account?,
     );
@@ -777,18 +719,17 @@ class AccountProfile {
   }
 
   @override
-  String toString() =>
-      'AccountProfile(id: $id, tenantId: $tenantId, accountSlug: $accountSlug, bio: $bio, account: $account)';
+  String toString() => 'AccountProfile(id: $id, tenantId: $tenantId, accountSlug: $accountSlug, bio: $bio, account: $account)';
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is AccountProfile &&
-            _deepEquals(id, other.id) &&
-            _deepEquals(tenantId, other.tenantId) &&
-            _deepEquals(accountSlug, other.accountSlug) &&
-            _deepEquals(bio, other.bio) &&
-            _deepEquals(account, other.account);
+        _deepEquals(id, other.id) &&
+        _deepEquals(tenantId, other.tenantId) &&
+        _deepEquals(accountSlug, other.accountSlug) &&
+        _deepEquals(bio, other.bio) &&
+        _deepEquals(account, other.account);
   }
 
   @override
@@ -813,16 +754,14 @@ class UserDelegate {
     UserInclude? include,
     UserSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'User',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then((record) => record == null ? null : User.fromRecord(record));
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'User',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : User.fromRecord(record));
   }
 
   Future<User?> findFirst({
@@ -835,44 +774,22 @@ class UserDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'User',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'User',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then((record) => record == null ? null : User.fromRecord(record));
+      ),
+    ).then((record) => record == null ? null : User.fromRecord(record));
   }
 
   Future<List<User>> findMany({
@@ -886,43 +803,23 @@ class UserDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'User',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'User',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) => records.map(User.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(User.fromRecord).toList(growable: false));
   }
 
   Future<int> count({UserWhereInput? where}) {
@@ -945,27 +842,20 @@ class UserDelegate {
     UserMinAggregateInput? min,
     UserMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'User',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(UserAggregateResult.fromQueryResult);
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'User',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(UserAggregateResult.fromQueryResult);
   }
 
   Future<List<UserGroupByRow>> groupBy({
@@ -981,38 +871,28 @@ class UserDelegate {
     UserMinAggregateInput? min,
     UserMaxAggregateInput? max,
   }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'User',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(UserGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'User',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(UserGroupByRow.fromQueryResultRow).toList(growable: false));
   }
 
-  Future<User> create({required UserCreateInput data, UserInclude? include}) {
+  Future<User> create({
+    required UserCreateInput data,
+    UserInclude? include,
+  }) {
     final queryInclude = include?.toQueryInclude();
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
@@ -1034,26 +914,26 @@ class UserDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'User',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'User', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -1088,7 +968,10 @@ class UserDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'User', where: predicates),
+        FindUniqueQuery(
+          model: 'User',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in User.');
@@ -1118,7 +1001,10 @@ class UserDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'User', where: predicates),
+        FindUniqueQuery(
+          model: 'User',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -1149,7 +1035,10 @@ class UserDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('User');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'User', where: predicates),
+          FindManyQuery(
+            model: 'User',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -1165,77 +1054,12 @@ class UserDelegate {
       });
     }
     return _delegate.updateMany(
-      UpdateManyQuery(model: 'User', where: predicates, data: data.toData()),
-    );
-  }
-
-  Future<List<User>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required UserWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
+      UpdateManyQuery(
         model: 'User',
         where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
+        data: data.toData(),
       ),
     );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <User>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords.map(User.fromRecord).toList(growable: false);
-    }
-    final projectedRecords = <User>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'User',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'User.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(User.fromRecord(projected));
-    }
-    return List<User>.unmodifiable(projectedRecords);
   }
 
   Future<User> _performCreateWithRelationWrites({
@@ -1273,9 +1097,7 @@ class UserDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'User create branch could not reload the created record by primary key.',
-      );
+      throw StateError('User create branch could not reload the created record by primary key.');
     }
     return User.fromRecord(projected);
   }
@@ -1317,9 +1139,7 @@ class UserDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'User update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('User update branch could not reload the updated record for the provided unique selector.');
     }
     return User.fromRecord(projected);
   }
@@ -1335,21 +1155,13 @@ class UserDelegate {
     } else {
       final nested = data.profile!;
       final parentReferenceValues = <String, Object?>{
-        'userId': _requireRecordValue(
-          existing,
-          'id',
-          'nested inverse one-to-one relation write on User.profile',
-        ),
+        'userId': _requireRecordValue(existing, 'id', 'nested inverse one-to-one relation write on User.profile'),
       };
       final currentRelated = await tx.profile._delegate.findFirst(
         FindFirstQuery(
           model: 'Profile',
           where: <QueryPredicate>[
-            QueryPredicate(
-              field: 'userId',
-              operator: 'equals',
-              value: parentReferenceValues['userId'],
-            ),
+            QueryPredicate(field: 'userId', operator: 'equals', value: parentReferenceValues['userId']),
           ],
         ),
       );
@@ -1358,27 +1170,25 @@ class UserDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for UserUpdateInput.profile.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for UserUpdateInput.profile.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
         final related = await tx.profile._delegate.findUnique(
-          FindUniqueQuery(model: 'Profile', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'Profile',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related Profile record found for nested connect on inverse one-to-one relation User.profile.',
-          );
+          throw StateError('No related Profile record found for nested connect on inverse one-to-one relation User.profile.');
         }
         final alreadyConnected =
-            related['userId'] == parentReferenceValues['userId'];
+            related['userId'] == parentReferenceValues['userId']
+        ;
         if (!alreadyConnected) {
           if (currentRelated != null) {
-            throw StateError(
-              'Nested connect cannot replace the existing inverse one-to-one relation User.profile because Profile.userId is required.',
-            );
+            throw StateError('Nested connect cannot replace the existing inverse one-to-one relation User.profile because Profile.userId is required.');
           }
           await tx.profile._delegate.update(
             UpdateQuery(
@@ -1394,16 +1204,18 @@ class UserDelegate {
       if (nested.connectOrCreate != null) {
         final entry = nested.connectOrCreate!;
         final related = await tx.profile._delegate.findUnique(
-          FindUniqueQuery(model: 'Profile', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'Profile',
+            where: entry.where.toPredicates(),
+          ),
         );
         if (related != null) {
           final alreadyConnected =
-              related['userId'] == parentReferenceValues['userId'];
+              related['userId'] == parentReferenceValues['userId']
+          ;
           if (!alreadyConnected) {
             if (currentRelated != null) {
-              throw StateError(
-                'Nested connectOrCreate cannot replace the existing inverse one-to-one relation User.profile because Profile.userId is required.',
-              );
+              throw StateError('Nested connectOrCreate cannot replace the existing inverse one-to-one relation User.profile because Profile.userId is required.');
             }
             await tx.profile._delegate.update(
               UpdateQuery(
@@ -1417,15 +1229,12 @@ class UserDelegate {
           }
         } else {
           if (currentRelated != null) {
-            throw StateError(
-              'Nested connectOrCreate cannot create a new inverse one-to-one relation User.profile because Profile.userId is required and already attached.',
-            );
+            throw StateError('Nested connectOrCreate cannot create a new inverse one-to-one relation User.profile because Profile.userId is required and already attached.');
           }
           await tx.profile._delegate.create(
             CreateQuery(
               model: 'Profile',
-              data: <String, Object?>{
-                ...entry.create.toData(),
+              data: <String, Object?>{...entry.create.toData(),
                 'userId': parentReferenceValues['userId'],
               },
               nestedCreates: entry.create.toNestedCreates(),
@@ -1435,50 +1244,42 @@ class UserDelegate {
       }
       if (nested.disconnect) {
         if (currentRelated != null) {
-          throw StateError(
-            'Nested disconnect is not supported for required inverse one-to-one relation User.profile.',
-          );
+        throw StateError('Nested disconnect is not supported for required inverse one-to-one relation User.profile.');
         }
       }
     }
   }
+
 
   Future<User> delete({
     required UserWhereUniqueInput where,
     UserInclude? include,
     UserSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'User',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(User.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'User',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(User.fromRecord);
   }
 
-  Future<int> deleteMany({required UserWhereInput where}) {
+  Future<int> deleteMany({
+    required UserWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'User', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'User',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class UserWhereInput {
-  const UserWhereInput({
-    this.AND = const <UserWhereInput>[],
-    this.OR = const <UserWhereInput>[],
-    this.NOT = const <UserWhereInput>[],
-    this.id,
-    this.idFilter,
-    this.email,
-    this.emailFilter,
-    this.profileIs,
-    this.profileIsNot,
-  });
+  const UserWhereInput({this.AND = const <UserWhereInput>[], this.OR = const <UserWhereInput>[], this.NOT = const <UserWhereInput>[], this.id, this.idFilter, this.email, this.emailFilter, this.profileIs, this.profileIsNot, });
 
   final List<UserWhereInput> AND;
   final List<UserWhereInput> OR;
@@ -1493,106 +1294,38 @@ class UserWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (id != null) {
-      predicates.add(
-        QueryPredicate(field: 'id', operator: 'equals', value: id),
-      );
+      predicates.add(QueryPredicate(field: 'id', operator: 'equals', value: id));
     }
     if (idFilter != null) {
       predicates.addAll(idFilter!.toPredicates('id'));
     }
     if (email != null) {
-      predicates.add(
-        QueryPredicate(field: 'email', operator: 'equals', value: email),
-      );
+      predicates.add(QueryPredicate(field: 'email', operator: 'equals', value: email));
     }
     if (emailFilter != null) {
       predicates.addAll(emailFilter!.toPredicates('email'));
     }
     if (profileIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'profile',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'profile',
-              targetModel: 'Profile',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'id',
-              targetKeyField: 'userId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['userId'],
-            ),
-            predicates: profileIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'profile', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'profile', targetModel: 'Profile', cardinality: QueryRelationCardinality.one, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']), predicates: profileIs!.toPredicates())));
     }
     if (profileIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'profile',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'profile',
-              targetModel: 'Profile',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'id',
-              targetKeyField: 'userId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['userId'],
-            ),
-            predicates: profileIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'profile', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'profile', targetModel: 'Profile', cardinality: QueryRelationCardinality.one, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']), predicates: profileIsNot!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class UserWhereUniqueInput {
-  const UserWhereUniqueInput({this.id, this.email});
+  const UserWhereUniqueInput({this.id, this.email, });
 
   final int? id;
   final String? email;
@@ -1610,11 +1343,13 @@ class UserWhereUniqueInput {
       ]);
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for UserWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for UserWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -1629,16 +1364,14 @@ class UserWhereUniqueInput {
       matches = record['email'] == email;
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for UserWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for UserWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class UserOrderByInput {
-  const UserOrderByInput({this.id, this.email});
+  const UserOrderByInput({this.id, this.email, });
 
   final SortOrder? id;
   final SortOrder? email;
@@ -1655,14 +1388,13 @@ class UserOrderByInput {
   }
 }
 
-enum UserScalarField { id, email }
+enum UserScalarField {
+  id,
+  email
+}
 
 class UserCountAggregateInput {
-  const UserCountAggregateInput({
-    this.all = false,
-    this.id = false,
-    this.email = false,
-  });
+  const UserCountAggregateInput({this.all = false, this.id = false, this.email = false, });
 
   final bool all;
   final bool id;
@@ -1676,15 +1408,12 @@ class UserCountAggregateInput {
     if (email) {
       fields.add('email');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class UserAvgAggregateInput {
-  const UserAvgAggregateInput({this.id = false});
+  const UserAvgAggregateInput({this.id = false, });
 
   final bool id;
 
@@ -1698,7 +1427,7 @@ class UserAvgAggregateInput {
 }
 
 class UserSumAggregateInput {
-  const UserSumAggregateInput({this.id = false});
+  const UserSumAggregateInput({this.id = false, });
 
   final bool id;
 
@@ -1712,7 +1441,7 @@ class UserSumAggregateInput {
 }
 
 class UserMinAggregateInput {
-  const UserMinAggregateInput({this.id = false, this.email = false});
+  const UserMinAggregateInput({this.id = false, this.email = false, });
 
   final bool id;
   final bool email;
@@ -1730,7 +1459,7 @@ class UserMinAggregateInput {
 }
 
 class UserMaxAggregateInput {
-  const UserMaxAggregateInput({this.id = false, this.email = false});
+  const UserMaxAggregateInput({this.id = false, this.email = false, });
 
   final bool id;
   final bool email;
@@ -1748,15 +1477,13 @@ class UserMaxAggregateInput {
 }
 
 class UserCountAggregateResult {
-  const UserCountAggregateResult({this.all, this.id, this.email});
+  const UserCountAggregateResult({this.all, this.id, this.email, });
 
   final int? all;
   final int? id;
   final int? email;
 
-  factory UserCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
+  factory UserCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
     return UserCountAggregateResult(
       all: result.all,
       id: result.fields['id'],
@@ -1766,27 +1493,31 @@ class UserCountAggregateResult {
 }
 
 class UserAvgAggregateResult {
-  const UserAvgAggregateResult({this.id});
+  const UserAvgAggregateResult({this.id, });
 
   final double? id;
 
   factory UserAvgAggregateResult.fromMap(Map<String, double?> values) {
-    return UserAvgAggregateResult(id: _asDouble(values['id']));
+    return UserAvgAggregateResult(
+      id: _asDouble(values['id']),
+    );
   }
 }
 
 class UserSumAggregateResult {
-  const UserSumAggregateResult({this.id});
+  const UserSumAggregateResult({this.id, });
 
   final int? id;
 
   factory UserSumAggregateResult.fromMap(Map<String, num?> values) {
-    return UserSumAggregateResult(id: values['id']?.toInt());
+    return UserSumAggregateResult(
+      id: values['id']?.toInt(),
+    );
   }
 }
 
 class UserMinAggregateResult {
-  const UserMinAggregateResult({this.id, this.email});
+  const UserMinAggregateResult({this.id, this.email, });
 
   final int? id;
   final String? email;
@@ -1800,7 +1531,7 @@ class UserMinAggregateResult {
 }
 
 class UserMaxAggregateResult {
-  const UserMaxAggregateResult({this.id, this.email});
+  const UserMaxAggregateResult({this.id, this.email, });
 
   final int? id;
   final String? email;
@@ -1830,27 +1561,17 @@ class UserAggregateResult {
 
   factory UserAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return UserAggregateResult(
-      count: result.count == null
-          ? null
-          : UserCountAggregateResult.fromQueryCountResult(result.count!),
-      avg: result.avg == null
-          ? null
-          : UserAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : UserSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : UserMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : UserMaxAggregateResult.fromMap(result.max!),
+      count: result.count == null ? null : UserCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : UserAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : UserSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : UserMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : UserMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class UserGroupByHavingInput {
-  const UserGroupByHavingInput({this.id});
+  const UserGroupByHavingInput({this.id, });
 
   final NumericAggregatesFilter? id;
 
@@ -1864,7 +1585,7 @@ class UserGroupByHavingInput {
 }
 
 class UserCountAggregateOrderByInput {
-  const UserCountAggregateOrderByInput({this.all, this.id, this.email});
+  const UserCountAggregateOrderByInput({this.all, this.id, this.email, });
 
   final SortOrder? all;
   final SortOrder? id;
@@ -1873,74 +1594,48 @@ class UserCountAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
     }
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (email != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'email',
-          direction: email!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'email', direction: email!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserAvgAggregateOrderByInput {
-  const UserAvgAggregateOrderByInput({this.id});
+  const UserAvgAggregateOrderByInput({this.id, });
 
   final SortOrder? id;
 
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserSumAggregateOrderByInput {
-  const UserSumAggregateOrderByInput({this.id});
+  const UserSumAggregateOrderByInput({this.id, });
 
   final SortOrder? id;
 
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserMinAggregateOrderByInput {
-  const UserMinAggregateOrderByInput({this.id, this.email});
+  const UserMinAggregateOrderByInput({this.id, this.email, });
 
   final SortOrder? id;
   final SortOrder? email;
@@ -1948,29 +1643,17 @@ class UserMinAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (email != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'email',
-          direction: email!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'email', direction: email!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserMaxAggregateOrderByInput {
-  const UserMaxAggregateOrderByInput({this.id, this.email});
+  const UserMaxAggregateOrderByInput({this.id, this.email, });
 
   final SortOrder? id;
   final SortOrder? email;
@@ -1978,37 +1661,17 @@ class UserMaxAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (email != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'email',
-          direction: email!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'email', direction: email!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserGroupByOrderByInput {
-  const UserGroupByOrderByInput({
-    this.id,
-    this.email,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const UserGroupByOrderByInput({this.id, this.email, this.count, this.avg, this.sum, this.min, this.max});
 
   final SortOrder? id;
   final SortOrder? email;
@@ -2046,15 +1709,7 @@ class UserGroupByOrderByInput {
 }
 
 class UserGroupByRow {
-  const UserGroupByRow({
-    this.id,
-    this.email,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const UserGroupByRow({this.id, this.email, this.count, this.avg, this.sum, this.min, this.max});
 
   final int? id;
   final String? email;
@@ -2068,46 +1723,24 @@ class UserGroupByRow {
     return UserGroupByRow(
       id: row.group['id'] as int?,
       email: row.group['email'] as String?,
-      count: row.aggregates.count == null
-          ? null
-          : UserCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : UserAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : UserSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : UserMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : UserMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: row.aggregates.count == null ? null : UserCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : UserAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : UserSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : UserMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : UserMaxAggregateResult.fromMap(row.aggregates.max!),
     );
   }
 }
 
 class UserInclude {
-  const UserInclude({this.profile = false});
+  const UserInclude({this.profile = false, });
 
   final bool profile;
 
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (profile) {
-      relations['profile'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'profile',
-          targetModel: 'Profile',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'id',
-          targetKeyField: 'userId',
-          localKeyFields: const <String>['id'],
-          targetKeyFields: const <String>['userId'],
-        ),
-      );
+      relations['profile'] = QueryIncludeEntry(relation: QueryRelation(field: 'profile', targetModel: 'Profile', cardinality: QueryRelationCardinality.one, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']));
     }
     if (relations.isEmpty) {
       return null;
@@ -2117,7 +1750,7 @@ class UserInclude {
 }
 
 class UserSelect {
-  const UserSelect({this.id = false, this.email = false});
+  const UserSelect({this.id = false, this.email = false, });
 
   final bool id;
   final bool email;
@@ -2138,7 +1771,7 @@ class UserSelect {
 }
 
 class UserCreateInput {
-  const UserCreateInput({this.id, required this.email, this.profile});
+  const UserCreateInput({this.id, required this.email, this.profile, });
 
   final int? id;
   final String email;
@@ -2160,30 +1793,16 @@ class UserCreateInput {
         QueryPredicate(field: 'id', operator: 'equals', value: id),
       ]);
     }
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'email', operator: 'equals', value: email),
-    ]);
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'email', operator: 'equals', value: email),
+      ]);
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (profile != null) {
-      writes.addAll(
-        profile!.toRelationWrites(
-          QueryRelation(
-            field: 'profile',
-            targetModel: 'Profile',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'id',
-            targetKeyField: 'userId',
-            localKeyFields: const <String>['id'],
-            targetKeyFields: const <String>['userId'],
-          ),
-        ),
-      );
+      writes.addAll(profile!.toRelationWrites(QueryRelation(field: 'profile', targetModel: 'Profile', cardinality: QueryRelationCardinality.one, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId'])));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
@@ -2193,12 +1812,14 @@ class UserCreateInput {
   }
 
   UserUpdateInput toDeferredRelationUpdateInput() {
-    return UserUpdateInput(profile: profile?.toDeferredUpdateWrite());
+    return UserUpdateInput(
+      profile: profile?.toDeferredUpdateWrite(),
+    );
   }
 }
 
 class UserUpdateInput {
-  const UserUpdateInput({this.email, this.emailOps, this.profile});
+  const UserUpdateInput({this.email, this.emailOps, this.profile, });
 
   final String? email;
   final StringFieldUpdateOperationsInput? emailOps;
@@ -2215,9 +1836,7 @@ class UserUpdateInput {
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
     if (email != null && emailOps != null) {
-      throw StateError(
-        'Only one of email or emailOps may be provided for UserUpdateInput.email.',
-      );
+      throw StateError('Only one of email or emailOps may be provided for UserUpdateInput.email.');
     }
     if (email != null) {
       data['email'] = email;
@@ -2234,9 +1853,7 @@ class UserUpdateInput {
   Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
     final data = <String, Object?>{};
     if (email != null && emailOps != null) {
-      throw StateError(
-        'Only one of email or emailOps may be provided for UserUpdateInput.email.',
-      );
+      throw StateError('Only one of email or emailOps may be provided for UserUpdateInput.email.');
     }
     if (email != null) {
       data['email'] = email;
@@ -2252,7 +1869,7 @@ class UserUpdateInput {
 }
 
 class UserCreateWithoutProfileInput {
-  const UserCreateWithoutProfileInput({this.id, required this.email});
+  const UserCreateWithoutProfileInput({this.id, required this.email, });
 
   final int? id;
   final String email;
@@ -2270,41 +1887,26 @@ class UserCreateWithoutProfileInput {
 }
 
 class ProfileConnectOrCreateWithoutUserInput {
-  const ProfileConnectOrCreateWithoutUserInput({
-    required this.where,
-    required this.create,
-  });
+  const ProfileConnectOrCreateWithoutUserInput({required this.where, required this.create});
 
   final ProfileWhereUniqueInput where;
   final ProfileCreateWithoutUserInput create;
 }
 
 class ProfileCreateNestedOneWithoutUserInput {
-  const ProfileCreateNestedOneWithoutUserInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const ProfileCreateNestedOneWithoutUserInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final ProfileCreateWithoutUserInput? create;
   final ProfileWhereUniqueInput? connect;
   final ProfileConnectOrCreateWithoutUserInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for ProfileCreateNestedOneWithoutUserInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for ProfileCreateNestedOneWithoutUserInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -2318,40 +1920,25 @@ class ProfileCreateNestedOneWithoutUserInput {
   }
 
   ProfileUpdateNestedOneWithoutUserInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for ProfileCreateNestedOneWithoutUserInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for ProfileCreateNestedOneWithoutUserInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return ProfileUpdateNestedOneWithoutUserInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return ProfileUpdateNestedOneWithoutUserInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class ProfileUpdateNestedOneWithoutUserInput {
-  const ProfileUpdateNestedOneWithoutUserInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const ProfileUpdateNestedOneWithoutUserInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final ProfileWhereUniqueInput? connect;
   final ProfileConnectOrCreateWithoutUserInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 class ProfileDelegate {
@@ -2365,16 +1952,14 @@ class ProfileDelegate {
     ProfileInclude? include,
     ProfileSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'Profile',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then((record) => record == null ? null : Profile.fromRecord(record));
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'Profile',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : Profile.fromRecord(record));
   }
 
   Future<Profile?> findFirst({
@@ -2387,44 +1972,22 @@ class ProfileDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'Profile',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'Profile',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then((record) => record == null ? null : Profile.fromRecord(record));
+      ),
+    ).then((record) => record == null ? null : Profile.fromRecord(record));
   }
 
   Future<List<Profile>> findMany({
@@ -2438,43 +2001,23 @@ class ProfileDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'Profile',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'Profile',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) => records.map(Profile.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(Profile.fromRecord).toList(growable: false));
   }
 
   Future<int> count({ProfileWhereInput? where}) {
@@ -2497,27 +2040,20 @@ class ProfileDelegate {
     ProfileMinAggregateInput? min,
     ProfileMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'Profile',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(ProfileAggregateResult.fromQueryResult);
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'Profile',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(ProfileAggregateResult.fromQueryResult);
   }
 
   Future<List<ProfileGroupByRow>> groupBy({
@@ -2533,35 +2069,22 @@ class ProfileDelegate {
     ProfileMinAggregateInput? min,
     ProfileMaxAggregateInput? max,
   }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'Profile',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(ProfileGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'Profile',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(ProfileGroupByRow.fromQueryResultRow).toList(growable: false));
   }
 
   Future<Profile> create({
@@ -2589,26 +2112,26 @@ class ProfileDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Profile');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Profile',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'Profile', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -2643,7 +2166,10 @@ class ProfileDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Profile');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Profile', where: predicates),
+        FindUniqueQuery(
+          model: 'Profile',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in Profile.');
@@ -2673,7 +2199,10 @@ class ProfileDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Profile');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Profile', where: predicates),
+        FindUniqueQuery(
+          model: 'Profile',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -2704,7 +2233,10 @@ class ProfileDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('Profile');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'Profile', where: predicates),
+          FindManyQuery(
+            model: 'Profile',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -2720,77 +2252,12 @@ class ProfileDelegate {
       });
     }
     return _delegate.updateMany(
-      UpdateManyQuery(model: 'Profile', where: predicates, data: data.toData()),
-    );
-  }
-
-  Future<List<Profile>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required ProfileWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
+      UpdateManyQuery(
         model: 'Profile',
         where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
+        data: data.toData(),
       ),
     );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <Profile>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords.map(Profile.fromRecord).toList(growable: false);
-    }
-    final projectedRecords = <Profile>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'Profile',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'Profile.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(Profile.fromRecord(projected));
-    }
-    return List<Profile>.unmodifiable(projectedRecords);
   }
 
   Future<Profile> _performCreateWithRelationWrites({
@@ -2828,9 +2295,7 @@ class ProfileDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Profile create branch could not reload the created record by primary key.',
-      );
+      throw StateError('Profile create branch could not reload the created record by primary key.');
     }
     return Profile.fromRecord(projected);
   }
@@ -2872,9 +2337,7 @@ class ProfileDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Profile update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('Profile update branch could not reload the updated record for the provided unique selector.');
     }
     return Profile.fromRecord(projected);
   }
@@ -2894,43 +2357,38 @@ class ProfileDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for ProfileUpdateInput.user.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for ProfileUpdateInput.user.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related User record found for nested connect on Profile.user.',
-          );
+          throw StateError('No related User record found for nested connect on Profile.user.');
         }
-        await tx._client
-            .model('Profile')
-            .update(
-              UpdateQuery(
-                model: 'Profile',
-                where: predicates,
-                data: <String, Object?>{
-                  'userId': _requireRecordValue(
-                    related,
-                    'id',
-                    'nested direct relation write on Profile.user',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('Profile').update(
+          UpdateQuery(
+            model: 'Profile',
+            where: predicates,
+            data: <String, Object?>{
+              'userId': _requireRecordValue(related, 'id', 'nested direct relation write on Profile.user'),
+            },
+          ),
+        );
       }
       if (nested.connectOrCreate != null) {
         final entry = nested.connectOrCreate!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: entry.where.toPredicates(),
+          ),
         );
-        final relatedRecord =
-            related ??
+        final relatedRecord = related ??
             await tx.user._delegate.create(
               CreateQuery(
                 model: 'User',
@@ -2938,68 +2396,52 @@ class ProfileDelegate {
                 nestedCreates: entry.create.toNestedCreates(),
               ),
             );
-        await tx._client
-            .model('Profile')
-            .update(
-              UpdateQuery(
-                model: 'Profile',
-                where: predicates,
-                data: <String, Object?>{
-                  'userId': _requireRecordValue(
-                    relatedRecord,
-                    'id',
-                    'nested direct relation write on Profile.user',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('Profile').update(
+          UpdateQuery(
+            model: 'Profile',
+            where: predicates,
+            data: <String, Object?>{
+              'userId': _requireRecordValue(relatedRecord, 'id', 'nested direct relation write on Profile.user'),
+            },
+          ),
+        );
       }
       if (nested.disconnect) {
-        throw StateError(
-          'Nested disconnect is not supported for required relation Profile.user.',
-        );
+        throw StateError('Nested disconnect is not supported for required relation Profile.user.');
       }
     }
   }
+
 
   Future<Profile> delete({
     required ProfileWhereUniqueInput where,
     ProfileInclude? include,
     ProfileSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'Profile',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(Profile.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'Profile',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(Profile.fromRecord);
   }
 
-  Future<int> deleteMany({required ProfileWhereInput where}) {
+  Future<int> deleteMany({
+    required ProfileWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'Profile', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'Profile',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class ProfileWhereInput {
-  const ProfileWhereInput({
-    this.AND = const <ProfileWhereInput>[],
-    this.OR = const <ProfileWhereInput>[],
-    this.NOT = const <ProfileWhereInput>[],
-    this.id,
-    this.idFilter,
-    this.userId,
-    this.userIdFilter,
-    this.bio,
-    this.bioFilter,
-    this.userIs,
-    this.userIsNot,
-  });
+  const ProfileWhereInput({this.AND = const <ProfileWhereInput>[], this.OR = const <ProfileWhereInput>[], this.NOT = const <ProfileWhereInput>[], this.id, this.idFilter, this.userId, this.userIdFilter, this.bio, this.bioFilter, this.userIs, this.userIsNot, });
 
   final List<ProfileWhereInput> AND;
   final List<ProfileWhereInput> OR;
@@ -3016,114 +2458,44 @@ class ProfileWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (id != null) {
-      predicates.add(
-        QueryPredicate(field: 'id', operator: 'equals', value: id),
-      );
+      predicates.add(QueryPredicate(field: 'id', operator: 'equals', value: id));
     }
     if (idFilter != null) {
       predicates.addAll(idFilter!.toPredicates('id'));
     }
     if (userId != null) {
-      predicates.add(
-        QueryPredicate(field: 'userId', operator: 'equals', value: userId),
-      );
+      predicates.add(QueryPredicate(field: 'userId', operator: 'equals', value: userId));
     }
     if (userIdFilter != null) {
       predicates.addAll(userIdFilter!.toPredicates('userId'));
     }
     if (bio != null) {
-      predicates.add(
-        QueryPredicate(field: 'bio', operator: 'equals', value: bio),
-      );
+      predicates.add(QueryPredicate(field: 'bio', operator: 'equals', value: bio));
     }
     if (bioFilter != null) {
       predicates.addAll(bioFilter!.toPredicates('bio'));
     }
     if (userIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'user',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'user',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'userId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['userId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: userIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'user', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']), predicates: userIs!.toPredicates())));
     }
     if (userIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'user',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'user',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'userId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['userId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: userIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'user', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']), predicates: userIsNot!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class ProfileWhereUniqueInput {
-  const ProfileWhereUniqueInput({this.id, this.userId});
+  const ProfileWhereUniqueInput({this.id, this.userId, });
 
   final int? id;
   final int? userId;
@@ -3141,11 +2513,13 @@ class ProfileWhereUniqueInput {
       ]);
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for ProfileWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for ProfileWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -3160,16 +2534,14 @@ class ProfileWhereUniqueInput {
       matches = record['userId'] == userId;
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for ProfileWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for ProfileWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class ProfileOrderByInput {
-  const ProfileOrderByInput({this.id, this.userId, this.bio});
+  const ProfileOrderByInput({this.id, this.userId, this.bio, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -3190,15 +2562,14 @@ class ProfileOrderByInput {
   }
 }
 
-enum ProfileScalarField { id, userId, bio }
+enum ProfileScalarField {
+  id,
+  userId,
+  bio
+}
 
 class ProfileCountAggregateInput {
-  const ProfileCountAggregateInput({
-    this.all = false,
-    this.id = false,
-    this.userId = false,
-    this.bio = false,
-  });
+  const ProfileCountAggregateInput({this.all = false, this.id = false, this.userId = false, this.bio = false, });
 
   final bool all;
   final bool id;
@@ -3216,15 +2587,12 @@ class ProfileCountAggregateInput {
     if (bio) {
       fields.add('bio');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class ProfileAvgAggregateInput {
-  const ProfileAvgAggregateInput({this.id = false, this.userId = false});
+  const ProfileAvgAggregateInput({this.id = false, this.userId = false, });
 
   final bool id;
   final bool userId;
@@ -3242,7 +2610,7 @@ class ProfileAvgAggregateInput {
 }
 
 class ProfileSumAggregateInput {
-  const ProfileSumAggregateInput({this.id = false, this.userId = false});
+  const ProfileSumAggregateInput({this.id = false, this.userId = false, });
 
   final bool id;
   final bool userId;
@@ -3260,11 +2628,7 @@ class ProfileSumAggregateInput {
 }
 
 class ProfileMinAggregateInput {
-  const ProfileMinAggregateInput({
-    this.id = false,
-    this.userId = false,
-    this.bio = false,
-  });
+  const ProfileMinAggregateInput({this.id = false, this.userId = false, this.bio = false, });
 
   final bool id;
   final bool userId;
@@ -3286,11 +2650,7 @@ class ProfileMinAggregateInput {
 }
 
 class ProfileMaxAggregateInput {
-  const ProfileMaxAggregateInput({
-    this.id = false,
-    this.userId = false,
-    this.bio = false,
-  });
+  const ProfileMaxAggregateInput({this.id = false, this.userId = false, this.bio = false, });
 
   final bool id;
   final bool userId;
@@ -3312,16 +2672,14 @@ class ProfileMaxAggregateInput {
 }
 
 class ProfileCountAggregateResult {
-  const ProfileCountAggregateResult({this.all, this.id, this.userId, this.bio});
+  const ProfileCountAggregateResult({this.all, this.id, this.userId, this.bio, });
 
   final int? all;
   final int? id;
   final int? userId;
   final int? bio;
 
-  factory ProfileCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
+  factory ProfileCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
     return ProfileCountAggregateResult(
       all: result.all,
       id: result.fields['id'],
@@ -3332,7 +2690,7 @@ class ProfileCountAggregateResult {
 }
 
 class ProfileAvgAggregateResult {
-  const ProfileAvgAggregateResult({this.id, this.userId});
+  const ProfileAvgAggregateResult({this.id, this.userId, });
 
   final double? id;
   final double? userId;
@@ -3346,7 +2704,7 @@ class ProfileAvgAggregateResult {
 }
 
 class ProfileSumAggregateResult {
-  const ProfileSumAggregateResult({this.id, this.userId});
+  const ProfileSumAggregateResult({this.id, this.userId, });
 
   final int? id;
   final int? userId;
@@ -3360,7 +2718,7 @@ class ProfileSumAggregateResult {
 }
 
 class ProfileMinAggregateResult {
-  const ProfileMinAggregateResult({this.id, this.userId, this.bio});
+  const ProfileMinAggregateResult({this.id, this.userId, this.bio, });
 
   final int? id;
   final int? userId;
@@ -3376,7 +2734,7 @@ class ProfileMinAggregateResult {
 }
 
 class ProfileMaxAggregateResult {
-  const ProfileMaxAggregateResult({this.id, this.userId, this.bio});
+  const ProfileMaxAggregateResult({this.id, this.userId, this.bio, });
 
   final int? id;
   final int? userId;
@@ -3408,27 +2766,17 @@ class ProfileAggregateResult {
 
   factory ProfileAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return ProfileAggregateResult(
-      count: result.count == null
-          ? null
-          : ProfileCountAggregateResult.fromQueryCountResult(result.count!),
-      avg: result.avg == null
-          ? null
-          : ProfileAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : ProfileSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : ProfileMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : ProfileMaxAggregateResult.fromMap(result.max!),
+      count: result.count == null ? null : ProfileCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : ProfileAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : ProfileSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : ProfileMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : ProfileMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class ProfileGroupByHavingInput {
-  const ProfileGroupByHavingInput({this.id, this.userId});
+  const ProfileGroupByHavingInput({this.id, this.userId, });
 
   final NumericAggregatesFilter? id;
   final NumericAggregatesFilter? userId;
@@ -3446,12 +2794,7 @@ class ProfileGroupByHavingInput {
 }
 
 class ProfileCountAggregateOrderByInput {
-  const ProfileCountAggregateOrderByInput({
-    this.all,
-    this.id,
-    this.userId,
-    this.bio,
-  });
+  const ProfileCountAggregateOrderByInput({this.all, this.id, this.userId, this.bio, });
 
   final SortOrder? all;
   final SortOrder? id;
@@ -3461,43 +2804,23 @@ class ProfileCountAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
     }
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     if (bio != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'bio',
-          direction: bio!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'bio', direction: bio!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileAvgAggregateOrderByInput {
-  const ProfileAvgAggregateOrderByInput({this.id, this.userId});
+  const ProfileAvgAggregateOrderByInput({this.id, this.userId, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -3505,29 +2828,17 @@ class ProfileAvgAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileSumAggregateOrderByInput {
-  const ProfileSumAggregateOrderByInput({this.id, this.userId});
+  const ProfileSumAggregateOrderByInput({this.id, this.userId, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -3535,29 +2846,17 @@ class ProfileSumAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileMinAggregateOrderByInput {
-  const ProfileMinAggregateOrderByInput({this.id, this.userId, this.bio});
+  const ProfileMinAggregateOrderByInput({this.id, this.userId, this.bio, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -3566,38 +2865,20 @@ class ProfileMinAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     if (bio != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'bio',
-          direction: bio!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'bio', direction: bio!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileMaxAggregateOrderByInput {
-  const ProfileMaxAggregateOrderByInput({this.id, this.userId, this.bio});
+  const ProfileMaxAggregateOrderByInput({this.id, this.userId, this.bio, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -3606,47 +2887,20 @@ class ProfileMaxAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     if (bio != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'bio',
-          direction: bio!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'bio', direction: bio!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileGroupByOrderByInput {
-  const ProfileGroupByOrderByInput({
-    this.id,
-    this.userId,
-    this.bio,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const ProfileGroupByOrderByInput({this.id, this.userId, this.bio, this.count, this.avg, this.sum, this.min, this.max});
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -3688,16 +2942,7 @@ class ProfileGroupByOrderByInput {
 }
 
 class ProfileGroupByRow {
-  const ProfileGroupByRow({
-    this.id,
-    this.userId,
-    this.bio,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const ProfileGroupByRow({this.id, this.userId, this.bio, this.count, this.avg, this.sum, this.min, this.max});
 
   final int? id;
   final int? userId;
@@ -3713,46 +2958,24 @@ class ProfileGroupByRow {
       id: row.group['id'] as int?,
       userId: row.group['userId'] as int?,
       bio: row.group['bio'] as String?,
-      count: row.aggregates.count == null
-          ? null
-          : ProfileCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : ProfileAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : ProfileSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : ProfileMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : ProfileMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: row.aggregates.count == null ? null : ProfileCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : ProfileAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : ProfileSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : ProfileMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : ProfileMaxAggregateResult.fromMap(row.aggregates.max!),
     );
   }
 }
 
 class ProfileInclude {
-  const ProfileInclude({this.user = false});
+  const ProfileInclude({this.user = false, });
 
   final bool user;
 
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (user) {
-      relations['user'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'user',
-          targetModel: 'User',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'userId',
-          targetKeyField: 'id',
-          localKeyFields: const <String>['userId'],
-          targetKeyFields: const <String>['id'],
-        ),
-      );
+      relations['user'] = QueryIncludeEntry(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']));
     }
     if (relations.isEmpty) {
       return null;
@@ -3762,7 +2985,7 @@ class ProfileInclude {
 }
 
 class ProfileSelect {
-  const ProfileSelect({this.id = false, this.userId = false, this.bio = false});
+  const ProfileSelect({this.id = false, this.userId = false, this.bio = false, });
 
   final bool id;
   final bool userId;
@@ -3787,12 +3010,7 @@ class ProfileSelect {
 }
 
 class ProfileCreateInput {
-  const ProfileCreateInput({
-    required this.id,
-    required this.userId,
-    this.bio,
-    this.user,
-  });
+  const ProfileCreateInput({required this.id, required this.userId, this.bio, this.user, });
 
   final int id;
   final int userId;
@@ -3811,33 +3029,19 @@ class ProfileCreateInput {
 
   List<List<QueryPredicate>> toUniqueSelectorPredicates() {
     final selectors = <List<QueryPredicate>>[];
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'id', operator: 'equals', value: id),
-    ]);
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'userId', operator: 'equals', value: userId),
-    ]);
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'id', operator: 'equals', value: id),
+      ]);
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'userId', operator: 'equals', value: userId),
+      ]);
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (user != null) {
-      writes.addAll(
-        user!.toRelationWrites(
-          QueryRelation(
-            field: 'user',
-            targetModel: 'User',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'userId',
-            targetKeyField: 'id',
-            localKeyFields: const <String>['userId'],
-            targetKeyFields: const <String>['id'],
-          ),
-        ),
-      );
+      writes.addAll(user!.toRelationWrites(QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id'])));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
@@ -3847,18 +3051,14 @@ class ProfileCreateInput {
   }
 
   ProfileUpdateInput toDeferredRelationUpdateInput() {
-    return ProfileUpdateInput(user: user?.toDeferredUpdateWrite());
+    return ProfileUpdateInput(
+      user: user?.toDeferredUpdateWrite(),
+    );
   }
 }
 
 class ProfileUpdateInput {
-  const ProfileUpdateInput({
-    this.userId,
-    this.userIdOps,
-    this.bio,
-    this.bioOps,
-    this.user,
-  });
+  const ProfileUpdateInput({this.userId, this.userIdOps, this.bio, this.bioOps, this.user, });
 
   final int? userId;
   final IntFieldUpdateOperationsInput? userIdOps;
@@ -3877,9 +3077,7 @@ class ProfileUpdateInput {
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
     if (userId != null && userIdOps != null) {
-      throw StateError(
-        'Only one of userId or userIdOps may be provided for ProfileUpdateInput.userId.',
-      );
+      throw StateError('Only one of userId or userIdOps may be provided for ProfileUpdateInput.userId.');
     }
     if (userId != null) {
       data['userId'] = userId;
@@ -3887,23 +3085,17 @@ class ProfileUpdateInput {
     if (userIdOps != null) {
       final ops = userIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for ProfileUpdateInput.userId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for ProfileUpdateInput.userId.');
       }
       if (ops.hasComputedUpdate) {
-        throw StateError(
-          'Computed scalar update operators for ProfileUpdateInput.userId require the current record value before they can be converted to raw update data.',
-        );
+        throw StateError('Computed scalar update operators for ProfileUpdateInput.userId require the current record value before they can be converted to raw update data.');
       }
       if (ops.hasSet) {
         data['userId'] = ops.set as int?;
       }
     }
     if (bio != null && bioOps != null) {
-      throw StateError(
-        'Only one of bio or bioOps may be provided for ProfileUpdateInput.bio.',
-      );
+      throw StateError('Only one of bio or bioOps may be provided for ProfileUpdateInput.bio.');
     }
     if (bio != null) {
       data['bio'] = bio;
@@ -3920,9 +3112,7 @@ class ProfileUpdateInput {
   Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
     final data = <String, Object?>{};
     if (userId != null && userIdOps != null) {
-      throw StateError(
-        'Only one of userId or userIdOps may be provided for ProfileUpdateInput.userId.',
-      );
+      throw StateError('Only one of userId or userIdOps may be provided for ProfileUpdateInput.userId.');
     }
     if (userId != null) {
       data['userId'] = userId;
@@ -3930,9 +3120,7 @@ class ProfileUpdateInput {
     if (userIdOps != null) {
       final ops = userIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for ProfileUpdateInput.userId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for ProfileUpdateInput.userId.');
       }
       if (ops.hasSet) {
         data['userId'] = ops.set as int?;
@@ -3940,26 +3128,20 @@ class ProfileUpdateInput {
         final currentValue = record['userId'] as int?;
         if (ops.increment != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot increment ProfileUpdateInput.userId because the current value is null.',
-            );
+            throw StateError('Cannot increment ProfileUpdateInput.userId because the current value is null.');
           }
           data['userId'] = currentValue + ops.increment!;
         }
         if (ops.decrement != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot decrement ProfileUpdateInput.userId because the current value is null.',
-            );
+            throw StateError('Cannot decrement ProfileUpdateInput.userId because the current value is null.');
           }
           data['userId'] = currentValue - ops.decrement!;
         }
       }
     }
     if (bio != null && bioOps != null) {
-      throw StateError(
-        'Only one of bio or bioOps may be provided for ProfileUpdateInput.bio.',
-      );
+      throw StateError('Only one of bio or bioOps may be provided for ProfileUpdateInput.bio.');
     }
     if (bio != null) {
       data['bio'] = bio;
@@ -3975,7 +3157,7 @@ class ProfileUpdateInput {
 }
 
 class ProfileCreateWithoutUserInput {
-  const ProfileCreateWithoutUserInput({required this.id, this.bio});
+  const ProfileCreateWithoutUserInput({required this.id, this.bio, });
 
   final int id;
   final String? bio;
@@ -3993,41 +3175,26 @@ class ProfileCreateWithoutUserInput {
 }
 
 class UserConnectOrCreateWithoutProfileInput {
-  const UserConnectOrCreateWithoutProfileInput({
-    required this.where,
-    required this.create,
-  });
+  const UserConnectOrCreateWithoutProfileInput({required this.where, required this.create});
 
   final UserWhereUniqueInput where;
   final UserCreateWithoutProfileInput create;
 }
 
 class UserCreateNestedOneWithoutProfileInput {
-  const UserCreateNestedOneWithoutProfileInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserCreateNestedOneWithoutProfileInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserCreateWithoutProfileInput? create;
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutProfileInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutProfileInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutProfileInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -4041,40 +3208,25 @@ class UserCreateNestedOneWithoutProfileInput {
   }
 
   UserUpdateNestedOneWithoutProfileInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutProfileInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutProfileInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return UserUpdateNestedOneWithoutProfileInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return UserUpdateNestedOneWithoutProfileInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class UserUpdateNestedOneWithoutProfileInput {
-  const UserUpdateNestedOneWithoutProfileInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserUpdateNestedOneWithoutProfileInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutProfileInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 class AccountDelegate {
@@ -4088,16 +3240,14 @@ class AccountDelegate {
     AccountInclude? include,
     AccountSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'Account',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then((record) => record == null ? null : Account.fromRecord(record));
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'Account',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : Account.fromRecord(record));
   }
 
   Future<Account?> findFirst({
@@ -4110,44 +3260,22 @@ class AccountDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'Account',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'Account',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then((record) => record == null ? null : Account.fromRecord(record));
+      ),
+    ).then((record) => record == null ? null : Account.fromRecord(record));
   }
 
   Future<List<Account>> findMany({
@@ -4161,43 +3289,23 @@ class AccountDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'Account',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'Account',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) => records.map(Account.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(Account.fromRecord).toList(growable: false));
   }
 
   Future<int> count({AccountWhereInput? where}) {
@@ -4220,27 +3328,20 @@ class AccountDelegate {
     AccountMinAggregateInput? min,
     AccountMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'Account',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(AccountAggregateResult.fromQueryResult);
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'Account',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(AccountAggregateResult.fromQueryResult);
   }
 
   Future<List<AccountGroupByRow>> groupBy({
@@ -4256,35 +3357,22 @@ class AccountDelegate {
     AccountMinAggregateInput? min,
     AccountMaxAggregateInput? max,
   }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'Account',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(AccountGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'Account',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(AccountGroupByRow.fromQueryResultRow).toList(growable: false));
   }
 
   Future<Account> create({
@@ -4312,26 +3400,26 @@ class AccountDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Account');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Account',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'Account', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -4366,7 +3454,10 @@ class AccountDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Account');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Account', where: predicates),
+        FindUniqueQuery(
+          model: 'Account',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in Account.');
@@ -4396,7 +3487,10 @@ class AccountDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Account');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Account', where: predicates),
+        FindUniqueQuery(
+          model: 'Account',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -4427,7 +3521,10 @@ class AccountDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('Account');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'Account', where: predicates),
+          FindManyQuery(
+            model: 'Account',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -4443,77 +3540,12 @@ class AccountDelegate {
       });
     }
     return _delegate.updateMany(
-      UpdateManyQuery(model: 'Account', where: predicates, data: data.toData()),
-    );
-  }
-
-  Future<List<Account>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required AccountWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
+      UpdateManyQuery(
         model: 'Account',
         where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
+        data: data.toData(),
       ),
     );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <Account>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords.map(Account.fromRecord).toList(growable: false);
-    }
-    final projectedRecords = <Account>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'Account',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'Account.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(Account.fromRecord(projected));
-    }
-    return List<Account>.unmodifiable(projectedRecords);
   }
 
   Future<Account> _performCreateWithRelationWrites({
@@ -4551,9 +3583,7 @@ class AccountDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Account create branch could not reload the created record by primary key.',
-      );
+      throw StateError('Account create branch could not reload the created record by primary key.');
     }
     return Account.fromRecord(projected);
   }
@@ -4600,9 +3630,7 @@ class AccountDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Account update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('Account update branch could not reload the updated record for the provided unique selector.');
     }
     return Account.fromRecord(projected);
   }
@@ -4618,31 +3646,15 @@ class AccountDelegate {
     } else {
       final nested = data.profile!;
       final parentReferenceValues = <String, Object?>{
-        'tenantId': _requireRecordValue(
-          existing,
-          'tenantId',
-          'nested inverse one-to-one relation write on Account.profile',
-        ),
-        'accountSlug': _requireRecordValue(
-          existing,
-          'slug',
-          'nested inverse one-to-one relation write on Account.profile',
-        ),
+        'tenantId': _requireRecordValue(existing, 'tenantId', 'nested inverse one-to-one relation write on Account.profile'),
+        'accountSlug': _requireRecordValue(existing, 'slug', 'nested inverse one-to-one relation write on Account.profile'),
       };
       final currentRelated = await tx.accountProfile._delegate.findFirst(
         FindFirstQuery(
           model: 'AccountProfile',
           where: <QueryPredicate>[
-            QueryPredicate(
-              field: 'tenantId',
-              operator: 'equals',
-              value: parentReferenceValues['tenantId'],
-            ),
-            QueryPredicate(
-              field: 'accountSlug',
-              operator: 'equals',
-              value: parentReferenceValues['accountSlug'],
-            ),
+            QueryPredicate(field: 'tenantId', operator: 'equals', value: parentReferenceValues['tenantId']),
+            QueryPredicate(field: 'accountSlug', operator: 'equals', value: parentReferenceValues['accountSlug']),
           ],
         ),
       );
@@ -4651,9 +3663,7 @@ class AccountDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for AccountUpdateInput.profile.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for AccountUpdateInput.profile.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
@@ -4664,18 +3674,15 @@ class AccountDelegate {
           ),
         );
         if (related == null) {
-          throw StateError(
-            'No related AccountProfile record found for nested connect on inverse one-to-one relation Account.profile.',
-          );
+          throw StateError('No related AccountProfile record found for nested connect on inverse one-to-one relation Account.profile.');
         }
         final alreadyConnected =
-            related['tenantId'] == parentReferenceValues['tenantId'] &&
-            related['accountSlug'] == parentReferenceValues['accountSlug'];
+            related['tenantId'] == parentReferenceValues['tenantId']
+            && related['accountSlug'] == parentReferenceValues['accountSlug']
+        ;
         if (!alreadyConnected) {
           if (currentRelated != null) {
-            throw StateError(
-              'Nested connect cannot replace the existing inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required.',
-            );
+            throw StateError('Nested connect cannot replace the existing inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required.');
           }
           await tx.accountProfile._delegate.update(
             UpdateQuery(
@@ -4699,13 +3706,12 @@ class AccountDelegate {
         );
         if (related != null) {
           final alreadyConnected =
-              related['tenantId'] == parentReferenceValues['tenantId'] &&
-              related['accountSlug'] == parentReferenceValues['accountSlug'];
+              related['tenantId'] == parentReferenceValues['tenantId']
+              && related['accountSlug'] == parentReferenceValues['accountSlug']
+          ;
           if (!alreadyConnected) {
             if (currentRelated != null) {
-              throw StateError(
-                'Nested connectOrCreate cannot replace the existing inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required.',
-              );
+              throw StateError('Nested connectOrCreate cannot replace the existing inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required.');
             }
             await tx.accountProfile._delegate.update(
               UpdateQuery(
@@ -4720,15 +3726,12 @@ class AccountDelegate {
           }
         } else {
           if (currentRelated != null) {
-            throw StateError(
-              'Nested connectOrCreate cannot create a new inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required and already attached.',
-            );
+            throw StateError('Nested connectOrCreate cannot create a new inverse one-to-one relation Account.profile because AccountProfile.tenantId, accountSlug is required and already attached.');
           }
           await tx.accountProfile._delegate.create(
             CreateQuery(
               model: 'AccountProfile',
-              data: <String, Object?>{
-                ...entry.create.toData(),
+              data: <String, Object?>{...entry.create.toData(),
                 'tenantId': parentReferenceValues['tenantId'],
                 'accountSlug': parentReferenceValues['accountSlug'],
               },
@@ -4739,50 +3742,42 @@ class AccountDelegate {
       }
       if (nested.disconnect) {
         if (currentRelated != null) {
-          throw StateError(
-            'Nested disconnect is not supported for required inverse one-to-one relation Account.profile.',
-          );
+        throw StateError('Nested disconnect is not supported for required inverse one-to-one relation Account.profile.');
         }
       }
     }
   }
+
 
   Future<Account> delete({
     required AccountWhereUniqueInput where,
     AccountInclude? include,
     AccountSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'Account',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(Account.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'Account',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(Account.fromRecord);
   }
 
-  Future<int> deleteMany({required AccountWhereInput where}) {
+  Future<int> deleteMany({
+    required AccountWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'Account', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'Account',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class AccountWhereInput {
-  const AccountWhereInput({
-    this.AND = const <AccountWhereInput>[],
-    this.OR = const <AccountWhereInput>[],
-    this.NOT = const <AccountWhereInput>[],
-    this.tenantId,
-    this.tenantIdFilter,
-    this.slug,
-    this.slugFilter,
-    this.profileIs,
-    this.profileIsNot,
-  });
+  const AccountWhereInput({this.AND = const <AccountWhereInput>[], this.OR = const <AccountWhereInput>[], this.NOT = const <AccountWhereInput>[], this.tenantId, this.tenantIdFilter, this.slug, this.slugFilter, this.profileIs, this.profileIsNot, });
 
   final List<AccountWhereInput> AND;
   final List<AccountWhereInput> OR;
@@ -4797,109 +3792,38 @@ class AccountWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (tenantId != null) {
-      predicates.add(
-        QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
-      );
+      predicates.add(QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId));
     }
     if (tenantIdFilter != null) {
       predicates.addAll(tenantIdFilter!.toPredicates('tenantId'));
     }
     if (slug != null) {
-      predicates.add(
-        QueryPredicate(field: 'slug', operator: 'equals', value: slug),
-      );
+      predicates.add(QueryPredicate(field: 'slug', operator: 'equals', value: slug));
     }
     if (slugFilter != null) {
       predicates.addAll(slugFilter!.toPredicates('slug'));
     }
     if (profileIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'profile',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'profile',
-              targetModel: 'AccountProfile',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'tenantId',
-              targetKeyField: 'tenantId',
-              localKeyFields: const <String>['tenantId', 'slug'],
-              targetKeyFields: const <String>['tenantId', 'accountSlug'],
-            ),
-            predicates: profileIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'profile', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'profile', targetModel: 'AccountProfile', cardinality: QueryRelationCardinality.one, localKeyField: 'tenantId', targetKeyField: 'tenantId', localKeyFields: const <String>['tenantId', 'slug'], targetKeyFields: const <String>['tenantId', 'accountSlug']), predicates: profileIs!.toPredicates())));
     }
     if (profileIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'profile',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'profile',
-              targetModel: 'AccountProfile',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'tenantId',
-              targetKeyField: 'tenantId',
-              localKeyFields: const <String>['tenantId', 'slug'],
-              targetKeyFields: const <String>['tenantId', 'accountSlug'],
-            ),
-            predicates: profileIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'profile', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'profile', targetModel: 'AccountProfile', cardinality: QueryRelationCardinality.one, localKeyField: 'tenantId', targetKeyField: 'tenantId', localKeyFields: const <String>['tenantId', 'slug'], targetKeyFields: const <String>['tenantId', 'accountSlug']), predicates: profileIsNot!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class AccountTenantIdSlugCompoundUniqueInput {
-  const AccountTenantIdSlugCompoundUniqueInput({
-    required this.tenantId,
-    required this.slug,
-  });
+  const AccountTenantIdSlugCompoundUniqueInput({required this.tenantId, required this.slug, });
 
   final int tenantId;
   final String slug;
@@ -4917,7 +3841,7 @@ class AccountTenantIdSlugCompoundUniqueInput {
 }
 
 class AccountWhereUniqueInput {
-  const AccountWhereUniqueInput({this.tenantId_slug});
+  const AccountWhereUniqueInput({this.tenantId_slug, });
 
   final AccountTenantIdSlugCompoundUniqueInput? tenantId_slug;
 
@@ -4927,11 +3851,13 @@ class AccountWhereUniqueInput {
       selectors.add(tenantId_slug!.toPredicates());
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for AccountWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for AccountWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -4942,16 +3868,14 @@ class AccountWhereUniqueInput {
       matches = tenantId_slug!.matchesRecord(record);
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for AccountWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for AccountWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class AccountOrderByInput {
-  const AccountOrderByInput({this.tenantId, this.slug});
+  const AccountOrderByInput({this.tenantId, this.slug, });
 
   final SortOrder? tenantId;
   final SortOrder? slug;
@@ -4968,14 +3892,13 @@ class AccountOrderByInput {
   }
 }
 
-enum AccountScalarField { tenantId, slug }
+enum AccountScalarField {
+  tenantId,
+  slug
+}
 
 class AccountCountAggregateInput {
-  const AccountCountAggregateInput({
-    this.all = false,
-    this.tenantId = false,
-    this.slug = false,
-  });
+  const AccountCountAggregateInput({this.all = false, this.tenantId = false, this.slug = false, });
 
   final bool all;
   final bool tenantId;
@@ -4989,15 +3912,12 @@ class AccountCountAggregateInput {
     if (slug) {
       fields.add('slug');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class AccountAvgAggregateInput {
-  const AccountAvgAggregateInput({this.tenantId = false});
+  const AccountAvgAggregateInput({this.tenantId = false, });
 
   final bool tenantId;
 
@@ -5011,7 +3931,7 @@ class AccountAvgAggregateInput {
 }
 
 class AccountSumAggregateInput {
-  const AccountSumAggregateInput({this.tenantId = false});
+  const AccountSumAggregateInput({this.tenantId = false, });
 
   final bool tenantId;
 
@@ -5025,7 +3945,7 @@ class AccountSumAggregateInput {
 }
 
 class AccountMinAggregateInput {
-  const AccountMinAggregateInput({this.tenantId = false, this.slug = false});
+  const AccountMinAggregateInput({this.tenantId = false, this.slug = false, });
 
   final bool tenantId;
   final bool slug;
@@ -5043,7 +3963,7 @@ class AccountMinAggregateInput {
 }
 
 class AccountMaxAggregateInput {
-  const AccountMaxAggregateInput({this.tenantId = false, this.slug = false});
+  const AccountMaxAggregateInput({this.tenantId = false, this.slug = false, });
 
   final bool tenantId;
   final bool slug;
@@ -5061,15 +3981,13 @@ class AccountMaxAggregateInput {
 }
 
 class AccountCountAggregateResult {
-  const AccountCountAggregateResult({this.all, this.tenantId, this.slug});
+  const AccountCountAggregateResult({this.all, this.tenantId, this.slug, });
 
   final int? all;
   final int? tenantId;
   final int? slug;
 
-  factory AccountCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
+  factory AccountCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
     return AccountCountAggregateResult(
       all: result.all,
       tenantId: result.fields['tenantId'],
@@ -5079,27 +3997,31 @@ class AccountCountAggregateResult {
 }
 
 class AccountAvgAggregateResult {
-  const AccountAvgAggregateResult({this.tenantId});
+  const AccountAvgAggregateResult({this.tenantId, });
 
   final double? tenantId;
 
   factory AccountAvgAggregateResult.fromMap(Map<String, double?> values) {
-    return AccountAvgAggregateResult(tenantId: _asDouble(values['tenantId']));
+    return AccountAvgAggregateResult(
+      tenantId: _asDouble(values['tenantId']),
+    );
   }
 }
 
 class AccountSumAggregateResult {
-  const AccountSumAggregateResult({this.tenantId});
+  const AccountSumAggregateResult({this.tenantId, });
 
   final int? tenantId;
 
   factory AccountSumAggregateResult.fromMap(Map<String, num?> values) {
-    return AccountSumAggregateResult(tenantId: values['tenantId']?.toInt());
+    return AccountSumAggregateResult(
+      tenantId: values['tenantId']?.toInt(),
+    );
   }
 }
 
 class AccountMinAggregateResult {
-  const AccountMinAggregateResult({this.tenantId, this.slug});
+  const AccountMinAggregateResult({this.tenantId, this.slug, });
 
   final int? tenantId;
   final String? slug;
@@ -5113,7 +4035,7 @@ class AccountMinAggregateResult {
 }
 
 class AccountMaxAggregateResult {
-  const AccountMaxAggregateResult({this.tenantId, this.slug});
+  const AccountMaxAggregateResult({this.tenantId, this.slug, });
 
   final int? tenantId;
   final String? slug;
@@ -5143,27 +4065,17 @@ class AccountAggregateResult {
 
   factory AccountAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return AccountAggregateResult(
-      count: result.count == null
-          ? null
-          : AccountCountAggregateResult.fromQueryCountResult(result.count!),
-      avg: result.avg == null
-          ? null
-          : AccountAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : AccountSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : AccountMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : AccountMaxAggregateResult.fromMap(result.max!),
+      count: result.count == null ? null : AccountCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : AccountAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : AccountSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : AccountMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : AccountMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class AccountGroupByHavingInput {
-  const AccountGroupByHavingInput({this.tenantId});
+  const AccountGroupByHavingInput({this.tenantId, });
 
   final NumericAggregatesFilter? tenantId;
 
@@ -5177,7 +4089,7 @@ class AccountGroupByHavingInput {
 }
 
 class AccountCountAggregateOrderByInput {
-  const AccountCountAggregateOrderByInput({this.all, this.tenantId, this.slug});
+  const AccountCountAggregateOrderByInput({this.all, this.tenantId, this.slug, });
 
   final SortOrder? all;
   final SortOrder? tenantId;
@@ -5186,74 +4098,48 @@ class AccountCountAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
     }
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (slug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'slug',
-          direction: slug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'slug', direction: slug!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountAvgAggregateOrderByInput {
-  const AccountAvgAggregateOrderByInput({this.tenantId});
+  const AccountAvgAggregateOrderByInput({this.tenantId, });
 
   final SortOrder? tenantId;
 
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountSumAggregateOrderByInput {
-  const AccountSumAggregateOrderByInput({this.tenantId});
+  const AccountSumAggregateOrderByInput({this.tenantId, });
 
   final SortOrder? tenantId;
 
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountMinAggregateOrderByInput {
-  const AccountMinAggregateOrderByInput({this.tenantId, this.slug});
+  const AccountMinAggregateOrderByInput({this.tenantId, this.slug, });
 
   final SortOrder? tenantId;
   final SortOrder? slug;
@@ -5261,29 +4147,17 @@ class AccountMinAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (slug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'slug',
-          direction: slug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'slug', direction: slug!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountMaxAggregateOrderByInput {
-  const AccountMaxAggregateOrderByInput({this.tenantId, this.slug});
+  const AccountMaxAggregateOrderByInput({this.tenantId, this.slug, });
 
   final SortOrder? tenantId;
   final SortOrder? slug;
@@ -5291,37 +4165,17 @@ class AccountMaxAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (slug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'slug',
-          direction: slug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'slug', direction: slug!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountGroupByOrderByInput {
-  const AccountGroupByOrderByInput({
-    this.tenantId,
-    this.slug,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const AccountGroupByOrderByInput({this.tenantId, this.slug, this.count, this.avg, this.sum, this.min, this.max});
 
   final SortOrder? tenantId;
   final SortOrder? slug;
@@ -5334,9 +4188,7 @@ class AccountGroupByOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy() {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.field(field: 'tenantId', direction: tenantId!),
-      );
+      orderings.add(GroupByOrderBy.field(field: 'tenantId', direction: tenantId!));
     }
     if (slug != null) {
       orderings.add(GroupByOrderBy.field(field: 'slug', direction: slug!));
@@ -5361,15 +4213,7 @@ class AccountGroupByOrderByInput {
 }
 
 class AccountGroupByRow {
-  const AccountGroupByRow({
-    this.tenantId,
-    this.slug,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const AccountGroupByRow({this.tenantId, this.slug, this.count, this.avg, this.sum, this.min, this.max});
 
   final int? tenantId;
   final String? slug;
@@ -5383,46 +4227,24 @@ class AccountGroupByRow {
     return AccountGroupByRow(
       tenantId: row.group['tenantId'] as int?,
       slug: row.group['slug'] as String?,
-      count: row.aggregates.count == null
-          ? null
-          : AccountCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : AccountAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : AccountSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : AccountMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : AccountMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: row.aggregates.count == null ? null : AccountCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : AccountAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : AccountSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : AccountMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : AccountMaxAggregateResult.fromMap(row.aggregates.max!),
     );
   }
 }
 
 class AccountInclude {
-  const AccountInclude({this.profile = false});
+  const AccountInclude({this.profile = false, });
 
   final bool profile;
 
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (profile) {
-      relations['profile'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'profile',
-          targetModel: 'AccountProfile',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'tenantId',
-          targetKeyField: 'tenantId',
-          localKeyFields: const <String>['tenantId', 'slug'],
-          targetKeyFields: const <String>['tenantId', 'accountSlug'],
-        ),
-      );
+      relations['profile'] = QueryIncludeEntry(relation: QueryRelation(field: 'profile', targetModel: 'AccountProfile', cardinality: QueryRelationCardinality.one, localKeyField: 'tenantId', targetKeyField: 'tenantId', localKeyFields: const <String>['tenantId', 'slug'], targetKeyFields: const <String>['tenantId', 'accountSlug']));
     }
     if (relations.isEmpty) {
       return null;
@@ -5432,7 +4254,7 @@ class AccountInclude {
 }
 
 class AccountSelect {
-  const AccountSelect({this.tenantId = false, this.slug = false});
+  const AccountSelect({this.tenantId = false, this.slug = false, });
 
   final bool tenantId;
   final bool slug;
@@ -5453,11 +4275,7 @@ class AccountSelect {
 }
 
 class AccountCreateInput {
-  const AccountCreateInput({
-    required this.tenantId,
-    required this.slug,
-    this.profile,
-  });
+  const AccountCreateInput({required this.tenantId, required this.slug, this.profile, });
 
   final int tenantId;
   final String slug;
@@ -5472,31 +4290,17 @@ class AccountCreateInput {
 
   List<List<QueryPredicate>> toUniqueSelectorPredicates() {
     final selectors = <List<QueryPredicate>>[];
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
-      QueryPredicate(field: 'slug', operator: 'equals', value: slug),
-    ]);
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
+        QueryPredicate(field: 'slug', operator: 'equals', value: slug),
+      ]);
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (profile != null) {
-      writes.addAll(
-        profile!.toRelationWrites(
-          QueryRelation(
-            field: 'profile',
-            targetModel: 'AccountProfile',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'tenantId',
-            targetKeyField: 'tenantId',
-            localKeyFields: const <String>['tenantId', 'slug'],
-            targetKeyFields: const <String>['tenantId', 'accountSlug'],
-          ),
-        ),
-      );
+      writes.addAll(profile!.toRelationWrites(QueryRelation(field: 'profile', targetModel: 'AccountProfile', cardinality: QueryRelationCardinality.one, localKeyField: 'tenantId', targetKeyField: 'tenantId', localKeyFields: const <String>['tenantId', 'slug'], targetKeyFields: const <String>['tenantId', 'accountSlug'])));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
@@ -5506,18 +4310,14 @@ class AccountCreateInput {
   }
 
   AccountUpdateInput toDeferredRelationUpdateInput() {
-    return AccountUpdateInput(profile: profile?.toDeferredUpdateWrite());
+    return AccountUpdateInput(
+      profile: profile?.toDeferredUpdateWrite(),
+    );
   }
 }
 
 class AccountUpdateInput {
-  const AccountUpdateInput({
-    this.tenantId,
-    this.tenantIdOps,
-    this.slug,
-    this.slugOps,
-    this.profile,
-  });
+  const AccountUpdateInput({this.tenantId, this.tenantIdOps, this.slug, this.slugOps, this.profile, });
 
   final int? tenantId;
   final IntFieldUpdateOperationsInput? tenantIdOps;
@@ -5536,9 +4336,7 @@ class AccountUpdateInput {
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
     if (tenantId != null && tenantIdOps != null) {
-      throw StateError(
-        'Only one of tenantId or tenantIdOps may be provided for AccountUpdateInput.tenantId.',
-      );
+      throw StateError('Only one of tenantId or tenantIdOps may be provided for AccountUpdateInput.tenantId.');
     }
     if (tenantId != null) {
       data['tenantId'] = tenantId;
@@ -5546,23 +4344,17 @@ class AccountUpdateInput {
     if (tenantIdOps != null) {
       final ops = tenantIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for AccountUpdateInput.tenantId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for AccountUpdateInput.tenantId.');
       }
       if (ops.hasComputedUpdate) {
-        throw StateError(
-          'Computed scalar update operators for AccountUpdateInput.tenantId require the current record value before they can be converted to raw update data.',
-        );
+        throw StateError('Computed scalar update operators for AccountUpdateInput.tenantId require the current record value before they can be converted to raw update data.');
       }
       if (ops.hasSet) {
         data['tenantId'] = ops.set as int?;
       }
     }
     if (slug != null && slugOps != null) {
-      throw StateError(
-        'Only one of slug or slugOps may be provided for AccountUpdateInput.slug.',
-      );
+      throw StateError('Only one of slug or slugOps may be provided for AccountUpdateInput.slug.');
     }
     if (slug != null) {
       data['slug'] = slug;
@@ -5579,9 +4371,7 @@ class AccountUpdateInput {
   Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
     final data = <String, Object?>{};
     if (tenantId != null && tenantIdOps != null) {
-      throw StateError(
-        'Only one of tenantId or tenantIdOps may be provided for AccountUpdateInput.tenantId.',
-      );
+      throw StateError('Only one of tenantId or tenantIdOps may be provided for AccountUpdateInput.tenantId.');
     }
     if (tenantId != null) {
       data['tenantId'] = tenantId;
@@ -5589,9 +4379,7 @@ class AccountUpdateInput {
     if (tenantIdOps != null) {
       final ops = tenantIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for AccountUpdateInput.tenantId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for AccountUpdateInput.tenantId.');
       }
       if (ops.hasSet) {
         data['tenantId'] = ops.set as int?;
@@ -5599,26 +4387,20 @@ class AccountUpdateInput {
         final currentValue = record['tenantId'] as int?;
         if (ops.increment != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot increment AccountUpdateInput.tenantId because the current value is null.',
-            );
+            throw StateError('Cannot increment AccountUpdateInput.tenantId because the current value is null.');
           }
           data['tenantId'] = currentValue + ops.increment!;
         }
         if (ops.decrement != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot decrement AccountUpdateInput.tenantId because the current value is null.',
-            );
+            throw StateError('Cannot decrement AccountUpdateInput.tenantId because the current value is null.');
           }
           data['tenantId'] = currentValue - ops.decrement!;
         }
       }
     }
     if (slug != null && slugOps != null) {
-      throw StateError(
-        'Only one of slug or slugOps may be provided for AccountUpdateInput.slug.',
-      );
+      throw StateError('Only one of slug or slugOps may be provided for AccountUpdateInput.slug.');
     }
     if (slug != null) {
       data['slug'] = slug;
@@ -5634,10 +4416,7 @@ class AccountUpdateInput {
 }
 
 class AccountCreateWithoutProfileInput {
-  const AccountCreateWithoutProfileInput({
-    required this.tenantId,
-    required this.slug,
-  });
+  const AccountCreateWithoutProfileInput({required this.tenantId, required this.slug, });
 
   final int tenantId;
   final String slug;
@@ -5653,41 +4432,26 @@ class AccountCreateWithoutProfileInput {
 }
 
 class AccountProfileConnectOrCreateWithoutAccountInput {
-  const AccountProfileConnectOrCreateWithoutAccountInput({
-    required this.where,
-    required this.create,
-  });
+  const AccountProfileConnectOrCreateWithoutAccountInput({required this.where, required this.create});
 
   final AccountProfileWhereUniqueInput where;
   final AccountProfileCreateWithoutAccountInput create;
 }
 
 class AccountProfileCreateNestedOneWithoutAccountInput {
-  const AccountProfileCreateNestedOneWithoutAccountInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const AccountProfileCreateNestedOneWithoutAccountInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final AccountProfileCreateWithoutAccountInput? create;
   final AccountProfileWhereUniqueInput? connect;
   final AccountProfileConnectOrCreateWithoutAccountInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for AccountProfileCreateNestedOneWithoutAccountInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for AccountProfileCreateNestedOneWithoutAccountInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -5701,40 +4465,25 @@ class AccountProfileCreateNestedOneWithoutAccountInput {
   }
 
   AccountProfileUpdateNestedOneWithoutAccountInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for AccountProfileCreateNestedOneWithoutAccountInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for AccountProfileCreateNestedOneWithoutAccountInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return AccountProfileUpdateNestedOneWithoutAccountInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return AccountProfileUpdateNestedOneWithoutAccountInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class AccountProfileUpdateNestedOneWithoutAccountInput {
-  const AccountProfileUpdateNestedOneWithoutAccountInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const AccountProfileUpdateNestedOneWithoutAccountInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final AccountProfileWhereUniqueInput? connect;
   final AccountProfileConnectOrCreateWithoutAccountInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 class AccountProfileDelegate {
@@ -5748,18 +4497,14 @@ class AccountProfileDelegate {
     AccountProfileInclude? include,
     AccountProfileSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'AccountProfile',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(
-          (record) => record == null ? null : AccountProfile.fromRecord(record),
-        );
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'AccountProfile',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : AccountProfile.fromRecord(record));
   }
 
   Future<AccountProfile?> findFirst({
@@ -5772,46 +4517,22 @@ class AccountProfileDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'AccountProfile',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'AccountProfile',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then(
-          (record) => record == null ? null : AccountProfile.fromRecord(record),
-        );
+      ),
+    ).then((record) => record == null ? null : AccountProfile.fromRecord(record));
   }
 
   Future<List<AccountProfile>> findMany({
@@ -5825,44 +4546,23 @@ class AccountProfileDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'AccountProfile',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'AccountProfile',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) =>
-              records.map(AccountProfile.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(AccountProfile.fromRecord).toList(growable: false));
   }
 
   Future<int> count({AccountProfileWhereInput? where}) {
@@ -5885,27 +4585,20 @@ class AccountProfileDelegate {
     AccountProfileMinAggregateInput? min,
     AccountProfileMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'AccountProfile',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(AccountProfileAggregateResult.fromQueryResult);
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'AccountProfile',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(AccountProfileAggregateResult.fromQueryResult);
   }
 
   Future<List<AccountProfileGroupByRow>> groupBy({
@@ -5921,35 +4614,22 @@ class AccountProfileDelegate {
     AccountProfileMinAggregateInput? min,
     AccountProfileMaxAggregateInput? max,
   }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'AccountProfile',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(AccountProfileGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'AccountProfile',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(AccountProfileGroupByRow.fromQueryResultRow).toList(growable: false));
   }
 
   Future<AccountProfile> create({
@@ -5977,26 +4657,26 @@ class AccountProfileDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('AccountProfile');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'AccountProfile',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'AccountProfile', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -6031,7 +4711,10 @@ class AccountProfileDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('AccountProfile');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'AccountProfile', where: predicates),
+        FindUniqueQuery(
+          model: 'AccountProfile',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in AccountProfile.');
@@ -6061,7 +4744,10 @@ class AccountProfileDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('AccountProfile');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'AccountProfile', where: predicates),
+        FindUniqueQuery(
+          model: 'AccountProfile',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -6092,7 +4778,10 @@ class AccountProfileDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('AccountProfile');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'AccountProfile', where: predicates),
+          FindManyQuery(
+            model: 'AccountProfile',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -6114,77 +4803,6 @@ class AccountProfileDelegate {
         data: data.toData(),
       ),
     );
-  }
-
-  Future<List<AccountProfile>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required AccountProfileWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
-        model: 'AccountProfile',
-        where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
-      ),
-    );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <AccountProfile>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords
-          .map(AccountProfile.fromRecord)
-          .toList(growable: false);
-    }
-    final projectedRecords = <AccountProfile>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'AccountProfile',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'AccountProfile.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(AccountProfile.fromRecord(projected));
-    }
-    return List<AccountProfile>.unmodifiable(projectedRecords);
   }
 
   Future<AccountProfile> _performCreateWithRelationWrites({
@@ -6222,9 +4840,7 @@ class AccountProfileDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'AccountProfile create branch could not reload the created record by primary key.',
-      );
+      throw StateError('AccountProfile create branch could not reload the created record by primary key.');
     }
     return AccountProfile.fromRecord(projected);
   }
@@ -6266,9 +4882,7 @@ class AccountProfileDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'AccountProfile update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('AccountProfile update branch could not reload the updated record for the provided unique selector.');
     }
     return AccountProfile.fromRecord(projected);
   }
@@ -6288,48 +4902,39 @@ class AccountProfileDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for AccountProfileUpdateInput.account.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for AccountProfileUpdateInput.account.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
         final related = await tx.account._delegate.findUnique(
-          FindUniqueQuery(model: 'Account', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'Account',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related Account record found for nested connect on AccountProfile.account.',
-          );
+          throw StateError('No related Account record found for nested connect on AccountProfile.account.');
         }
-        await tx._client
-            .model('AccountProfile')
-            .update(
-              UpdateQuery(
-                model: 'AccountProfile',
-                where: predicates,
-                data: <String, Object?>{
-                  'tenantId': _requireRecordValue(
-                    related,
-                    'tenantId',
-                    'nested direct relation write on AccountProfile.account',
-                  ),
-                  'accountSlug': _requireRecordValue(
-                    related,
-                    'slug',
-                    'nested direct relation write on AccountProfile.account',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('AccountProfile').update(
+          UpdateQuery(
+            model: 'AccountProfile',
+            where: predicates,
+            data: <String, Object?>{
+              'tenantId': _requireRecordValue(related, 'tenantId', 'nested direct relation write on AccountProfile.account'),
+              'accountSlug': _requireRecordValue(related, 'slug', 'nested direct relation write on AccountProfile.account'),
+            },
+          ),
+        );
       }
       if (nested.connectOrCreate != null) {
         final entry = nested.connectOrCreate!;
         final related = await tx.account._delegate.findUnique(
-          FindUniqueQuery(model: 'Account', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'Account',
+            where: entry.where.toPredicates(),
+          ),
         );
-        final relatedRecord =
-            related ??
+        final relatedRecord = related ??
             await tx.account._delegate.create(
               CreateQuery(
                 model: 'Account',
@@ -6337,75 +4942,53 @@ class AccountProfileDelegate {
                 nestedCreates: entry.create.toNestedCreates(),
               ),
             );
-        await tx._client
-            .model('AccountProfile')
-            .update(
-              UpdateQuery(
-                model: 'AccountProfile',
-                where: predicates,
-                data: <String, Object?>{
-                  'tenantId': _requireRecordValue(
-                    relatedRecord,
-                    'tenantId',
-                    'nested direct relation write on AccountProfile.account',
-                  ),
-                  'accountSlug': _requireRecordValue(
-                    relatedRecord,
-                    'slug',
-                    'nested direct relation write on AccountProfile.account',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('AccountProfile').update(
+          UpdateQuery(
+            model: 'AccountProfile',
+            where: predicates,
+            data: <String, Object?>{
+              'tenantId': _requireRecordValue(relatedRecord, 'tenantId', 'nested direct relation write on AccountProfile.account'),
+              'accountSlug': _requireRecordValue(relatedRecord, 'slug', 'nested direct relation write on AccountProfile.account'),
+            },
+          ),
+        );
       }
       if (nested.disconnect) {
-        throw StateError(
-          'Nested disconnect is not supported for required relation AccountProfile.account.',
-        );
+        throw StateError('Nested disconnect is not supported for required relation AccountProfile.account.');
       }
     }
   }
+
 
   Future<AccountProfile> delete({
     required AccountProfileWhereUniqueInput where,
     AccountProfileInclude? include,
     AccountProfileSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'AccountProfile',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(AccountProfile.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'AccountProfile',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(AccountProfile.fromRecord);
   }
 
-  Future<int> deleteMany({required AccountProfileWhereInput where}) {
+  Future<int> deleteMany({
+    required AccountProfileWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'AccountProfile', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'AccountProfile',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class AccountProfileWhereInput {
-  const AccountProfileWhereInput({
-    this.AND = const <AccountProfileWhereInput>[],
-    this.OR = const <AccountProfileWhereInput>[],
-    this.NOT = const <AccountProfileWhereInput>[],
-    this.id,
-    this.idFilter,
-    this.tenantId,
-    this.tenantIdFilter,
-    this.accountSlug,
-    this.accountSlugFilter,
-    this.bio,
-    this.bioFilter,
-    this.accountIs,
-    this.accountIsNot,
-  });
+  const AccountProfileWhereInput({this.AND = const <AccountProfileWhereInput>[], this.OR = const <AccountProfileWhereInput>[], this.NOT = const <AccountProfileWhereInput>[], this.id, this.idFilter, this.tenantId, this.tenantIdFilter, this.accountSlug, this.accountSlugFilter, this.bio, this.bioFilter, this.accountIs, this.accountIsNot, });
 
   final List<AccountProfileWhereInput> AND;
   final List<AccountProfileWhereInput> OR;
@@ -6424,129 +5007,50 @@ class AccountProfileWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (id != null) {
-      predicates.add(
-        QueryPredicate(field: 'id', operator: 'equals', value: id),
-      );
+      predicates.add(QueryPredicate(field: 'id', operator: 'equals', value: id));
     }
     if (idFilter != null) {
       predicates.addAll(idFilter!.toPredicates('id'));
     }
     if (tenantId != null) {
-      predicates.add(
-        QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
-      );
+      predicates.add(QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId));
     }
     if (tenantIdFilter != null) {
       predicates.addAll(tenantIdFilter!.toPredicates('tenantId'));
     }
     if (accountSlug != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'accountSlug',
-          operator: 'equals',
-          value: accountSlug,
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'accountSlug', operator: 'equals', value: accountSlug));
     }
     if (accountSlugFilter != null) {
       predicates.addAll(accountSlugFilter!.toPredicates('accountSlug'));
     }
     if (bio != null) {
-      predicates.add(
-        QueryPredicate(field: 'bio', operator: 'equals', value: bio),
-      );
+      predicates.add(QueryPredicate(field: 'bio', operator: 'equals', value: bio));
     }
     if (bioFilter != null) {
       predicates.addAll(bioFilter!.toPredicates('bio'));
     }
     if (accountIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'account',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'account',
-              targetModel: 'Account',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'tenantId',
-              targetKeyField: 'tenantId',
-              localKeyFields: const <String>['tenantId', 'accountSlug'],
-              targetKeyFields: const <String>['tenantId', 'slug'],
-            ),
-            predicates: accountIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'account', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'account', targetModel: 'Account', cardinality: QueryRelationCardinality.one, localKeyField: 'tenantId', targetKeyField: 'tenantId', localKeyFields: const <String>['tenantId', 'accountSlug'], targetKeyFields: const <String>['tenantId', 'slug']), predicates: accountIs!.toPredicates())));
     }
     if (accountIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'account',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'account',
-              targetModel: 'Account',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'tenantId',
-              targetKeyField: 'tenantId',
-              localKeyFields: const <String>['tenantId', 'accountSlug'],
-              targetKeyFields: const <String>['tenantId', 'slug'],
-            ),
-            predicates: accountIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'account', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'account', targetModel: 'Account', cardinality: QueryRelationCardinality.one, localKeyField: 'tenantId', targetKeyField: 'tenantId', localKeyFields: const <String>['tenantId', 'accountSlug'], targetKeyFields: const <String>['tenantId', 'slug']), predicates: accountIsNot!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class AccountProfileTenantIdAccountSlugCompoundUniqueInput {
-  const AccountProfileTenantIdAccountSlugCompoundUniqueInput({
-    required this.tenantId,
-    required this.accountSlug,
-  });
+  const AccountProfileTenantIdAccountSlugCompoundUniqueInput({required this.tenantId, required this.accountSlug, });
 
   final int tenantId;
   final String accountSlug;
@@ -6554,26 +5058,20 @@ class AccountProfileTenantIdAccountSlugCompoundUniqueInput {
   List<QueryPredicate> toPredicates() {
     return List<QueryPredicate>.unmodifiable(<QueryPredicate>[
       QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
-      QueryPredicate(
-        field: 'accountSlug',
-        operator: 'equals',
-        value: accountSlug,
-      ),
+      QueryPredicate(field: 'accountSlug', operator: 'equals', value: accountSlug),
     ]);
   }
 
   bool matchesRecord(Map<String, Object?> record) {
-    return record['tenantId'] == tenantId &&
-        record['accountSlug'] == accountSlug;
+    return record['tenantId'] == tenantId && record['accountSlug'] == accountSlug;
   }
 }
 
 class AccountProfileWhereUniqueInput {
-  const AccountProfileWhereUniqueInput({this.id, this.tenantId_accountSlug});
+  const AccountProfileWhereUniqueInput({this.id, this.tenantId_accountSlug, });
 
   final int? id;
-  final AccountProfileTenantIdAccountSlugCompoundUniqueInput?
-  tenantId_accountSlug;
+  final AccountProfileTenantIdAccountSlugCompoundUniqueInput? tenantId_accountSlug;
 
   List<QueryPredicate> toPredicates() {
     final selectors = <List<QueryPredicate>>[];
@@ -6586,11 +5084,13 @@ class AccountProfileWhereUniqueInput {
       selectors.add(tenantId_accountSlug!.toPredicates());
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for AccountProfileWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for AccountProfileWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -6605,21 +5105,14 @@ class AccountProfileWhereUniqueInput {
       matches = tenantId_accountSlug!.matchesRecord(record);
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for AccountProfileWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for AccountProfileWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class AccountProfileOrderByInput {
-  const AccountProfileOrderByInput({
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-  });
+  const AccountProfileOrderByInput({this.id, this.tenantId, this.accountSlug, this.bio, });
 
   final SortOrder? id;
   final SortOrder? tenantId;
@@ -6635,9 +5128,7 @@ class AccountProfileOrderByInput {
       orderings.add(QueryOrderBy(field: 'tenantId', direction: tenantId!));
     }
     if (accountSlug != null) {
-      orderings.add(
-        QueryOrderBy(field: 'accountSlug', direction: accountSlug!),
-      );
+      orderings.add(QueryOrderBy(field: 'accountSlug', direction: accountSlug!));
     }
     if (bio != null) {
       orderings.add(QueryOrderBy(field: 'bio', direction: bio!));
@@ -6646,16 +5137,15 @@ class AccountProfileOrderByInput {
   }
 }
 
-enum AccountProfileScalarField { id, tenantId, accountSlug, bio }
+enum AccountProfileScalarField {
+  id,
+  tenantId,
+  accountSlug,
+  bio
+}
 
 class AccountProfileCountAggregateInput {
-  const AccountProfileCountAggregateInput({
-    this.all = false,
-    this.id = false,
-    this.tenantId = false,
-    this.accountSlug = false,
-    this.bio = false,
-  });
+  const AccountProfileCountAggregateInput({this.all = false, this.id = false, this.tenantId = false, this.accountSlug = false, this.bio = false, });
 
   final bool all;
   final bool id;
@@ -6677,18 +5167,12 @@ class AccountProfileCountAggregateInput {
     if (bio) {
       fields.add('bio');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class AccountProfileAvgAggregateInput {
-  const AccountProfileAvgAggregateInput({
-    this.id = false,
-    this.tenantId = false,
-  });
+  const AccountProfileAvgAggregateInput({this.id = false, this.tenantId = false, });
 
   final bool id;
   final bool tenantId;
@@ -6706,10 +5190,7 @@ class AccountProfileAvgAggregateInput {
 }
 
 class AccountProfileSumAggregateInput {
-  const AccountProfileSumAggregateInput({
-    this.id = false,
-    this.tenantId = false,
-  });
+  const AccountProfileSumAggregateInput({this.id = false, this.tenantId = false, });
 
   final bool id;
   final bool tenantId;
@@ -6727,12 +5208,7 @@ class AccountProfileSumAggregateInput {
 }
 
 class AccountProfileMinAggregateInput {
-  const AccountProfileMinAggregateInput({
-    this.id = false,
-    this.tenantId = false,
-    this.accountSlug = false,
-    this.bio = false,
-  });
+  const AccountProfileMinAggregateInput({this.id = false, this.tenantId = false, this.accountSlug = false, this.bio = false, });
 
   final bool id;
   final bool tenantId;
@@ -6758,12 +5234,7 @@ class AccountProfileMinAggregateInput {
 }
 
 class AccountProfileMaxAggregateInput {
-  const AccountProfileMaxAggregateInput({
-    this.id = false,
-    this.tenantId = false,
-    this.accountSlug = false,
-    this.bio = false,
-  });
+  const AccountProfileMaxAggregateInput({this.id = false, this.tenantId = false, this.accountSlug = false, this.bio = false, });
 
   final bool id;
   final bool tenantId;
@@ -6789,13 +5260,7 @@ class AccountProfileMaxAggregateInput {
 }
 
 class AccountProfileCountAggregateResult {
-  const AccountProfileCountAggregateResult({
-    this.all,
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-  });
+  const AccountProfileCountAggregateResult({this.all, this.id, this.tenantId, this.accountSlug, this.bio, });
 
   final int? all;
   final int? id;
@@ -6803,9 +5268,7 @@ class AccountProfileCountAggregateResult {
   final int? accountSlug;
   final int? bio;
 
-  factory AccountProfileCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
+  factory AccountProfileCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
     return AccountProfileCountAggregateResult(
       all: result.all,
       id: result.fields['id'],
@@ -6817,14 +5280,12 @@ class AccountProfileCountAggregateResult {
 }
 
 class AccountProfileAvgAggregateResult {
-  const AccountProfileAvgAggregateResult({this.id, this.tenantId});
+  const AccountProfileAvgAggregateResult({this.id, this.tenantId, });
 
   final double? id;
   final double? tenantId;
 
-  factory AccountProfileAvgAggregateResult.fromMap(
-    Map<String, double?> values,
-  ) {
+  factory AccountProfileAvgAggregateResult.fromMap(Map<String, double?> values) {
     return AccountProfileAvgAggregateResult(
       id: _asDouble(values['id']),
       tenantId: _asDouble(values['tenantId']),
@@ -6833,7 +5294,7 @@ class AccountProfileAvgAggregateResult {
 }
 
 class AccountProfileSumAggregateResult {
-  const AccountProfileSumAggregateResult({this.id, this.tenantId});
+  const AccountProfileSumAggregateResult({this.id, this.tenantId, });
 
   final int? id;
   final int? tenantId;
@@ -6847,21 +5308,14 @@ class AccountProfileSumAggregateResult {
 }
 
 class AccountProfileMinAggregateResult {
-  const AccountProfileMinAggregateResult({
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-  });
+  const AccountProfileMinAggregateResult({this.id, this.tenantId, this.accountSlug, this.bio, });
 
   final int? id;
   final int? tenantId;
   final String? accountSlug;
   final String? bio;
 
-  factory AccountProfileMinAggregateResult.fromMap(
-    Map<String, Object?> values,
-  ) {
+  factory AccountProfileMinAggregateResult.fromMap(Map<String, Object?> values) {
     return AccountProfileMinAggregateResult(
       id: values['id'] as int?,
       tenantId: values['tenantId'] as int?,
@@ -6872,21 +5326,14 @@ class AccountProfileMinAggregateResult {
 }
 
 class AccountProfileMaxAggregateResult {
-  const AccountProfileMaxAggregateResult({
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-  });
+  const AccountProfileMaxAggregateResult({this.id, this.tenantId, this.accountSlug, this.bio, });
 
   final int? id;
   final int? tenantId;
   final String? accountSlug;
   final String? bio;
 
-  factory AccountProfileMaxAggregateResult.fromMap(
-    Map<String, Object?> values,
-  ) {
+  factory AccountProfileMaxAggregateResult.fromMap(Map<String, Object?> values) {
     return AccountProfileMaxAggregateResult(
       id: values['id'] as int?,
       tenantId: values['tenantId'] as int?,
@@ -6911,33 +5358,19 @@ class AccountProfileAggregateResult {
   final AccountProfileMinAggregateResult? min;
   final AccountProfileMaxAggregateResult? max;
 
-  factory AccountProfileAggregateResult.fromQueryResult(
-    AggregateQueryResult result,
-  ) {
+  factory AccountProfileAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return AccountProfileAggregateResult(
-      count: result.count == null
-          ? null
-          : AccountProfileCountAggregateResult.fromQueryCountResult(
-              result.count!,
-            ),
-      avg: result.avg == null
-          ? null
-          : AccountProfileAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : AccountProfileSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : AccountProfileMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : AccountProfileMaxAggregateResult.fromMap(result.max!),
+      count: result.count == null ? null : AccountProfileCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : AccountProfileAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : AccountProfileSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : AccountProfileMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : AccountProfileMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class AccountProfileGroupByHavingInput {
-  const AccountProfileGroupByHavingInput({this.id, this.tenantId});
+  const AccountProfileGroupByHavingInput({this.id, this.tenantId, });
 
   final NumericAggregatesFilter? id;
   final NumericAggregatesFilter? tenantId;
@@ -6955,13 +5388,7 @@ class AccountProfileGroupByHavingInput {
 }
 
 class AccountProfileCountAggregateOrderByInput {
-  const AccountProfileCountAggregateOrderByInput({
-    this.all,
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-  });
+  const AccountProfileCountAggregateOrderByInput({this.all, this.id, this.tenantId, this.accountSlug, this.bio, });
 
   final SortOrder? all;
   final SortOrder? id;
@@ -6972,52 +5399,26 @@ class AccountProfileCountAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
     }
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (accountSlug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'accountSlug',
-          direction: accountSlug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'accountSlug', direction: accountSlug!));
     }
     if (bio != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'bio',
-          direction: bio!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'bio', direction: bio!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountProfileAvgAggregateOrderByInput {
-  const AccountProfileAvgAggregateOrderByInput({this.id, this.tenantId});
+  const AccountProfileAvgAggregateOrderByInput({this.id, this.tenantId, });
 
   final SortOrder? id;
   final SortOrder? tenantId;
@@ -7025,29 +5426,17 @@ class AccountProfileAvgAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountProfileSumAggregateOrderByInput {
-  const AccountProfileSumAggregateOrderByInput({this.id, this.tenantId});
+  const AccountProfileSumAggregateOrderByInput({this.id, this.tenantId, });
 
   final SortOrder? id;
   final SortOrder? tenantId;
@@ -7055,34 +5444,17 @@ class AccountProfileSumAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountProfileMinAggregateOrderByInput {
-  const AccountProfileMinAggregateOrderByInput({
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-  });
+  const AccountProfileMinAggregateOrderByInput({this.id, this.tenantId, this.accountSlug, this.bio, });
 
   final SortOrder? id;
   final SortOrder? tenantId;
@@ -7092,52 +5464,23 @@ class AccountProfileMinAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (accountSlug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'accountSlug',
-          direction: accountSlug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'accountSlug', direction: accountSlug!));
     }
     if (bio != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'bio',
-          direction: bio!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'bio', direction: bio!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountProfileMaxAggregateOrderByInput {
-  const AccountProfileMaxAggregateOrderByInput({
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-  });
+  const AccountProfileMaxAggregateOrderByInput({this.id, this.tenantId, this.accountSlug, this.bio, });
 
   final SortOrder? id;
   final SortOrder? tenantId;
@@ -7147,57 +5490,23 @@ class AccountProfileMaxAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (accountSlug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'accountSlug',
-          direction: accountSlug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'accountSlug', direction: accountSlug!));
     }
     if (bio != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'bio',
-          direction: bio!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'bio', direction: bio!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class AccountProfileGroupByOrderByInput {
-  const AccountProfileGroupByOrderByInput({
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const AccountProfileGroupByOrderByInput({this.id, this.tenantId, this.accountSlug, this.bio, this.count, this.avg, this.sum, this.min, this.max});
 
   final SortOrder? id;
   final SortOrder? tenantId;
@@ -7215,14 +5524,10 @@ class AccountProfileGroupByOrderByInput {
       orderings.add(GroupByOrderBy.field(field: 'id', direction: id!));
     }
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.field(field: 'tenantId', direction: tenantId!),
-      );
+      orderings.add(GroupByOrderBy.field(field: 'tenantId', direction: tenantId!));
     }
     if (accountSlug != null) {
-      orderings.add(
-        GroupByOrderBy.field(field: 'accountSlug', direction: accountSlug!),
-      );
+      orderings.add(GroupByOrderBy.field(field: 'accountSlug', direction: accountSlug!));
     }
     if (bio != null) {
       orderings.add(GroupByOrderBy.field(field: 'bio', direction: bio!));
@@ -7247,17 +5552,7 @@ class AccountProfileGroupByOrderByInput {
 }
 
 class AccountProfileGroupByRow {
-  const AccountProfileGroupByRow({
-    this.id,
-    this.tenantId,
-    this.accountSlug,
-    this.bio,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const AccountProfileGroupByRow({this.id, this.tenantId, this.accountSlug, this.bio, this.count, this.avg, this.sum, this.min, this.max});
 
   final int? id;
   final int? tenantId;
@@ -7269,54 +5564,30 @@ class AccountProfileGroupByRow {
   final AccountProfileMinAggregateResult? min;
   final AccountProfileMaxAggregateResult? max;
 
-  factory AccountProfileGroupByRow.fromQueryResultRow(
-    GroupByQueryResultRow row,
-  ) {
+  factory AccountProfileGroupByRow.fromQueryResultRow(GroupByQueryResultRow row) {
     return AccountProfileGroupByRow(
       id: row.group['id'] as int?,
       tenantId: row.group['tenantId'] as int?,
       accountSlug: row.group['accountSlug'] as String?,
       bio: row.group['bio'] as String?,
-      count: row.aggregates.count == null
-          ? null
-          : AccountProfileCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : AccountProfileAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : AccountProfileSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : AccountProfileMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : AccountProfileMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: row.aggregates.count == null ? null : AccountProfileCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : AccountProfileAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : AccountProfileSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : AccountProfileMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : AccountProfileMaxAggregateResult.fromMap(row.aggregates.max!),
     );
   }
 }
 
 class AccountProfileInclude {
-  const AccountProfileInclude({this.account = false});
+  const AccountProfileInclude({this.account = false, });
 
   final bool account;
 
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (account) {
-      relations['account'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'account',
-          targetModel: 'Account',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'tenantId',
-          targetKeyField: 'tenantId',
-          localKeyFields: const <String>['tenantId', 'accountSlug'],
-          targetKeyFields: const <String>['tenantId', 'slug'],
-        ),
-      );
+      relations['account'] = QueryIncludeEntry(relation: QueryRelation(field: 'account', targetModel: 'Account', cardinality: QueryRelationCardinality.one, localKeyField: 'tenantId', targetKeyField: 'tenantId', localKeyFields: const <String>['tenantId', 'accountSlug'], targetKeyFields: const <String>['tenantId', 'slug']));
     }
     if (relations.isEmpty) {
       return null;
@@ -7326,12 +5597,7 @@ class AccountProfileInclude {
 }
 
 class AccountProfileSelect {
-  const AccountProfileSelect({
-    this.id = false,
-    this.tenantId = false,
-    this.accountSlug = false,
-    this.bio = false,
-  });
+  const AccountProfileSelect({this.id = false, this.tenantId = false, this.accountSlug = false, this.bio = false, });
 
   final bool id;
   final bool tenantId;
@@ -7360,13 +5626,7 @@ class AccountProfileSelect {
 }
 
 class AccountProfileCreateInput {
-  const AccountProfileCreateInput({
-    required this.id,
-    required this.tenantId,
-    required this.accountSlug,
-    this.bio,
-    this.account,
-  });
+  const AccountProfileCreateInput({required this.id, required this.tenantId, required this.accountSlug, this.bio, this.account, });
 
   final int id;
   final int tenantId;
@@ -7387,38 +5647,20 @@ class AccountProfileCreateInput {
 
   List<List<QueryPredicate>> toUniqueSelectorPredicates() {
     final selectors = <List<QueryPredicate>>[];
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'id', operator: 'equals', value: id),
-    ]);
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
-      QueryPredicate(
-        field: 'accountSlug',
-        operator: 'equals',
-        value: accountSlug,
-      ),
-    ]);
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'id', operator: 'equals', value: id),
+      ]);
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
+        QueryPredicate(field: 'accountSlug', operator: 'equals', value: accountSlug),
+      ]);
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (account != null) {
-      writes.addAll(
-        account!.toRelationWrites(
-          QueryRelation(
-            field: 'account',
-            targetModel: 'Account',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'tenantId',
-            targetKeyField: 'tenantId',
-            localKeyFields: const <String>['tenantId', 'accountSlug'],
-            targetKeyFields: const <String>['tenantId', 'slug'],
-          ),
-        ),
-      );
+      writes.addAll(account!.toRelationWrites(QueryRelation(field: 'account', targetModel: 'Account', cardinality: QueryRelationCardinality.one, localKeyField: 'tenantId', targetKeyField: 'tenantId', localKeyFields: const <String>['tenantId', 'accountSlug'], targetKeyFields: const <String>['tenantId', 'slug'])));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
@@ -7428,20 +5670,14 @@ class AccountProfileCreateInput {
   }
 
   AccountProfileUpdateInput toDeferredRelationUpdateInput() {
-    return AccountProfileUpdateInput(account: account?.toDeferredUpdateWrite());
+    return AccountProfileUpdateInput(
+      account: account?.toDeferredUpdateWrite(),
+    );
   }
 }
 
 class AccountProfileUpdateInput {
-  const AccountProfileUpdateInput({
-    this.tenantId,
-    this.tenantIdOps,
-    this.accountSlug,
-    this.accountSlugOps,
-    this.bio,
-    this.bioOps,
-    this.account,
-  });
+  const AccountProfileUpdateInput({this.tenantId, this.tenantIdOps, this.accountSlug, this.accountSlugOps, this.bio, this.bioOps, this.account, });
 
   final int? tenantId;
   final IntFieldUpdateOperationsInput? tenantIdOps;
@@ -7462,9 +5698,7 @@ class AccountProfileUpdateInput {
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
     if (tenantId != null && tenantIdOps != null) {
-      throw StateError(
-        'Only one of tenantId or tenantIdOps may be provided for AccountProfileUpdateInput.tenantId.',
-      );
+      throw StateError('Only one of tenantId or tenantIdOps may be provided for AccountProfileUpdateInput.tenantId.');
     }
     if (tenantId != null) {
       data['tenantId'] = tenantId;
@@ -7472,23 +5706,17 @@ class AccountProfileUpdateInput {
     if (tenantIdOps != null) {
       final ops = tenantIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for AccountProfileUpdateInput.tenantId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for AccountProfileUpdateInput.tenantId.');
       }
       if (ops.hasComputedUpdate) {
-        throw StateError(
-          'Computed scalar update operators for AccountProfileUpdateInput.tenantId require the current record value before they can be converted to raw update data.',
-        );
+        throw StateError('Computed scalar update operators for AccountProfileUpdateInput.tenantId require the current record value before they can be converted to raw update data.');
       }
       if (ops.hasSet) {
         data['tenantId'] = ops.set as int?;
       }
     }
     if (accountSlug != null && accountSlugOps != null) {
-      throw StateError(
-        'Only one of accountSlug or accountSlugOps may be provided for AccountProfileUpdateInput.accountSlug.',
-      );
+      throw StateError('Only one of accountSlug or accountSlugOps may be provided for AccountProfileUpdateInput.accountSlug.');
     }
     if (accountSlug != null) {
       data['accountSlug'] = accountSlug;
@@ -7500,9 +5728,7 @@ class AccountProfileUpdateInput {
       }
     }
     if (bio != null && bioOps != null) {
-      throw StateError(
-        'Only one of bio or bioOps may be provided for AccountProfileUpdateInput.bio.',
-      );
+      throw StateError('Only one of bio or bioOps may be provided for AccountProfileUpdateInput.bio.');
     }
     if (bio != null) {
       data['bio'] = bio;
@@ -7519,9 +5745,7 @@ class AccountProfileUpdateInput {
   Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
     final data = <String, Object?>{};
     if (tenantId != null && tenantIdOps != null) {
-      throw StateError(
-        'Only one of tenantId or tenantIdOps may be provided for AccountProfileUpdateInput.tenantId.',
-      );
+      throw StateError('Only one of tenantId or tenantIdOps may be provided for AccountProfileUpdateInput.tenantId.');
     }
     if (tenantId != null) {
       data['tenantId'] = tenantId;
@@ -7529,9 +5753,7 @@ class AccountProfileUpdateInput {
     if (tenantIdOps != null) {
       final ops = tenantIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for AccountProfileUpdateInput.tenantId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for AccountProfileUpdateInput.tenantId.');
       }
       if (ops.hasSet) {
         data['tenantId'] = ops.set as int?;
@@ -7539,26 +5761,20 @@ class AccountProfileUpdateInput {
         final currentValue = record['tenantId'] as int?;
         if (ops.increment != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot increment AccountProfileUpdateInput.tenantId because the current value is null.',
-            );
+            throw StateError('Cannot increment AccountProfileUpdateInput.tenantId because the current value is null.');
           }
           data['tenantId'] = currentValue + ops.increment!;
         }
         if (ops.decrement != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot decrement AccountProfileUpdateInput.tenantId because the current value is null.',
-            );
+            throw StateError('Cannot decrement AccountProfileUpdateInput.tenantId because the current value is null.');
           }
           data['tenantId'] = currentValue - ops.decrement!;
         }
       }
     }
     if (accountSlug != null && accountSlugOps != null) {
-      throw StateError(
-        'Only one of accountSlug or accountSlugOps may be provided for AccountProfileUpdateInput.accountSlug.',
-      );
+      throw StateError('Only one of accountSlug or accountSlugOps may be provided for AccountProfileUpdateInput.accountSlug.');
     }
     if (accountSlug != null) {
       data['accountSlug'] = accountSlug;
@@ -7570,9 +5786,7 @@ class AccountProfileUpdateInput {
       }
     }
     if (bio != null && bioOps != null) {
-      throw StateError(
-        'Only one of bio or bioOps may be provided for AccountProfileUpdateInput.bio.',
-      );
+      throw StateError('Only one of bio or bioOps may be provided for AccountProfileUpdateInput.bio.');
     }
     if (bio != null) {
       data['bio'] = bio;
@@ -7588,7 +5802,7 @@ class AccountProfileUpdateInput {
 }
 
 class AccountProfileCreateWithoutAccountInput {
-  const AccountProfileCreateWithoutAccountInput({required this.id, this.bio});
+  const AccountProfileCreateWithoutAccountInput({required this.id, this.bio, });
 
   final int id;
   final String? bio;
@@ -7606,41 +5820,26 @@ class AccountProfileCreateWithoutAccountInput {
 }
 
 class AccountConnectOrCreateWithoutProfileInput {
-  const AccountConnectOrCreateWithoutProfileInput({
-    required this.where,
-    required this.create,
-  });
+  const AccountConnectOrCreateWithoutProfileInput({required this.where, required this.create});
 
   final AccountWhereUniqueInput where;
   final AccountCreateWithoutProfileInput create;
 }
 
 class AccountCreateNestedOneWithoutProfileInput {
-  const AccountCreateNestedOneWithoutProfileInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const AccountCreateNestedOneWithoutProfileInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final AccountCreateWithoutProfileInput? create;
   final AccountWhereUniqueInput? connect;
   final AccountConnectOrCreateWithoutProfileInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for AccountCreateNestedOneWithoutProfileInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for AccountCreateNestedOneWithoutProfileInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -7654,40 +5853,25 @@ class AccountCreateNestedOneWithoutProfileInput {
   }
 
   AccountUpdateNestedOneWithoutProfileInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for AccountCreateNestedOneWithoutProfileInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for AccountCreateNestedOneWithoutProfileInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return AccountUpdateNestedOneWithoutProfileInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return AccountUpdateNestedOneWithoutProfileInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class AccountUpdateNestedOneWithoutProfileInput {
-  const AccountUpdateNestedOneWithoutProfileInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const AccountUpdateNestedOneWithoutProfileInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final AccountWhereUniqueInput? connect;
   final AccountConnectOrCreateWithoutProfileInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 DateTime? _asDateTime(Object? value) {
@@ -7780,14 +5964,10 @@ int _deepHash(Object? value) {
     return Object.hashAll(value.map(_deepHash));
   }
   if (value is Map<Object?, Object?>) {
-    final entries =
-        value.entries
-            .map(
-              (entry) =>
-                  Object.hash(_deepHash(entry.key), _deepHash(entry.value)),
-            )
-            .toList(growable: false)
-          ..sort();
+    final entries = value.entries
+        .map((entry) => Object.hash(_deepHash(entry.key), _deepHash(entry.value)))
+        .toList(growable: false)
+      ..sort();
     return Object.hashAll(entries);
   }
   return value.hashCode;
@@ -7826,7 +6006,9 @@ Object? _requireRecordValue(
 ) {
   final value = record[field];
   if (value == null) {
-    throw StateError('Missing required key "$field" for $context.');
+    throw StateError(
+      'Missing required key "$field" for $context.',
+    );
   }
   return value;
 }
@@ -7837,9 +6019,7 @@ bool _isSkippableDuplicateError(Object error) {
     return true;
   }
   final normalized = error.toString().toLowerCase();
-  return normalized.contains(
-        'duplicate key value violates unique constraint',
-      ) ||
+  return normalized.contains('duplicate key value violates unique constraint') ||
       normalized.contains('unique constraint failed') ||
       normalized.contains('unique violation');
 }
@@ -7853,3 +6033,4 @@ String? _errorCode(Object error) {
     return null;
   }
 }
+

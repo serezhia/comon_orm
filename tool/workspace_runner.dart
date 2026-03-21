@@ -73,7 +73,7 @@ Future<int> runDartCommandAcrossMembers({
 
 String packageCommandExecutable(Directory packageDir, List<String> command) {
   if (_isFlutterPackage(packageDir) && _canUseFlutter(command)) {
-    return 'flutter';
+    return Platform.isWindows ? 'flutter.bat' : 'flutter';
   }
 
   return Platform.resolvedExecutable;
@@ -85,8 +85,11 @@ bool _isFlutterPackage(Directory packageDir) {
     return false;
   }
 
-  final content = pubspec.readAsStringSync();
-  return content.contains('flutter:\n    sdk: flutter');
+  final content = pubspec.readAsStringSync().replaceAll('\r\n', '\n');
+  return RegExp(
+    r'(^|\n)\s*flutter:\s*\n\s*sdk:\s*flutter\b',
+    multiLine: true,
+  ).hasMatch(content);
 }
 
 bool _canUseFlutter(List<String> command) {

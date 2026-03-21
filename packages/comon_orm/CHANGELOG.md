@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.1-alpha.2
+
+- Added native provider-side upsert and `createMany(skipDuplicates)` execution paths instead of transaction-heavy fallbacks.
+- Added include planning plus JOIN/batch eager-loading improvements across SQL adapters and generated clients.
+- Added middleware decoration APIs, SQL pushdown for `distinct + cursor`, and CI/pub.dev release validation updates.
+
 ## 0.0.1-alpha.1
 
 - Added generated runtime metadata so generated clients can open adapters without re-reading `schema.prisma` at normal runtime.

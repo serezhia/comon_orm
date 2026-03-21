@@ -272,6 +272,49 @@ class SqliteMigrationRunner {
     }
   }
 
+  /// Applies the schema diff to [target] without writing migration history.
+  SqliteMigrationResult pushToSchema({
+    required sqlite.Database database,
+    required SchemaDocument target,
+    bool allowWarnings = false,
+  }) {
+    final filteredFrom = _currentSourceSchema(database);
+    final plan = _mergeRiskWarnings(
+      planner.plan(from: filteredFrom, to: target),
+      detectPotentialDataLossWarnings(from: filteredFrom, to: target),
+    );
+    if (plan.warnings.isNotEmpty && !allowWarnings) {
+      throw StateError(
+        'Migration plan contains warnings: ${plan.warnings.join(' | ')}',
+      );
+    }
+
+    if (!plan.requiresRebuild && plan.statements.isEmpty) {
+      return SqliteMigrationResult(plan: plan, applied: false);
+    }
+
+    if (plan.requiresRebuild) {
+      _rebuildDatabase(
+        database: database,
+        source: filteredFrom,
+        target: target,
+      );
+      return SqliteMigrationResult(plan: plan, applied: true);
+    }
+
+    database.execute('BEGIN');
+    try {
+      for (final statement in plan.statements) {
+        database.execute(statement);
+      }
+      database.execute('COMMIT');
+      return SqliteMigrationResult(plan: plan, applied: true);
+    } catch (_) {
+      database.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   /// Rolls migration history back to [targetMigrationName].
   SqliteRollbackResult rollbackToSchema({
     required sqlite.Database database,
@@ -376,6 +419,73 @@ class SqliteMigrationRunner {
         rebuildRequired ? 1 : 0,
       ],
     );
+  }
+
+  /// Inserts an apply record without executing schema statements.
+  bool markMigrationApplied({
+    required sqlite.Database database,
+    required String migrationName,
+    required int statementCount,
+    required String checksum,
+    required String beforeSchema,
+    required String afterSchema,
+    required List<String> warnings,
+    required bool rebuildRequired,
+  }) {
+    ensureHistoryTable(database);
+    final activeNames = _activeMigrationNames(loadHistory(database));
+    if (activeNames.contains(migrationName)) {
+      return false;
+    }
+
+    _recordHistory(
+      database: database,
+      migrationName: migrationName,
+      statementCount: statementCount,
+      kind: SqliteMigrationRecordKind.apply,
+      provider: providerName,
+      checksum: checksum,
+      beforeSchema: beforeSchema,
+      afterSchema: afterSchema,
+      warnings: warnings,
+      rebuildRequired: rebuildRequired,
+    );
+    return true;
+  }
+
+  /// Inserts a rollback record without executing schema statements.
+  bool markMigrationRolledBack({
+    required sqlite.Database database,
+    required String migrationName,
+    String? rollbackName,
+  }) {
+    ensureHistoryTable(database);
+    final history = loadHistory(database);
+    final activeNames = _activeMigrationNames(history);
+    if (!activeNames.contains(migrationName)) {
+      return false;
+    }
+
+    final targetRecord = history.lastWhere(
+      (record) => record.name == migrationName,
+    );
+    final effectiveRollbackName =
+        rollbackName ??
+        '${migrationName}_resolve_rollback_${DateTime.now().toUtc().millisecondsSinceEpoch}';
+    _recordHistory(
+      database: database,
+      migrationName: effectiveRollbackName,
+      statementCount: 0,
+      kind: SqliteMigrationRecordKind.rollback,
+      provider: providerName,
+      checksum: targetRecord.checksum ?? effectiveRollbackName,
+      beforeSchema: targetRecord.afterSchema ?? targetRecord.beforeSchema ?? '',
+      afterSchema: targetRecord.beforeSchema ?? targetRecord.afterSchema ?? '',
+      warnings: const <String>[],
+      rebuildRequired: false,
+      targetName: migrationName,
+    );
+    return true;
   }
 
   SqliteMigrationRecordKind _parseRecordKind(String value) {

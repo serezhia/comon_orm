@@ -26,6 +26,17 @@ flutter test
 flutter test integration_test
 ```
 
+Для первичной локальной подготовки схемы можно отдельно выполнить:
+
+```bash
+cd examples/flutter_sqlite
+dart run ../../packages/comon_orm/bin/comon_orm.dart check
+dart run ../../packages/comon_orm/bin/comon_orm.dart generate
+dart run ../../packages/comon_orm/bin/comon_orm.dart db push
+```
+
+Если локальную базу нужно полностью пересоздать во время разработки, вместо `db push` можно использовать `dart run ../../packages/comon_orm/bin/comon_orm.dart migrate reset`.
+
 Пример при старте:
 
 - если локальная база уже существует, открывает ее напрямую из generated metadata

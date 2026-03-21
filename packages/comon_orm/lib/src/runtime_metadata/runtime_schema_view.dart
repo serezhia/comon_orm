@@ -329,7 +329,7 @@ abstract interface class RuntimeDatasourceView {
 
 /// Creates a runtime schema bridge over [schema].
 RuntimeSchemaView runtimeSchemaViewFromSchemaDocument(SchemaDocument schema) {
-  return _AstRuntimeSchemaView(schema);
+  return _AstRuntimeSchemaView(schema.withoutIgnored());
 }
 
 /// Creates a runtime schema bridge over [schema].

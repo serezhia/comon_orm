@@ -1,0 +1,60 @@
+---
+title: Native types
+description: Provider-specific @db.* support for PostgreSQL and SQLite.
+---
+
+# Native types
+
+`comon_orm` supports a deliberate subset of provider-specific native types.
+
+Use native types when you need a more exact database shape than the default logical scalar mapping.
+
+## PostgreSQL
+
+| Schema attribute | Typical logical type |
+| --- | --- |
+| `@db.VarChar(255)` | `String` |
+| `@db.Text` | `String` |
+| `@db.Json` | `Json` |
+| `@db.JsonB` | `Json` |
+| `@db.ByteA` | `Bytes` |
+| `@db.Numeric` | `Decimal` |
+| `@db.Timestamp` | `DateTime` |
+| `@db.Timestamptz` | `DateTime` |
+| `@db.Uuid` | `String` |
+
+Example:
+
+```prisma
+model Event {
+  id        String   @id @db.Uuid
+  payload   Json     @db.JsonB
+  createdAt DateTime @db.Timestamptz
+}
+```
+
+## SQLite
+
+| Schema attribute | Typical logical type |
+| --- | --- |
+| `@db.Integer` | `Int` |
+| `@db.Numeric` | `Decimal` |
+| `@db.Real` | `Float` |
+| `@db.Text` | `String` |
+| `@db.Blob` | `Bytes` |
+
+Example:
+
+```prisma
+model Attachment {
+  id      Int   @id @default(autoincrement())
+  data    Bytes @db.Blob
+  version Int   @db.Integer
+}
+```
+
+## Practical rules
+
+- prefer logical types first and reach for `@db.*` only when the database shape matters
+- keep PostgreSQL and SQLite schemas intentionally separate when you need provider-specific storage behavior
+- review native-type changes carefully in migrations because they can become lossy type transitions

@@ -247,6 +247,7 @@ class SchemaWorkflow {
             fieldName: issue.fieldName,
             filePath: filePath,
             line: issue.line ?? _resolveIssueLine(schema, issue),
+            column: issue.column ?? _resolveIssueColumn(schema, issue),
           ),
         )
         .toList(growable: false);
@@ -285,6 +286,41 @@ class SchemaWorkflow {
     }
 
     return issue.line;
+  }
+
+  int? _resolveIssueColumn(SchemaDocument schema, ValidationIssue issue) {
+    final modelName = issue.modelName;
+    if (modelName == null) {
+      return issue.column;
+    }
+
+    final model = schema.findModel(modelName);
+    if (model != null) {
+      if (issue.fieldName != null) {
+        final field = model.findField(issue.fieldName!);
+        if (field != null) {
+          return field.column ?? model.column;
+        }
+      }
+      return model.column;
+    }
+
+    final enumDefinition = schema.findEnum(modelName);
+    if (enumDefinition != null) {
+      return enumDefinition.column;
+    }
+
+    final datasource = schema.findDatasource(modelName);
+    if (datasource != null) {
+      return datasource.column;
+    }
+
+    final generator = schema.findGenerator(modelName);
+    if (generator != null) {
+      return generator.column;
+    }
+
+    return issue.column;
   }
 
   GeneratorDefinition? _selectGenerator(

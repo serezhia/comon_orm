@@ -5,10 +5,10 @@ This file is for commands only. If the task is about workflow decisions or migra
 ## Core Schema Commands
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm validate schema.prisma
-dart run comon_orm format schema.prisma
-dart run comon_orm generate schema.prisma
+dart run comon_orm check
+dart run comon_orm validate
+dart run comon_orm format
+dart run comon_orm generate
 ```
 
 Notes:
@@ -21,9 +21,21 @@ Notes:
 Use these first. The dispatcher resolves `datasource.provider` from `schema.prisma` and forwards to the matching provider package.
 
 ```bash
+dart run comon_orm migrate dev --name 20260315_init
+dart run comon_orm migrate dev --create-only
+dart run comon_orm migrate deploy
+dart run comon_orm migrate status
+dart run comon_orm migrate reset --force
+dart run comon_orm migrate resolve --applied 20260315_init
+dart run comon_orm migrate diff --from-database --to-schema prisma/schema.prisma --script
+dart run comon_orm db push
+```
+
+Legacy commands still exist with deprecation warnings:
+
+```bash
 dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init --out prisma/migrations
 dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations
 dart run comon_orm migrate history --schema schema.prisma
 dart run comon_orm migrate rollback --schema schema.prisma --from prisma/migrations --allow-warnings
 ```
@@ -35,17 +47,17 @@ Use these only when the task explicitly needs provider-level debugging.
 PostgreSQL:
 
 ```bash
-dart run comon_orm_postgresql:comon_orm_postgresql diff --schema schema.prisma --name 20260315_init --out prisma/migrations
-dart run comon_orm_postgresql:comon_orm_postgresql apply --schema schema.prisma --name 20260315_init
-dart run comon_orm_postgresql:comon_orm_postgresql status --schema schema.prisma --from prisma/migrations
+dart run comon_orm_postgresql:comon_orm_postgresql dev --name 20260315_init
+dart run comon_orm_postgresql:comon_orm_postgresql deploy
+dart run comon_orm_postgresql:comon_orm_postgresql push
 ```
 
 SQLite:
 
 ```bash
-dart run comon_orm_sqlite:comon_orm_sqlite diff --schema schema.prisma --name 20260315_init --out prisma/migrations
-dart run comon_orm_sqlite:comon_orm_sqlite apply --schema schema.prisma --name 20260315_init
-dart run comon_orm_sqlite:comon_orm_sqlite status --schema schema.prisma --from prisma/migrations
+dart run comon_orm_sqlite:comon_orm_sqlite dev --name 20260315_init
+dart run comon_orm_sqlite:comon_orm_sqlite deploy
+dart run comon_orm_sqlite:comon_orm_sqlite push
 ```
 
 ## Runtime Bootstrap Commands
@@ -53,7 +65,7 @@ dart run comon_orm_sqlite:comon_orm_sqlite status --schema schema.prisma --from 
 These are the normal codegen and app bootstrap steps, not deployment steps.
 
 ```bash
-dart run comon_orm generate schema.prisma
+dart run comon_orm generate
 ```
 
 Normal runtime bootstrap in app code:
@@ -90,8 +102,8 @@ dart test
 - `packages/comon_orm_postgresql/lib/comon_orm_postgresql.dart`
 - `packages/comon_orm_sqlite/lib/comon_orm_sqlite.dart`
 - `README.md`
-- `MIGRATIONS.md`
-- `SCHEMA_REFERENCE.md`
+- `site/content/docs/migrations/index.mdx`
+- `site/content/docs/schema/reference.mdx`
 
 ## Status And Drift Interpretation
 
@@ -105,5 +117,6 @@ dart test
 
 - Use `check` for new docs and examples.
 - Use unified `comon_orm migrate ...` commands by default.
+- `schema.prisma` is auto-discovered from `prisma/schema.prisma` or `schema.prisma` when `--schema` is omitted.
 - Mention provider-specific executables only when debugging dispatcher behavior or provider CLIs directly.
 - Do not describe `migrate apply` as replaying checked-in `migration.sql` files.
