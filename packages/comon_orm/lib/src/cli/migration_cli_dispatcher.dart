@@ -2,6 +2,8 @@ import 'dart:io';
 
 import '../schema/schema_ast.dart';
 import '../schema/schema_workflow.dart';
+import 'cli_output.dart';
+import 'cli_paths.dart';
 
 /// Runs a provider-specific migration CLI for a validated invocation.
 typedef MigrationCliDelegate =
@@ -44,17 +46,25 @@ class MigrationCliDispatcher {
   final StringSink _out;
   final StringSink _err;
 
+  bool get _outAnsiEnabled => sinkSupportsAnsi(_out);
+  bool get _errAnsiEnabled => sinkSupportsAnsi(_err);
+
   /// Dispatches [arguments] to the provider-specific migration executable.
-  Future<int> run(List<String> arguments) async {
+  Future<int> run(
+    List<String> arguments, {
+    String commandName = 'migrate',
+  }) async {
     if (arguments.isEmpty ||
         arguments.contains('--help') ||
         arguments.contains('-h')) {
-      _writeUsage();
+      _writeUsage(commandName: commandName);
       return 0;
     }
 
     try {
-      final schemaPath = _readOption(arguments, 'schema') ?? 'schema.prisma';
+      final schemaPath = discoverSchemaPath(
+        explicitPath: _readOption(arguments, 'schema'),
+      );
       final datasourceName = _readOption(arguments, 'datasource');
       final loaded = _workflow.loadValidatedSchemaSync(schemaPath);
       final provider = _resolveProvider(
@@ -62,43 +72,79 @@ class MigrationCliDispatcher {
         datasourceName: datasourceName,
       );
       final packageExecutable = _packageExecutableFor(provider);
+      final forwardedArguments = _upsertOption(arguments, 'schema', schemaPath);
 
       return _delegate(
         MigrationCliInvocation(
           provider: provider,
           packageExecutable: packageExecutable,
-          arguments: List<String>.unmodifiable(arguments),
+          arguments: List<String>.unmodifiable(forwardedArguments),
         ),
       );
     } on SchemaValidationException catch (error) {
       for (final issue in error.issues) {
-        _err.writeln(issue);
+        _err.writeln(cliError('$issue', ansiEnabled: _errAnsiEnabled));
       }
       return 1;
     } on FormatException catch (error) {
-      _err.writeln(error.message);
+      _err.writeln(cliError(error.message, ansiEnabled: _errAnsiEnabled));
       return 2;
     } on Object catch (error) {
-      _err.writeln(error);
+      _err.writeln(cliError('$error', ansiEnabled: _errAnsiEnabled));
       return 1;
     }
   }
 
-  void _writeUsage() {
-    _out.writeln('Usage: comon_orm migrate <command> [options]');
-    _out.writeln('Commands:');
+  void _writeUsage({required String commandName}) {
     _out.writeln(
-      '  diff|apply|rollback|history|status are delegated to the adapter package selected from datasource.provider.',
+      cliTitle('comon_orm $commandName', ansiEnabled: _outAnsiEnabled),
     );
+    _out.writeln(
+      cliMuted(
+        'Usage: comon_orm $commandName <command> [options]',
+        ansiEnabled: _outAnsiEnabled,
+      ),
+    );
+    _out.writeln('Commands:');
+    switch (commandName) {
+      case 'db':
+        _out.writeln(
+          '  push      Push the current schema without creating migration history.',
+        );
+        break;
+      case 'migrate':
+        _out.writeln(
+          '  diff      Compare schema sources and print or write an SQL diff.',
+        );
+        _out.writeln(
+          '  dev       Create and apply a local migration, then regenerate the client.',
+        );
+        _out.writeln(
+          '  deploy    Apply reviewed local migrations to the target database.',
+        );
+        _out.writeln(
+          '  rollback  Revert to a recorded schema snapshot for recovery scenarios.',
+        );
+        _out.writeln(
+          '  reset     Reset the database from the schema and regenerate the client.',
+        );
+        _out.writeln(
+          '  resolve   Mark migrations applied or rolled back in migration history.',
+        );
+        _out.writeln(
+          '  status    Compare local migration artifacts with database history.',
+        );
+        break;
+    }
     _out.writeln('Options:');
     _out.writeln(
-      '  --schema <path>        Schema file to inspect before delegating. Defaults to schema.prisma.',
+      '  --schema <path>        Schema file to inspect before delegating. Defaults to auto-discovery: prisma/schema.prisma, schema.prisma.',
     );
     _out.writeln(
       '  --datasource <name>    Select datasource when the schema declares multiple datasource blocks.',
     );
     _out.writeln(
-      '  Any remaining options are forwarded to the provider-specific migration CLI unchanged.',
+      '  Remaining options are forwarded unchanged to the provider-specific CLI.',
     );
   }
 
@@ -114,6 +160,43 @@ class MigrationCliDispatcher {
       return arguments[index + 1];
     }
     return null;
+  }
+
+  List<String> _upsertOption(
+    List<String> arguments,
+    String name,
+    String value,
+  ) {
+    final token = '--$name';
+    final normalized = <String>[];
+    var replaced = false;
+
+    for (var index = 0; index < arguments.length; index++) {
+      final current = arguments[index];
+      if (current != token) {
+        normalized.add(current);
+        continue;
+      }
+
+      if (index + 1 >= arguments.length) {
+        throw FormatException('Missing value for $token');
+      }
+
+      if (!replaced) {
+        normalized
+          ..add(token)
+          ..add(value);
+        replaced = true;
+      }
+      index++;
+    }
+
+    if (!replaced) {
+      normalized
+        ..add(token)
+        ..add(value);
+    }
+    return normalized;
   }
 
   String _resolveProvider(SchemaDocument schema, {String? datasourceName}) {

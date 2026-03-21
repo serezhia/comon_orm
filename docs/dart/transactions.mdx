@@ -1,0 +1,55 @@
+---
+title: Transactions
+description: Multi-step writes, rollback semantics, and when to wrap operations together.
+---
+
+# Transactions
+
+Use `transaction(...)` when multiple writes must succeed or fail together.
+
+## Basic pattern
+
+```dart
+await db.transaction((tx) async {
+  final user = await tx.user.create(
+    data: const UserCreateInput(
+      email: 'alice@example.com',
+      name: 'Alice',
+    ),
+  );
+
+  await tx.post.create(
+    data: PostCreateInput(
+      title: 'Created in the same transaction',
+      author: UserCreateNestedOneWithoutPostsInput(
+        connect: UserWhereUniqueInput(id: user.id),
+      ),
+    ),
+  );
+});
+```
+
+## Rollback behavior
+
+If the callback throws, the transaction is rolled back.
+
+```dart
+await db.transaction((tx) async {
+  await tx.user.create(
+    data: const UserCreateInput(
+      email: 'alice@example.com',
+      name: 'Alice',
+    ),
+  );
+
+  throw StateError('abort the whole unit of work');
+});
+```
+
+## When to use transactions
+
+- creating or updating multiple related records that must stay consistent
+- transferring counters or balances between rows
+- mixing direct delegate writes with relation-aware follow-up writes
+
+Nested writes already cover many common relation cases. Use explicit transactions when the unit of work spans multiple delegate calls or branches.

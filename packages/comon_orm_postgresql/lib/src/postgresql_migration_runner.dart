@@ -250,6 +250,50 @@ class PostgresqlMigrationRunner {
     );
   }
 
+  /// Applies the schema diff to [target] without writing migration history.
+  Future<PostgresqlMigrationResult> pushToSchema({
+    required pg.SessionExecutor executor,
+    required SchemaDocument target,
+    bool allowWarnings = false,
+  }) async {
+    final filteredFrom = filterSchemaForUserModels(
+      await planner.schemaIntrospector.introspect(executor),
+      historyTableName: historyTableName,
+    );
+    final plan = _mergeRiskWarnings(
+      planner.plan(from: filteredFrom, to: target),
+      detectPotentialDataLossWarnings(from: filteredFrom, to: target),
+    );
+    if (plan.warnings.isNotEmpty && !allowWarnings) {
+      throw StateError(
+        'Migration plan contains warnings: ${plan.warnings.join(' | ')}',
+      );
+    }
+
+    if (!plan.requiresRebuild && plan.statements.isEmpty) {
+      return PostgresqlMigrationResult(plan: plan, applied: false);
+    }
+
+    await executor.runTx((session) async {
+      if (plan.requiresRebuild) {
+        await _rebuildDatabase(
+          session: session,
+          source: filteredFrom,
+          target: target,
+        );
+      } else {
+        for (final statement in plan.statements) {
+          await session.execute(statement, ignoreRows: true);
+        }
+      }
+    });
+
+    return PostgresqlMigrationResult(
+      plan: plan,
+      applied: plan.requiresRebuild || plan.statements.isNotEmpty,
+    );
+  }
+
   /// Rolls migration history back to [targetMigrationName].
   Future<PostgresqlRollbackResult> rollbackToSchema({
     required pg.SessionExecutor executor,
@@ -363,6 +407,79 @@ class PostgresqlMigrationRunner {
       ],
       ignoreRows: true,
     );
+  }
+
+  /// Inserts an apply record without executing schema statements.
+  Future<bool> markMigrationApplied({
+    required pg.SessionExecutor executor,
+    required String migrationName,
+    required int statementCount,
+    required String checksum,
+    required String beforeSchema,
+    required String afterSchema,
+    required List<String> warnings,
+    required bool rebuildRequired,
+  }) async {
+    await ensureHistoryTable(executor);
+    final activeNames = _activeMigrationNames(await loadHistory(executor));
+    if (activeNames.contains(migrationName)) {
+      return false;
+    }
+
+    await executor.run((session) {
+      return _recordHistory(
+        session,
+        migrationName: migrationName,
+        statementCount: statementCount,
+        kind: PostgresqlMigrationRecordKind.apply,
+        provider: providerName,
+        checksum: checksum,
+        beforeSchema: beforeSchema,
+        afterSchema: afterSchema,
+        warnings: warnings,
+        rebuildRequired: rebuildRequired,
+      );
+    });
+    return true;
+  }
+
+  /// Inserts a rollback record without executing schema statements.
+  Future<bool> markMigrationRolledBack({
+    required pg.SessionExecutor executor,
+    required String migrationName,
+    String? rollbackName,
+  }) async {
+    await ensureHistoryTable(executor);
+    final history = await loadHistory(executor);
+    final activeNames = _activeMigrationNames(history);
+    if (!activeNames.contains(migrationName)) {
+      return false;
+    }
+
+    final targetRecord = history.lastWhere(
+      (record) => record.name == migrationName,
+    );
+    final effectiveRollbackName =
+        rollbackName ??
+        '${migrationName}_resolve_rollback_${DateTime.now().toUtc().millisecondsSinceEpoch}';
+    await executor.run((session) {
+      return _recordHistory(
+        session,
+        migrationName: effectiveRollbackName,
+        statementCount: 0,
+        kind: PostgresqlMigrationRecordKind.rollback,
+        targetName: migrationName,
+        provider: providerName,
+        checksum: targetRecord.checksum ?? effectiveRollbackName,
+        beforeSchema:
+            targetRecord.afterSchema ?? targetRecord.beforeSchema ?? '',
+        afterSchema:
+            targetRecord.beforeSchema ?? targetRecord.afterSchema ?? '',
+        warnings: const <String>[],
+        rebuildRequired: false,
+      );
+    });
+    return true;
   }
 
   Future<int> _rebuildDatabase({

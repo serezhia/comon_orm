@@ -15,11 +15,14 @@ class SchemaValidator {
 
   /// Returns validation issues for [schema].
   List<ValidationIssue> validate(SchemaDocument schema) {
+    final effectiveSchema = schema.withoutIgnored();
     final issues = <ValidationIssue>[];
     final seenModels = <String>{};
     final seenEnums = <String>{};
     final seenDatasources = <String>{};
     final seenGenerators = <String>{};
+    // Tracks effective database table names to catch @@map conflicts.
+    final seenTableNames = <String>{};
 
     for (final datasource in schema.datasources) {
       if (!seenDatasources.add(datasource.name)) {
@@ -121,12 +124,21 @@ class SchemaValidator {
       }
     }
 
-    for (final model in schema.models) {
+    for (final model in effectiveSchema.models) {
       if (!seenModels.add(model.name)) {
         issues.add(
           ValidationIssue(
             modelName: model.name,
             message: 'Duplicate model name.',
+          ),
+        );
+      }
+      if (!seenTableNames.add(model.databaseName)) {
+        issues.add(
+          ValidationIssue(
+            modelName: model.name,
+            message:
+                'Database table name "${model.databaseName}" conflicts with another model.',
           ),
         );
       }
@@ -140,6 +152,8 @@ class SchemaValidator {
       }
 
       final seenFields = <String>{};
+      // Tracks effective database column names to catch @map conflicts.
+      final seenDbFieldNames = <String>{};
       var idCount = 0;
       final modelId = model.attribute('id');
 
@@ -181,6 +195,7 @@ class SchemaValidator {
                 ),
               );
             }
+          case 'ignore':
           case 'id':
             break;
           default:
@@ -204,6 +219,20 @@ class SchemaValidator {
           );
         }
 
+        // Relation fields have no database column; skip the db-name check.
+        final isColumnField =
+            field.isScalar || effectiveSchema.findEnum(field.type) != null;
+        if (isColumnField && !seenDbFieldNames.add(field.databaseName)) {
+          issues.add(
+            ValidationIssue(
+              modelName: model.name,
+              fieldName: field.name,
+              message:
+                  'Field database name "${field.databaseName}" conflicts with another field in model "${model.name}".',
+            ),
+          );
+        }
+
         if (field.isId) {
           idCount++;
           if (field.isNullable || field.isList) {
@@ -218,8 +247,8 @@ class SchemaValidator {
         }
 
         if (!field.isScalar &&
-            schema.findEnum(field.type) == null &&
-            schema.findModel(field.type) == null) {
+            effectiveSchema.findEnum(field.type) == null &&
+            effectiveSchema.findModel(field.type) == null) {
           issues.add(
             ValidationIssue(
               modelName: model.name,
@@ -231,7 +260,13 @@ class SchemaValidator {
 
         final relation = field.attribute('relation');
         if (relation != null) {
-          _validateRelationArguments(schema, model, field, relation, issues);
+          _validateRelationArguments(
+            effectiveSchema,
+            model,
+            field,
+            relation,
+            issues,
+          );
         }
 
         final updatedAt = field.attribute('updatedAt');
@@ -301,7 +336,7 @@ class SchemaValidator {
       }
     }
 
-    _validateRelationTopology(schema, issues);
+    _validateRelationTopology(effectiveSchema, issues);
 
     return List<ValidationIssue>.unmodifiable(issues);
   }
@@ -1126,6 +1161,55 @@ class SchemaValidator {
     final value = nativeType.arguments['value'];
 
     switch (nativeType.name) {
+      case 'db.SmallInt':
+        if (field.type != 'Int' || field.isList) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.SmallInt is only supported on singular Int fields.',
+          );
+        }
+        if (nativeType.arguments.isNotEmpty) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.SmallInt does not accept arguments.',
+          );
+        }
+        return null;
+      case 'db.BigInt':
+        if (field.type != 'BigInt' || field.isList) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.BigInt is only supported on singular BigInt fields.',
+          );
+        }
+        if (nativeType.arguments.isNotEmpty) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.BigInt does not accept arguments.',
+          );
+        }
+        return null;
+      case 'db.DoublePrecision':
+        if (field.type != 'Float' || field.isList) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message:
+                '@db.DoublePrecision is only supported on singular Float fields.',
+          );
+        }
+        if (nativeType.arguments.isNotEmpty) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.DoublePrecision does not accept arguments.',
+          );
+        }
+        return null;
       case 'db.VarChar':
         final length = value == null ? null : int.tryParse(value.trim());
         if (field.type != 'String' || field.isList) {
@@ -1142,6 +1226,23 @@ class SchemaValidator {
             message: '@db.VarChar requires a positive length argument.',
           );
         }
+      case 'db.Char':
+        final length = value == null ? null : int.tryParse(value.trim());
+        if (field.type != 'String' || field.isList) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.Char is only supported on singular String fields.',
+          );
+        }
+        if (length == null || length <= 0) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.Char requires a positive length argument.',
+          );
+        }
+        return null;
       case 'db.Text':
         if (field.type != 'String' || field.isList) {
           return ValidationIssue(
@@ -1221,6 +1322,22 @@ class SchemaValidator {
             message: '@db.Uuid does not accept arguments.',
           );
         }
+      case 'db.Xml':
+        if (field.type != 'String' || field.isList) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.Xml is only supported on singular String fields.',
+          );
+        }
+        if (nativeType.arguments.isNotEmpty) {
+          return ValidationIssue(
+            modelName: model.name,
+            fieldName: field.name,
+            message: '@db.Xml does not accept arguments.',
+          );
+        }
+        return null;
       case 'db.Timestamp':
       case 'db.Timestamptz':
         if (field.type != 'DateTime' || field.isList) {

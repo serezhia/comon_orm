@@ -41,6 +41,37 @@ model Post {
       );
     });
 
+    test('ignores ignored models and fields during planning', () {
+      final initial = const SchemaParser().parse('''
+model User {
+  id Int @id @default(autoincrement())
+  name String
+}
+''');
+      final target = const SchemaParser().parse('''
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  scratch String @ignore
+}
+
+model AuditLog {
+  id Int @id
+
+  @@ignore
+}
+''');
+
+      final plan = const PostgresqlMigrationPlanner().plan(
+        from: initial,
+        to: target,
+      );
+
+      expect(plan.statements, isEmpty);
+      expect(plan.warnings, isEmpty);
+      expect(plan.requiresRebuild, isFalse);
+    });
+
     test('warns about destructive or incompatible changes', () {
       final initial = const SchemaParser().parse('''
 model User {
@@ -93,6 +124,40 @@ model Invoice {
       expect(plan.warnings, isEmpty);
       expect(plan.requiresRebuild, isFalse);
     });
+
+    test(
+      'treats BigInt/@db.BigInt and Float/@db.DoublePrecision as the same postgresql shape',
+      () {
+        final initial = const SchemaParser().parse('''
+model Metric {
+  id Int @id @default(autoincrement())
+  total BigInt
+  score Float
+}
+''');
+        final target = const SchemaParser().parse('''
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+model Metric {
+  id Int @id @default(autoincrement())
+  total BigInt @db.BigInt
+  score Float @db.DoublePrecision
+}
+''');
+
+        final plan = const PostgresqlMigrationPlanner().plan(
+          from: initial,
+          to: target,
+        );
+
+        expect(plan.statements, isEmpty);
+        expect(plan.warnings, isEmpty);
+        expect(plan.requiresRebuild, isFalse);
+      },
+    );
 
     test('plans enum creation before tables that use it', () {
       final initial = const SchemaParser().parse('''
@@ -590,6 +655,63 @@ model Tag {
         ),
       );
     });
+
+    test(
+      'creates synthetic join table for added implicit many-to-many with compound ids',
+      () {
+        final from = const SchemaParser().parse('''
+model User {
+  tenantId Int
+  slug     String
+
+  @@id([tenantId, slug])
+}
+
+model Tag {
+  scope String
+  code  String
+
+  @@id([scope, code])
+}
+''');
+        final to = const SchemaParser().parse('''
+model User {
+  tenantId Int
+  slug     String
+  tags     Tag[]
+
+  @@id([tenantId, slug])
+}
+
+model Tag {
+  scope String
+  code  String
+  users User[]
+
+  @@id([scope, code])
+}
+''');
+
+        final storage = collectImplicitManyToManyStorages(to).single;
+        final plan = const PostgresqlMigrationPlanner().plan(
+          from: from,
+          to: to,
+        );
+
+        expect(plan.warnings, isEmpty);
+        expect(plan.statements, hasLength(1));
+        expect(
+          plan.statements.single,
+          contains('CREATE TABLE IF NOT EXISTS "${storage.tableName}"'),
+        );
+        expect(
+          plan.statements.single,
+          contains(
+            'PRIMARY KEY ("${[...storage.sourceJoinColumns, ...storage.targetJoinColumns].join('", "')}")',
+          ),
+        );
+      },
+    );
 
     test('treats native type changes as incompatible field changes', () {
       final initial = const SchemaParser().parse('''

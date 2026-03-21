@@ -25,6 +25,8 @@ extension on ClientGenerator {
     final selectName = '${model.name}Select';
     final createInputName = '${model.name}CreateInput';
     final updateInputName = '${model.name}UpdateInput';
+    final hasNumericFields = _numericAggregateFields(schema, model).isNotEmpty;
+    final hasGroupBy = _scalarFields(schema, model).length > 1;
     final relationFields = _relationFields(schema, model);
     final primaryKeyFields = model.fields
         .where((field) => field.isId)
@@ -82,26 +84,11 @@ extension on ClientGenerator {
       )
       ..writeln('    final queryInclude = include?.toQueryInclude();')
       ..writeln('    final querySelect = select?.toQuerySelect();')
-      ..writeln('    if (cursor != null) {')
-      ..writeln('      final records = await _findManyWithCursor(')
-      ..writeln('        predicates: predicates,')
-      ..writeln('        cursor: cursor,')
-      ..writeln('        orderBy: queryOrderBy,')
-      ..writeln('        distinct: queryDistinct,')
-      ..writeln('        include: queryInclude,')
-      ..writeln('        select: querySelect,')
-      ..writeln('        skip: skip,')
-      ..writeln('        take: 1,')
-      ..writeln('      );')
-      ..writeln('      if (records.isEmpty) {')
-      ..writeln('        return null;')
-      ..writeln('      }')
-      ..writeln('      return records.first;')
-      ..writeln('    }')
       ..writeln('    return _delegate.findFirst(')
       ..writeln('      FindFirstQuery(')
       ..writeln('        model: ${_stringLiteral(model.name)},')
       ..writeln('        where: predicates,')
+      ..writeln('        cursor: cursor?.toQueryCursor(),')
       ..writeln('        orderBy: queryOrderBy,')
       ..writeln('        distinct: queryDistinct,')
       ..writeln('        include: queryInclude,')
@@ -134,22 +121,11 @@ extension on ClientGenerator {
       )
       ..writeln('    final queryInclude = include?.toQueryInclude();')
       ..writeln('    final querySelect = select?.toQuerySelect();')
-      ..writeln('    if (cursor != null) {')
-      ..writeln('      return _findManyWithCursor(')
-      ..writeln('        predicates: predicates,')
-      ..writeln('        cursor: cursor,')
-      ..writeln('        orderBy: queryOrderBy,')
-      ..writeln('        distinct: queryDistinct,')
-      ..writeln('        include: queryInclude,')
-      ..writeln('        select: querySelect,')
-      ..writeln('        skip: skip,')
-      ..writeln('        take: take,')
-      ..writeln('      );')
-      ..writeln('    }')
       ..writeln('    return _delegate.findMany(')
       ..writeln('      FindManyQuery(')
       ..writeln('        model: ${_stringLiteral(model.name)},')
       ..writeln('        where: predicates,')
+      ..writeln('        cursor: cursor?.toQueryCursor(),')
       ..writeln('        orderBy: queryOrderBy,')
       ..writeln('        distinct: queryDistinct,')
       ..writeln('        include: queryInclude,')
@@ -178,9 +154,13 @@ extension on ClientGenerator {
       ..writeln('    List<$orderByName>? orderBy,')
       ..writeln('    int? skip,')
       ..writeln('    int? take,')
-      ..writeln('    $countAggregateInputName? count,')
-      ..writeln('    $avgAggregateInputName? avg,')
-      ..writeln('    $sumAggregateInputName? sum,')
+      ..writeln('    $countAggregateInputName? count,');
+    if (hasNumericFields) {
+      buffer
+        ..writeln('    $avgAggregateInputName? avg,')
+        ..writeln('    $sumAggregateInputName? sum,');
+    }
+    buffer
       ..writeln('    $minAggregateInputName? min,')
       ..writeln('    $maxAggregateInputName? max,')
       ..writeln('  }) {')
@@ -197,58 +177,90 @@ extension on ClientGenerator {
       ..writeln('        take: take,')
       ..writeln(
         '        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),',
-      )
-      ..writeln('        avg: avg?.toFields() ?? const <String>{},')
-      ..writeln('        sum: sum?.toFields() ?? const <String>{},')
+      );
+    if (hasNumericFields) {
+      buffer
+        ..writeln('        avg: avg?.toFields() ?? const <String>{},')
+        ..writeln('        sum: sum?.toFields() ?? const <String>{},');
+    } else {
+      buffer
+        ..writeln('        avg: const <String>{},')
+        ..writeln('        sum: const <String>{},');
+    }
+    buffer
       ..writeln('        min: min?.toFields() ?? const <String>{},')
       ..writeln('        max: max?.toFields() ?? const <String>{},')
       ..writeln('      ),')
       ..writeln('    ).then($aggregateResultName.fromQueryResult);')
       ..writeln('  }')
-      ..writeln()
-      ..writeln('  Future<List<$groupByRowName>> groupBy({')
-      ..writeln('    required List<$scalarFieldName> by,')
-      ..writeln('    $whereInputName? where,')
-      ..writeln('    List<$groupByOrderByName>? orderBy,')
-      ..writeln('    $groupByHavingName? having,')
-      ..writeln('    int? skip,')
-      ..writeln('    int? take,')
-      ..writeln('    $countAggregateInputName? count,')
-      ..writeln('    $avgAggregateInputName? avg,')
-      ..writeln('    $sumAggregateInputName? sum,')
-      ..writeln('    $minAggregateInputName? min,')
-      ..writeln('    $maxAggregateInputName? max,')
-      ..writeln('  }) {')
-      ..writeln('    return _delegate.groupBy(')
-      ..writeln('      GroupByQuery(')
-      ..writeln('        model: ${_stringLiteral(model.name)},')
-      ..writeln(
-        '        by: by.map((field) => field.name).toList(growable: false),',
-      )
-      ..writeln(
-        '        where: where?.toPredicates() ?? const <QueryPredicate>[],',
-      )
-      ..writeln(
-        '        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],',
-      )
-      ..writeln(
-        '        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],',
-      )
-      ..writeln('        skip: skip,')
-      ..writeln('        take: take,')
-      ..writeln(
-        '        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),',
-      )
-      ..writeln('        avg: avg?.toFields() ?? const <String>{},')
-      ..writeln('        sum: sum?.toFields() ?? const <String>{},')
-      ..writeln('        min: min?.toFields() ?? const <String>{},')
-      ..writeln('        max: max?.toFields() ?? const <String>{},')
-      ..writeln('      ),')
-      ..writeln(
-        '    ).then((rows) => rows.map($groupByRowName.fromQueryResultRow).toList(growable: false));',
-      )
-      ..writeln('  }')
-      ..writeln()
+      ..writeln();
+    if (hasGroupBy) {
+      buffer
+        ..writeln('  Future<List<$groupByRowName>> groupBy({')
+        ..writeln('    required List<$scalarFieldName> by,')
+        ..writeln('    $whereInputName? where,')
+        ..writeln('    List<$groupByOrderByName>? orderBy,');
+      if (hasNumericFields) {
+        buffer.writeln('    $groupByHavingName? having,');
+      }
+      buffer
+        ..writeln('    int? skip,')
+        ..writeln('    int? take,')
+        ..writeln('    $countAggregateInputName? count,');
+      if (hasNumericFields) {
+        buffer
+          ..writeln('    $avgAggregateInputName? avg,')
+          ..writeln('    $sumAggregateInputName? sum,');
+      }
+      buffer
+        ..writeln('    $minAggregateInputName? min,')
+        ..writeln('    $maxAggregateInputName? max,')
+        ..writeln('  }) {')
+        ..writeln('    return _delegate.groupBy(')
+        ..writeln('      GroupByQuery(')
+        ..writeln('        model: ${_stringLiteral(model.name)},')
+        ..writeln(
+          '        by: by.map((field) => field.name).toList(growable: false),',
+        )
+        ..writeln(
+          '        where: where?.toPredicates() ?? const <QueryPredicate>[],',
+        );
+      if (hasNumericFields) {
+        buffer.writeln(
+          '        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],',
+        );
+      } else {
+        buffer.writeln('        having: const <QueryAggregatePredicate>[],');
+      }
+      buffer
+        ..writeln(
+          '        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],',
+        )
+        ..writeln('        skip: skip,')
+        ..writeln('        take: take,')
+        ..writeln(
+          '        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),',
+        );
+      if (hasNumericFields) {
+        buffer
+          ..writeln('        avg: avg?.toFields() ?? const <String>{},')
+          ..writeln('        sum: sum?.toFields() ?? const <String>{},');
+      } else {
+        buffer
+          ..writeln('        avg: const <String>{},')
+          ..writeln('        sum: const <String>{},');
+      }
+      buffer
+        ..writeln('        min: min?.toFields() ?? const <String>{},')
+        ..writeln('        max: max?.toFields() ?? const <String>{},')
+        ..writeln('      ),')
+        ..writeln(
+          '    ).then((rows) => rows.map($groupByRowName.fromQueryResultRow).toList(growable: false));',
+        )
+        ..writeln('  }')
+        ..writeln();
+    }
+    buffer
       ..writeln('  Future<$modelClassName> create({')
       ..writeln('    required $createInputName data,')
       ..writeln('    $includeName? include,')
@@ -280,28 +292,22 @@ extension on ClientGenerator {
       ..writeln(
         '      final txDelegate = tx._client.model(${_stringLiteral(model.name)});',
       )
+      ..writeln('      final hasDeferredRelationWrites = data.any(')
+      ..writeln('        (entry) => entry.hasDeferredRelationWrites,')
+      ..writeln('      );')
+      ..writeln('      if (!hasDeferredRelationWrites) {')
+      ..writeln('        return txDelegate.createMany(')
+      ..writeln('          CreateManyQuery(')
+      ..writeln('            model: ${_stringLiteral(model.name)},')
+      ..writeln(
+        '            data: data.map((entry) => entry.toData()).toList(growable: false),',
+      )
+      ..writeln('            skipDuplicates: skipDuplicates,')
+      ..writeln('          ),')
+      ..writeln('        );')
+      ..writeln('      }')
       ..writeln('      var createdCount = 0;')
       ..writeln('      for (final entry in data) {')
-      ..writeln('        if (skipDuplicates) {')
-      ..writeln('          var duplicateFound = false;')
-      ..writeln(
-        '          for (final selector in entry.toUniqueSelectorPredicates()) {',
-      )
-      ..writeln('            final existing = await txDelegate.findUnique(')
-      ..writeln('              FindUniqueQuery(')
-      ..writeln('                model: ${_stringLiteral(model.name)},')
-      ..writeln('                where: selector,')
-      ..writeln('              ),')
-      ..writeln('            );')
-      ..writeln('            if (existing != null) {')
-      ..writeln('              duplicateFound = true;')
-      ..writeln('              break;')
-      ..writeln('            }')
-      ..writeln('          }')
-      ..writeln('          if (duplicateFound) {')
-      ..writeln('            continue;')
-      ..writeln('          }')
-      ..writeln('        }')
       ..writeln('        try {')
       ..writeln('          if (entry.hasDeferredRelationWrites) {')
       ..writeln('            await _performCreateWithRelationWrites(')
@@ -458,91 +464,6 @@ extension on ClientGenerator {
       ..writeln();
 
     buffer
-      ..writeln('  Future<List<$modelClassName>> _findManyWithCursor({')
-      ..writeln('    required List<QueryPredicate> predicates,')
-      ..writeln('    required $whereUniqueInputName cursor,')
-      ..writeln('    required List<QueryOrderBy> orderBy,')
-      ..writeln('    required Set<String> distinct,')
-      ..writeln('    QueryInclude? include,')
-      ..writeln('    QuerySelect? select,')
-      ..writeln('    int? skip,')
-      ..writeln('    int? take,')
-      ..writeln('  }) async {')
-      ..writeln('    final rawRecords = await _delegate.findMany(')
-      ..writeln('      FindManyQuery(')
-      ..writeln('        model: ${_stringLiteral(model.name)},')
-      ..writeln('        where: predicates,')
-      ..writeln('        orderBy: orderBy,')
-      ..writeln('        distinct: distinct,')
-      ..writeln('      ),')
-      ..writeln('    );')
-      ..writeln(
-        '    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);',
-      )
-      ..writeln('    if (cursorIndex < 0) {')
-      ..writeln('      return const <$modelClassName>[];')
-      ..writeln('    }')
-      ..writeln('    final effectiveSkip = skip ?? 0;')
-      ..writeln('    final startIndex = cursorIndex + effectiveSkip;')
-      ..writeln(
-        '    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;',
-      )
-      ..writeln('    late final List<Map<String, Object?>> pagedRecords;')
-      ..writeln('    if (take == null) {')
-      ..writeln(
-        '      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);',
-      )
-      ..writeln('    } else if (take >= 0) {')
-      ..writeln(
-        '      pagedRecords = rawRecords.skip(boundedStartIndex).take(take).toList(growable: false);',
-      )
-      ..writeln('    } else {')
-      ..writeln('      final endExclusive = cursorIndex + 1 - effectiveSkip;')
-      ..writeln('      final boundedEndExclusive =')
-      ..writeln('          endExclusive <= 0')
-      ..writeln('              ? 0')
-      ..writeln('              : (endExclusive > rawRecords.length')
-      ..writeln('                    ? rawRecords.length')
-      ..writeln('                    : endExclusive);')
-      ..writeln('      final startInclusive = boundedEndExclusive + take;')
-      ..writeln(
-        '      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;',
-      )
-      ..writeln(
-        '      pagedRecords = rawRecords.sublist(boundedBackwardStart, boundedEndExclusive).toList(growable: false);',
-      )
-      ..writeln('    }')
-      ..writeln('    if (include == null && select == null) {')
-      ..writeln(
-        '      return pagedRecords.map($modelClassName.fromRecord).toList(growable: false);',
-      )
-      ..writeln('    }')
-      ..writeln('    final projectedRecords = <$modelClassName>[];')
-      ..writeln('    for (final record in pagedRecords) {')
-      ..writeln('      final projected = await _delegate.findUnique(')
-      ..writeln('        FindUniqueQuery(')
-      ..writeln('          model: ${_stringLiteral(model.name)},')
-      ..writeln(
-        '          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),',
-      )
-      ..writeln('          include: include,')
-      ..writeln('          select: select,')
-      ..writeln('        ),')
-      ..writeln('      );')
-      ..writeln('      if (projected == null) {')
-      ..writeln(
-        '        throw StateError(${_stringLiteral('${model.name}.findMany(cursor: ...) could not reload a paged record by primary key.')});',
-      )
-      ..writeln('      }')
-      ..writeln(
-        '      projectedRecords.add($modelClassName.fromRecord(projected));',
-      )
-      ..writeln('    }')
-      ..writeln(
-        '    return List<$modelClassName>.unmodifiable(projectedRecords);',
-      )
-      ..writeln('  }')
-      ..writeln()
       ..writeln('  Future<$modelClassName> _performCreateWithRelationWrites({')
       ..writeln('    required GeneratedComonOrmClient tx,')
       ..writeln('    required $createInputName data,')

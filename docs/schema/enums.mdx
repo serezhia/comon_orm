@@ -1,0 +1,67 @@
+---
+title: Enums
+description: Define enum blocks, use them in models, and understand Dart and migration behavior.
+---
+
+# Enums
+
+Enums are first-class schema blocks and become generated Dart enums.
+
+## Declaring an enum
+
+```prisma
+enum Role {
+  admin
+  member
+}
+```
+
+Use the enum in a model field:
+
+```prisma
+model User {
+  id   Int  @id @default(autoincrement())
+  role Role @default(member)
+}
+```
+
+Generated Dart usage:
+
+```dart
+await db.user.create(
+  data: const UserCreateInput(
+    role: Role.admin,
+  ),
+);
+```
+
+## Enum defaults
+
+Enum defaults use enum values directly:
+
+```prisma
+role Role @default(member)
+```
+
+## Mapping enum storage names
+
+When the database type name must differ from the logical enum name, use `@@map`.
+
+```prisma
+enum PostStatus {
+  draft
+  published
+
+  @@map("post_status")
+}
+```
+
+## Migration implications
+
+Enum changes are more sensitive than normal scalar changes.
+
+- adding values is usually straightforward
+- reordering or renaming values needs explicit review
+- removing values can be destructive if live rows still reference them
+
+For shared PostgreSQL databases, review enum migrations especially carefully because enum value changes can require rebuild-like transitions or explicit data cleanup.

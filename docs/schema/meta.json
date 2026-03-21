@@ -1,0 +1,6 @@
+{
+  "title": "Schema",
+  "description": "DSL and relations.",
+  "root": true,
+  "pages": ["index", "datasource-and-generator", "models-and-fields", "relations", "enums", "native-types", "reference"]
+}

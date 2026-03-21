@@ -148,12 +148,12 @@ SQLite currently supports:
 After changing the schema:
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm generate schema.prisma
-dart run comon_orm migrate diff --schema schema.prisma --name <migration_name> --out prisma/migrations
+dart run comon_orm check
+dart run comon_orm generate
+dart run comon_orm migrate dev --name <migration_name>
 ```
 
-If the migration warns about destructive changes, review the warnings before applying.
+If the migration warns about destructive changes, review the warnings before continuing.
 
 Do not confuse local setup/bootstrap with real migrations: schema apply belongs to tooling or explicit setup helpers, not the normal runtime adapter path.
 
@@ -168,6 +168,6 @@ Do not confuse local setup/bootstrap with real migrations: schema apply belongs 
 ## Load These Docs When Needed
 
 - `README.md` for top-level workflow and runtime examples
-- `SCHEMA_REFERENCE.md` for syntax and supported constructs
-- `MIGRATIONS.md` for local-vs-production migration guidance
+- `site/content/docs/schema/reference.mdx` for syntax and supported constructs
+- `site/content/docs/migrations/index.mdx` for local-vs-production migration guidance
 - `workflow.md` for the operational migration sequence

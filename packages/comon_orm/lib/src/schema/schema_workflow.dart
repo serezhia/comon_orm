@@ -113,8 +113,19 @@ class SchemaWorkflow {
     required String source,
     String filePath = 'schema.prisma',
   }) {
-    final file = File(filePath).absolute;
-    return _validateLoadedSchema(file, source);
+    final schema = parser.parse(source);
+    final issues = _attachSourceLocations(
+      schema,
+      validator.validate(schema),
+      filePath,
+    );
+    if (issues.isNotEmpty) {
+      throw SchemaValidationException(
+        List<ValidationIssue>.unmodifiable(issues),
+      );
+    }
+
+    return LoadedSchemaDocument(filePath: filePath, schema: schema);
   }
 
   /// Formats raw schema source into the canonical serialized form.
@@ -250,6 +261,7 @@ class SchemaWorkflow {
             fieldName: issue.fieldName,
             filePath: filePath,
             line: issue.line ?? _resolveIssueLine(schema, issue),
+            column: issue.column ?? _resolveIssueColumn(schema, issue),
           ),
         )
         .toList(growable: false);
@@ -288,6 +300,41 @@ class SchemaWorkflow {
     }
 
     return issue.line;
+  }
+
+  int? _resolveIssueColumn(SchemaDocument schema, ValidationIssue issue) {
+    final modelName = issue.modelName;
+    if (modelName == null) {
+      return issue.column;
+    }
+
+    final model = schema.findModel(modelName);
+    if (model != null) {
+      if (issue.fieldName != null) {
+        final field = model.findField(issue.fieldName!);
+        if (field != null) {
+          return field.column ?? model.column;
+        }
+      }
+      return model.column;
+    }
+
+    final enumDefinition = schema.findEnum(modelName);
+    if (enumDefinition != null) {
+      return enumDefinition.column;
+    }
+
+    final datasource = schema.findDatasource(modelName);
+    if (datasource != null) {
+      return datasource.column;
+    }
+
+    final generator = schema.findGenerator(modelName);
+    if (generator != null) {
+      return generator.column;
+    }
+
+    return issue.column;
   }
 
   GeneratorDefinition? _selectGenerator(
@@ -358,6 +405,10 @@ class SchemaWorkflow {
     final resolvedPath = _resolveRelativePath(schemaPath, configuredPath);
     if (resolvedPath.endsWith('.dart')) {
       return resolvedPath;
+    }
+
+    if (_usesLogicalPosixPath(resolvedPath)) {
+      return _joinPathSegments(resolvedPath, 'comon_orm_client.dart');
     }
 
     return File(
@@ -433,7 +484,18 @@ class SchemaWorkflow {
     }
 
     if (_isAbsoluteFilePath(configuredPath)) {
+      if (_usesLogicalPosixPath(configuredPath)) {
+        return _normalizeLogicalPosixPath(configuredPath);
+      }
       return File(_normalizePathSeparators(configuredPath)).path;
+    }
+
+    if (_usesLogicalPosixPath(schemaPath)) {
+      final schemaDirectory = _dirname(_normalizeLogicalPosixPath(schemaPath));
+      return _joinPathSegments(
+        schemaDirectory,
+        _normalizeLogicalPosixPath(configuredPath),
+      );
     }
 
     final schemaDirectory = File(schemaPath).absolute.parent.path;
@@ -444,7 +506,7 @@ class SchemaWorkflow {
   }
 
   bool _isAbsoluteFilePath(String path) {
-    if (path.startsWith(Platform.pathSeparator)) {
+    if (path.startsWith('/') || path.startsWith(Platform.pathSeparator)) {
       return true;
     }
 
@@ -456,12 +518,51 @@ class SchemaWorkflow {
     return false;
   }
 
+  bool _usesLogicalPosixPath(String path) {
+    return path.startsWith('/') && !RegExp(r'^[a-zA-Z]:[/\\]').hasMatch(path);
+  }
+
+  String _normalizeLogicalPosixPath(String path) {
+    return path.replaceAll('\\', '/');
+  }
+
+  String _dirname(String path) {
+    final normalized = _normalizeLogicalPosixPath(path);
+    final separator = normalized.lastIndexOf('/');
+    if (separator < 0) {
+      return '.';
+    }
+    if (separator == 0) {
+      return '/';
+    }
+    return normalized.substring(0, separator);
+  }
+
+  String _joinPathSegments(String left, String right) {
+    final normalizedLeft = _normalizeLogicalPosixPath(left);
+    final normalizedRight = _normalizeLogicalPosixPath(right);
+    final trimmedLeft =
+        normalizedLeft.endsWith('/') && normalizedLeft.length > 1
+        ? normalizedLeft.substring(0, normalizedLeft.length - 1)
+        : normalizedLeft;
+    final trimmedRight = normalizedRight.startsWith('/')
+        ? normalizedRight.substring(1)
+        : normalizedRight;
+    if (trimmedLeft.isEmpty || trimmedLeft == '.') {
+      return trimmedRight;
+    }
+    if (trimmedLeft == '/') {
+      return '/$trimmedRight';
+    }
+    return '$trimmedLeft/$trimmedRight';
+  }
+
   String _normalizePathSeparators(String path) {
     if (Platform.pathSeparator == r'\') {
       return path.replaceAll('/', Platform.pathSeparator);
     }
 
-    return path.replaceAll(r'\', Platform.pathSeparator);
+    return path.replaceAll('\\', Platform.pathSeparator);
   }
 
   String _stripQuotes(String value) {

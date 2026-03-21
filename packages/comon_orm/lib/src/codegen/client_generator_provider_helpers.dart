@@ -80,6 +80,7 @@ extension on ClientGenerator {
       ..writeln()
       ..writeln('  static Future<GeneratedComonOrmClient> open({')
       ..writeln('    String? connectionUrl,')
+      ..writeln('    pg.SslMode? sslMode,')
       ..writeln('    String? datasourceName,')
       ..writeln(
         '    RuntimeDatasourceResolver resolver = const RuntimeDatasourceResolver(),',
@@ -91,6 +92,7 @@ extension on ClientGenerator {
       )
       ..writeln('      schema: GeneratedComonOrmClient.runtimeSchema,')
       ..writeln('      connectionUrl: connectionUrl,')
+      ..writeln('      sslMode: sslMode,')
       ..writeln('      datasourceName: datasourceName,')
       ..writeln('      resolver: resolver,')
       ..writeln('      adapterFactory: adapterFactory,')

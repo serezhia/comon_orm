@@ -128,6 +128,29 @@ model User {
       );
     });
 
+    test('describes manual-only drafts as requiring manual SQL', () {
+      final draft = SqliteMigrationDraft(
+        name: '20260314_require_last_name',
+        generatedAt: DateTime.utc(2026, 3, 14, 12),
+        plan: const SqliteMigrationPlan(
+          statements: <String>[],
+          warnings: <String>[
+            'Altering User.lastName requires manual migration.',
+            'Potential data loss: field User.lastName changes from optional to required.',
+          ],
+        ),
+        beforeSchema: 'model User {\n  id Int @id\n  lastName String?\n}\n',
+        afterSchema: 'model User {\n  id Int @id\n  lastName String\n}\n',
+      );
+
+      expect(draft.sqlScript, contains('-- Manual migration required.'));
+      expect(
+        draft.sqlScript,
+        contains('Apply the required SQL changes manually'),
+      );
+      expect(draft.sqlScript, isNot(contains('No schema changes required')));
+    });
+
     test('applies target schema through runner facade', () {
       final initial = const SchemaParser().parse('''
 model User {
@@ -155,6 +178,51 @@ model User {
       expect(columns.any((row) => row['name'] == 'nickname'), isTrue);
 
       database.close();
+    });
+
+    test('deploy rejects artifacts that require manual migration', () {
+      final tempRoot = Directory.systemTemp.createTempSync('comon_orm_sqlite_');
+      final database = sqlite.sqlite3.openInMemory();
+      try {
+        final migrationDir = Directory(
+          '${tempRoot.path}${Platform.pathSeparator}20260314_require_last_name',
+        )..createSync(recursive: true);
+        File(
+          '${migrationDir.path}${Platform.pathSeparator}before.prisma',
+        ).writeAsStringSync(
+          'model User {\n  id Int @id\n  lastName String?\n}\n',
+        );
+        File(
+          '${migrationDir.path}${Platform.pathSeparator}after.prisma',
+        ).writeAsStringSync(
+          'model User {\n  id Int @id\n  lastName String\n}\n',
+        );
+        File(
+          '${migrationDir.path}${Platform.pathSeparator}migration.sql',
+        ).writeAsStringSync('-- noop\n');
+        File(
+          '${migrationDir.path}${Platform.pathSeparator}warnings.txt',
+        ).writeAsStringSync(
+          'Altering User.lastName requires manual migration.\n',
+        );
+
+        expect(
+          () => const SqliteMigrationService().deployMigrations(
+            database: database,
+            migrationsDirectory: tempRoot.path,
+          ),
+          throwsA(
+            isA<ManualMigrationRequiredException>().having(
+              (error) => error.message,
+              'message',
+              contains('20260314_require_last_name'),
+            ),
+          ),
+        );
+      } finally {
+        database.close();
+        tempRoot.deleteSync(recursive: true);
+      }
     });
 
     test('rolls back the latest applied migration from DB snapshot fallback', () {

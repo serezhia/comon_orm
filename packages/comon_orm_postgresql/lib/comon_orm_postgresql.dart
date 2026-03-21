@@ -6,3 +6,4 @@ export 'src/postgresql_migration_runner.dart';
 export 'src/postgresql_migration_service.dart';
 export 'src/postgresql_schema_applier.dart';
 export 'src/postgresql_schema_introspector.dart';
+export 'src/postgresql_transaction.dart';

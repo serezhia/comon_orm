@@ -16,14 +16,22 @@ Use it when your schema declares `provider = "postgresql"` and you need a real a
 - migration planning, apply, rollback, history, and status helpers
 - the provider implementation behind `dart run comon_orm migrate ...`
 
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## 🚀 Quick Start
 
 Add dependencies:
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
-	comon_orm_postgresql: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
+	comon_orm_postgresql: ^0.0.1-alpha.2
 ```
 
 Generated-client-first example:
@@ -62,6 +70,69 @@ final db = await GeneratedComonOrmClientPostgresql.open();
 
 - Runtime path: `GeneratedComonOrmClientPostgresql.open(...)`
 - Tooling/setup path: schema-driven migrate/apply flows through the CLI and schema tools
+- both generated-helper openers and `PostgresqlDatabaseAdapter.openFrom...(...)` use pooled `package:postgres` sessions under the hood
+
+## Connection Pooling
+
+PostgreSQL runtime paths in this package are pool-backed by default.
+
+- `GeneratedComonOrmClientPostgresql.open(...)` resolves metadata and opens a pooled adapter for the generated client
+- `PostgresqlDatabaseAdapter.openFromUrl(...)` and `openFromGeneratedSchema(...)` also create a `package:postgres` pool internally
+- `PostgresqlDatabaseAdapter.connect(...)` is the explicit path when you want structured host/database/user/SSL config instead of a URL
+
+Example with explicit pooled adapter construction:
+
+```dart
+import 'dart:io';
+
+import 'package:comon_orm/comon_orm.dart';
+import 'package:comon_orm_postgresql/comon_orm_postgresql.dart';
+
+import 'generated/comon_orm_client.dart';
+
+Future<void> main() async {
+	final connectionUrl = Platform.environment['DATABASE_URL'];
+	if (connectionUrl == null || connectionUrl.isEmpty) {
+		stderr.writeln('Set DATABASE_URL before running this example.');
+		exitCode = 64;
+		return;
+	}
+
+	final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+		schema: GeneratedComonOrmClient.runtimeSchema,
+		connectionUrl: connectionUrl,
+	);
+	final db = GeneratedComonOrmClient(adapter: adapter);
+
+	try {
+		final users = await db.user.findMany();
+		print(users.length);
+	} finally {
+		await db.close();
+	}
+}
+```
+
+Example with structured connection settings:
+
+```dart
+final adapter = await PostgresqlDatabaseAdapter.connect(
+	config: const PostgresqlConnectionConfig(
+		host: 'localhost',
+		database: 'app',
+		username: 'postgres',
+		password: 'postgres',
+	),
+	schema: yourSchemaDocument,
+);
+```
+
+## Internal Runtime Layout
+
+- `postgresql_database_adapter.dart` keeps the public `DatabaseAdapter` surface and provider-specific execution flow
+- `postgresql_sql_builder.dart` owns WHERE, relation-filter, and ORDER BY SQL clause construction
+- `postgresql_relation_materializer.dart` owns include loading and batched relation materialization
+- `postgresql_transaction.dart` owns transaction/query-executor coordination and nested execution surfaces
 
 ## 🎯 Key Features
 
@@ -71,6 +142,7 @@ final db = await GeneratedComonOrmClientPostgresql.open();
 - compiled-metadata runtime bootstrap via `openFromGeneratedSchema(...)`
 - SQL-backed query execution for generated client operations
 - aggregate and group-by pushdown
+- internal runtime responsibilities are split into small modules without changing generated-client APIs
 
 ### 🧭 Migrations
 
@@ -90,9 +162,11 @@ final db = await GeneratedComonOrmClientPostgresql.open();
 Most users should call migrations through the unified core CLI:
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations
+dart run comon_orm check
+dart run comon_orm generate
+dart run comon_orm migrate dev --name 20260315_init
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
 ```
 
 Important:
@@ -101,6 +175,7 @@ Important:
 - the preferred application runtime path is `GeneratedComonOrmClient.runtimeSchema` plus `openFromGeneratedSchema(...)`
 - schema apply stays in tooling/setup flows instead of runtime adapter convenience APIs
 - destructive enum transitions and other risky changes still require manual review
+- `db push` exists for prototypes or disposable databases, but reviewed shared-database flows should prefer `migrate dev` and `migrate deploy`
 
 ## 📱 Platform Notes
 

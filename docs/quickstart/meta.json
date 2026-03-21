@@ -1,0 +1,6 @@
+{
+  "title": "QuickStart",
+  "description": "From schema.prisma to a working app.",
+  "root": true,
+  "pages": ["index"]
+}

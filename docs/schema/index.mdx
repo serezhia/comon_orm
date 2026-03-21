@@ -1,0 +1,62 @@
+---
+title: Schema
+description: The schema.prisma mental model and the main constructs you will use every day.
+---
+
+# Schema
+
+The schema is the contract for the whole system. It drives code generation, runtime metadata, validation, and migration planning.
+
+## Supported top-level blocks
+
+- `datasource`
+- `generator`
+- `model`
+- `enum`
+
+Minimal example:
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "comon_orm"
+  output   = "lib/generated/comon_orm_client.dart"
+}
+
+enum Role {
+  admin
+  member
+}
+
+model User {
+  id    Int    @id @default(autoincrement())
+  email String @unique
+  role  Role
+}
+```
+
+## What lives in schema and what does not
+
+Use the schema for:
+
+- data model structure
+- keys, unique constraints, and indexes
+- relation ownership and referential actions
+- enum definitions
+- logical-to-physical name mapping through `@map` and `@@map`
+- generator configuration such as output path and SQLite helper flavor
+
+Do not expect the schema alone to replace rollout decisions. A destructive schema diff still needs human review at migration time.
+
+<Cards>
+  <Card title="Datasource and generator" href="/docs/orm/schema/datasource-and-generator" description="Provider selection, URLs, output path, and Flutter SQLite helper mode." />
+  <Card title="Models and fields" href="/docs/orm/schema/models-and-fields" description="Scalar types, defaults, ids, uniques, maps, indexes, and Dart type mapping." />
+  <Card title="Reference" href="/docs/orm/schema/reference" description="Scalar types, attributes, generator options, and supported schema keywords." />
+  <Card title="Relations" href="/docs/orm/schema/relations" description="One-to-one, one-to-many, self-relations, and compound relation references." />
+  <Card title="Enums" href="/docs/orm/schema/enums" description="Define enum blocks, use them in models, and understand Dart and migration behavior." />
+  <Card title="Native types" href="/docs/orm/schema/native-types" description="See the supported PostgreSQL and SQLite @db.* subset and the matching Dart types." />
+</Cards>

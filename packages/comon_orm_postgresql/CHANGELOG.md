@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.1-alpha.2
+
+- Added native PostgreSQL upsert and `createMany(skipDuplicates)` through `ON CONFLICT` SQL.
+- Split the runtime into SQL-builder, relation-materializer, and transaction modules without changing the public adapter API.
+- Added SQL pushdown for `distinct + cursor` queries and documented pool-backed runtime openers.
+
 ## 0.0.1-alpha.1
 
 - Added generated-metadata runtime opening through `openFromGeneratedSchema(...)` and generated PostgreSQL client helpers.

@@ -6,6 +6,14 @@
 
 It is intended to cover Flutter mobile, desktop, and web scenarios on top of the `sqflite` ecosystem, while keeping `comon_orm_sqlite` focused on Dart VM, CLI workflows, migrations, and introspection.
 
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## Why A Separate Package
 
 This package is separate on purpose.
@@ -48,8 +56,8 @@ Add dependencies:
 
 ```yaml
 dependencies:
-  comon_orm: ^0.0.1-alpha.1
-  comon_orm_sqlite_flutter: ^0.0.1-alpha.1
+  comon_orm: ^0.0.1-alpha.2
+  comon_orm_sqlite_flutter: ^0.0.1-alpha.2
 ```
 
 Open a Flutter SQLite runtime directly through the generated client helper:
@@ -179,8 +187,41 @@ Practical rules:
 - use CLI-reviewed migrations for shared, staging, and production databases
 - prefer reset over complex migration code when local data is disposable
 - use `SqliteFlutterMigration.sql(...)` for simple additive steps
+- use `SqliteFlutterMigration.schemaDiff(...)` when the app owns both schema snapshots and wants the package to choose additive SQL vs rebuild automatically
 - use `SqliteFlutterMigration.rebuildTable(...)` or a custom migration callback for rebuild-heavy local upgrades
 - keep upgrade first and runtime open second
+
+Schema-diff example:
+
+```dart
+final fromSchema = const SchemaParser().parse('''
+model User {
+  id Int @id
+  email String @unique
+}
+''');
+
+final toSchema = const SchemaParser().parse('''
+model User {
+  id Int @id
+  email String @unique
+  enabled Boolean @default(false)
+}
+''');
+
+final migrator = SqliteFlutterMigrator(
+  currentVersion: 2,
+  migrations: <SqliteFlutterMigration>[
+    SqliteFlutterMigration.schemaDiff(
+      fromVersion: 1,
+      toVersion: 2,
+      debugName: 'add_enabled_flag',
+      fromSchema: fromSchema,
+      toSchema: toSchema,
+    ),
+  ],
+);
+```
 
 ## Scope
 

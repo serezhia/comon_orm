@@ -54,16 +54,17 @@ SQLite exports from `packages/comon_orm_sqlite/lib/comon_orm_sqlite.dart`:
 
 ## Current Migration Model
 
-- `migrate diff` writes migration artifacts to disk
-- `migrate apply` recalculates a plan from the live database to the current schema and records history
-- local artifacts remain important for review, `status`, and `rollback`
-- rollback can use local `before.prisma` or snapshots stored in `_comon_orm_migrations`
+- `migrate dev` creates a local migration artifact, applies it to the current database, and refreshes generated code
+- `migrate deploy` applies already-created local migrations to another database
+- `migrate status` and `migrate resolve` are the primary repair and inspection tools
+- `db push` updates a database without creating migration history
+- local artifacts remain important for review, `status`, and recovery
 
 ## Repository Docs To Load When Needed
 
 - `README.md` for top-level usage, migration semantics, and runtime bootstrap
-- `MIGRATIONS.md` for rollout guidance and risk handling
-- `SCHEMA_REFERENCE.md` for supported schema constructs and examples
+- `site/content/docs/migrations/index.mdx` for rollout guidance and risk handling
+- `site/content/docs/schema/reference.mdx` for supported schema constructs and examples
 - `examples/postgres/README.md` for a runnable end-to-end example
 
 ## Practical Rules

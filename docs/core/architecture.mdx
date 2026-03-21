@@ -1,0 +1,44 @@
+---
+title: Architecture
+description: The main layers and data flow inside comon_orm.
+---
+
+# Architecture
+
+The high-level flow is:
+
+1. `schema.prisma` is parsed into an AST.
+2. The schema is validated and normalized.
+3. Code generation emits typed Dart models, inputs, delegates, and runtime metadata.
+4. The generated client routes queries through neutral query models.
+5. Runtime adapters translate that query shape into in-memory behavior, SQLite SQL, PostgreSQL SQL, or Flutter SQLite calls.
+
+## Main layers
+
+### Schema layer
+
+- `SchemaParser` turns source text into `SchemaDocument`
+- `SchemaValidator` applies DSL and provider-specific validation rules
+- formatting and source regeneration work from the same AST model
+
+### Code generation layer
+
+- generated clients expose models, inputs, relation helpers, delegates, and runtime metadata
+- generated cursor selectors and query arguments flow into the neutral query layer
+- simple `createMany(...)` routes into adapter-level batch paths where supported
+
+### Runtime layer
+
+- `ComonOrmClient` and `ModelDelegate` sit between generated code and adapters
+- middleware can wrap adapters without changing their implementation
+- adapters own provider-specific execution details such as SQL pushdown, cursor windows, and include materialization
+
+### Migration layer
+
+- shared PostgreSQL and SQLite migrations live in VM-oriented packages
+- migration artifacts store warnings, checksums, and before/after schema snapshots
+- Flutter local SQLite upgrades are explicit app-side code, not shared-database rollout
+
+## Design rule worth remembering
+
+Normal runtime startup should be generated-metadata-first. Runtime adapters are not the place to auto-apply schema changes in production.

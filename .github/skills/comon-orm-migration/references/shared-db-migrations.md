@@ -10,34 +10,33 @@ Shared databases are owned by CLI and VM migration tooling, not by Flutter app r
 
 1. edit `schema.prisma`
 2. run `check` and `generate`
-3. run `migrate diff`
-4. review `migration.sql`, `warnings.txt`, `before.prisma`, and `after.prisma`
+3. run `migrate dev`
+4. review `migration.sql`, `warnings.txt`, `before.prisma`, `after.prisma`, and `metadata.txt`
 5. commit schema and migration artifacts together
 6. run `migrate status` against the target database
-7. run `migrate apply`
-8. verify with `migrate history` and `migrate status`
+7. run `migrate deploy`
+8. verify with `migrate status`
 
 ## Commands
 
 ```bash
-dart run comon_orm check schema.prisma
-dart run comon_orm generate schema.prisma
-dart run comon_orm migrate diff --schema schema.prisma --name <migration_name> --out prisma/migrations
-dart run comon_orm migrate status --schema schema.prisma --from prisma/migrations
-dart run comon_orm migrate apply --schema schema.prisma --name <migration_name>
-dart run comon_orm migrate history --schema schema.prisma
+dart run comon_orm check
+dart run comon_orm generate
+dart run comon_orm migrate dev --name <migration_name>
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
 ```
 
 ## Important Semantics
 
-- `diff` writes reviewed artifacts to disk
-- `apply` recalculates the plan from the live database to the current schema
+- `dev` creates the next local migration artifact, applies it locally, and refreshes generated code
+- `deploy` applies already-created local migrations to the target database
 - warnings are blocking by default
 - production runtime should not auto-apply schema changes on startup
 
 ## Rollout Rules
 
-- run `status` before shared-environment apply
+- run `status` before shared-environment deploy
 - keep migration artifacts in git
 - do not rewrite artifacts that were already applied
 - prefer a forward fix over panic rollback when data risk is unclear

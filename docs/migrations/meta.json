@@ -1,0 +1,6 @@
+{
+  "title": "Migrations",
+  "description": "Rollout and fixes.",
+  "root": true,
+  "pages": ["index", "cli-commands", "shared-databases", "flutter-local-sqlite", "rollback-and-recovery", "troubleshooting"]
+}

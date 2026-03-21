@@ -39,7 +39,7 @@ Use this skill when the task mentions any of these triggers:
 - `openFromGeneratedSchema`
 - PostgreSQL adapter
 - SQLite adapter
-- `migrate diff`, `migrate apply`, `migrate status`, `migrate rollback`
+- `migrate dev`, `migrate deploy`, `migrate reset`, `migrate resolve`, `migrate status`, `migrate diff`, `db push`
 - `_comon_orm_migrations`
 - drift, checksum mismatch, schema snapshots, migration warnings
 - relations, implicit many-to-many, enums, `@db.*`, `@updatedAt`

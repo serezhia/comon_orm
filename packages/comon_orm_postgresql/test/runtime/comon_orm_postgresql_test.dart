@@ -93,6 +93,34 @@ model User {
     },
   );
 
+  test('generated schema open accepts sslMode override', () async {
+    final adapter = await PostgresqlDatabaseAdapter.openFromGeneratedSchema(
+      schema: const GeneratedRuntimeSchema(
+        datasources: <GeneratedDatasourceMetadata>[
+          GeneratedDatasourceMetadata(
+            name: 'db',
+            provider: 'postgresql',
+            url: GeneratedDatasourceUrl(
+              kind: GeneratedDatasourceUrlKind.literal,
+              value: 'postgresql://localhost:5432/app',
+            ),
+          ),
+        ],
+        models: <GeneratedModelMetadata>[],
+      ),
+      sslMode: pg.SslMode.disable,
+      adapterFactory: ({required connectionUrl, required schema}) async {
+        expect(connectionUrl, 'postgresql://localhost:5432/app');
+        return PostgresqlDatabaseAdapter.fromRuntimeSchema(
+          executor: _FakeExecutor(),
+          schema: schema,
+        );
+      },
+    );
+
+    expect(adapter, isA<PostgresqlDatabaseAdapter>());
+  });
+
   test('constructs postgresql adapter from generated metadata', () {
     final adapter = PostgresqlDatabaseAdapter.fromGeneratedSchema(
       executor: _FakeExecutor(),

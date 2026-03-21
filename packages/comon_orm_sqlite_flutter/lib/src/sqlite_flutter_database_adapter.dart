@@ -461,7 +461,95 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
   }
 
   @override
+  Future<Map<String, Object?>> upsert(UpsertQuery query) async {
+    return transaction((tx) async {
+      final txAdapter = tx as SqliteFlutterDatabaseAdapter;
+      final existing = await txAdapter.findUnique(
+        FindUniqueQuery(model: query.model, where: query.where),
+      );
+      if (existing != null) {
+        return txAdapter.update(
+          UpdateQuery(
+            model: query.model,
+            where: query.where,
+            data: query.update,
+            include: query.include,
+            select: query.select,
+          ),
+        );
+      }
+      return txAdapter.create(
+        CreateQuery(
+          model: query.model,
+          data: query.create,
+          include: query.include,
+        ),
+      );
+    });
+  }
+
+  @override
+  Future<int> createMany(CreateManyQuery query) async {
+    if (query.data.isEmpty) {
+      return 0;
+    }
+    return transaction((tx) async {
+      final txAdapter = tx as SqliteFlutterDatabaseAdapter;
+      var count = 0;
+      for (final row in query.data) {
+        await txAdapter._insertRecord(
+          query.model,
+          txAdapter._applyAutomaticFieldValues(
+            query.model,
+            row,
+            isCreate: true,
+          ),
+        );
+        count++;
+      }
+      return count;
+    });
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> rawQuery(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) async {
+    final result = await _executor.rawQuery(sql, parameters);
+    return List<Map<String, Object?>>.unmodifiable(result);
+  }
+
+  @override
+  Future<int> rawExecute(
+    String sql, [
+    List<Object?> parameters = const <Object?>[],
+  ]) {
+    return _executor.rawUpdate(sql, parameters);
+  }
+
+  @override
   Future<Map<String, Object?>?> findFirst(FindFirstQuery query) async {
+    if (query.includeStrategy == IncludeStrategy.join &&
+        query.distinct.isEmpty) {
+      final records = await findMany(
+        FindManyQuery(
+          model: query.model,
+          where: query.where,
+          orderBy: query.orderBy,
+          include: query.include,
+          select: query.select,
+          includeStrategy: query.includeStrategy,
+          skip: query.skip,
+          take: 1,
+        ),
+      );
+      if (records.isEmpty) {
+        return null;
+      }
+      return records.first;
+    }
+
     if (query.distinct.isNotEmpty) {
       final records = await findMany(
         FindManyQuery(
@@ -471,6 +559,7 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
           distinct: query.distinct,
           include: query.include,
           select: query.select,
+          includeStrategy: query.includeStrategy,
           skip: query.skip,
           take: 1,
         ),
@@ -503,6 +592,17 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
 
   @override
   Future<List<Map<String, Object?>>> findMany(FindManyQuery query) async {
+    if (query.distinct.isEmpty &&
+        (query.includeStrategy == null ||
+            query.includeStrategy == IncludeStrategy.join)) {
+      final joined = await _findManyWithSimpleSingularIncludeJoins(query);
+      if (joined != null) {
+        return List<Map<String, Object?>>.unmodifiable(
+          joined.map(Map<String, Object?>.unmodifiable),
+        );
+      }
+    }
+
     final rows = await _selectRows(
       model: query.model,
       where: query.where,
@@ -511,36 +611,114 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
       offset: query.distinct.isEmpty ? query.skip : null,
     );
 
-    final records = query.distinct.isEmpty
-        ? rows.map((row) => row.record).toList(growable: false)
-        : () {
-            final distinct = applyDistinctRecords(
-              rows.map((row) => row.record),
-              query.distinct,
-            );
-            final skipped = query.skip == null
-                ? distinct
-                : distinct.skip(query.skip!).toList(growable: false);
-            final taken = query.take == null
-                ? skipped
-                : skipped.take(query.take!).toList(growable: false);
-            return List<Map<String, Object?>>.unmodifiable(taken);
-          }();
+    final List<Map<String, Object?>> rawRecords;
+    if (query.distinct.isEmpty) {
+      rawRecords = rows.map((row) => row.record).toList(growable: false);
+    } else {
+      final distinct = applyDistinctRecords(
+        rows.map((row) => row.record),
+        query.distinct,
+      );
+      final skipped = query.skip == null
+          ? distinct
+          : distinct.skip(query.skip!).toList(growable: false);
+      final taken = query.take == null
+          ? skipped
+          : skipped.take(query.take!).toList(growable: false);
+      rawRecords = List<Map<String, Object?>>.unmodifiable(taken);
+    }
 
-    final materialized = <Map<String, Object?>>[];
-    for (final record in records) {
-      materialized.add(
-        Map<String, Object?>.unmodifiable(
-          await _materializeRecord(
+    final materialized = query.includeStrategy == IncludeStrategy.perRow
+        ? await Future.wait(
+            rawRecords.map(
+              (raw) => _materializeRecord(
+                query.model,
+                raw,
+                include: query.include,
+                select: query.select,
+              ),
+            ),
+          )
+        : await _materializeRecordsBatch(
             query.model,
-            record,
+            rawRecords,
             include: query.include,
             select: query.select,
-          ),
-        ),
+          );
+    return List<Map<String, Object?>>.unmodifiable(
+      materialized.map(Map<String, Object?>.unmodifiable),
+    );
+  }
+
+  Future<List<Map<String, Object?>>?> _findManyWithSimpleSingularIncludeJoins(
+    FindManyQuery query,
+  ) async {
+    final context = _SqlBuildContext();
+    final alias = context.nextAlias();
+    final joins = _simpleSingularIncludeJoins(
+      sourceModel: query.model,
+      parentAlias: alias,
+      include: query.include,
+      context: context,
+      depth: 1,
+    );
+    if (joins == null || joins.isEmpty) {
+      return null;
+    }
+    final flatJoins = _flattenSimpleSingularIncludeJoins(joins);
+
+    final whereClause = _buildWhereClause(
+      context,
+      query.model,
+      alias,
+      query.where,
+    );
+    final orderClause = _buildOrderByClause(alias, query.model, query.orderBy);
+    final sql = StringBuffer()
+      ..write(
+        'SELECT ${_quoteIdentifier(alias)}.rowid AS ${_quoteIdentifier(_rowIdColumn)}, ${_quoteIdentifier(alias)}.*',
+      );
+    for (final join in flatJoins) {
+      for (final field in _storedFields(join.relation.targetModel)) {
+        sql.write(
+          ', ${_qualifiedField(join.alias, join.relation.targetModel, field.name)} AS ${_quoteIdentifier(join.columnAlias(field.name))}',
+        );
+      }
+    }
+    sql.write(' FROM ${_tableReference(query.model, alias)}');
+    for (final join in flatJoins) {
+      sql.write(
+        ' LEFT JOIN ${_tableReference(join.relation.targetModel, join.alias)} '
+        'ON ${_qualifiedField(join.parentAlias, join.sourceModel, join.relation.localKeyField)} = '
+        '${_qualifiedField(join.alias, join.relation.targetModel, join.relation.targetKeyField)}',
       );
     }
-    return List<Map<String, Object?>>.unmodifiable(materialized);
+    sql.write(' WHERE ${whereClause.sql}');
+
+    final parameters = <Object?>[...whereClause.parameters];
+    if (orderClause.isNotEmpty) {
+      sql.write(' ORDER BY $orderClause');
+    }
+    if (query.take != null) {
+      sql.write(' LIMIT ?');
+      parameters.add(query.take);
+    }
+    if (query.skip != null) {
+      sql.write(' OFFSET ?');
+      parameters.add(query.skip);
+    }
+
+    final result = await _executor.rawQuery(sql.toString(), parameters);
+    return result
+        .map(
+          (row) => _materializeJoinedFindManyRow(
+            query.model,
+            row,
+            joins: joins,
+            select: query.select,
+          ),
+        )
+        .toList(growable: false);
   }
 
   @override
@@ -790,6 +968,325 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
     return base;
   }
 
+  Map<String, Object?> _materializeJoinedFindManyRow(
+    String model,
+    Map<String, Object?> row, {
+    required List<_SimpleSingularIncludeJoin> joins,
+    required QuerySelect? select,
+  }) {
+    final record = _normalizeBaseJoinedRecord(model, row);
+    final base = SqliteQuerySupport.selectMaterializedRecordFields(
+      record: record,
+      select: select,
+    );
+    for (final join in joins) {
+      base[join.includeKey] = _materializeJoinedIncludeRecord(join, row);
+    }
+    return base;
+  }
+
+  Map<String, Object?> _normalizeBaseJoinedRecord(
+    String model,
+    Map<String, Object?> row,
+  ) {
+    final record = <String, Object?>{};
+    for (final field in _storedFields(model)) {
+      record[field.name] = _normalizeValueFromStorage(
+        model,
+        field.name,
+        row[field.databaseName],
+      );
+    }
+    return record;
+  }
+
+  Map<String, Object?>? _materializeJoinedIncludeRecord(
+    _SimpleSingularIncludeJoin join,
+    Map<String, Object?> row,
+  ) {
+    if (row[join.columnAlias(join.relation.targetKeyField)] == null) {
+      return null;
+    }
+
+    final record = <String, Object?>{};
+    for (final field in _storedFields(join.relation.targetModel)) {
+      record[field.name] = _normalizeValueFromStorage(
+        join.relation.targetModel,
+        field.name,
+        row[join.columnAlias(field.name)],
+      );
+    }
+
+    final selected = SqliteQuerySupport.selectMaterializedRecordFields(
+      record: record,
+      select: join.entry.select,
+    );
+    for (final child in join.children) {
+      selected[child.includeKey] = _materializeJoinedIncludeRecord(child, row);
+    }
+    return selected;
+  }
+
+  List<_SimpleSingularIncludeJoin>? _simpleSingularIncludeJoins({
+    required String sourceModel,
+    required String parentAlias,
+    required QueryInclude? include,
+    required _SqlBuildContext context,
+    required int depth,
+  }) {
+    if (include == null || include.relations.isEmpty) {
+      return const <_SimpleSingularIncludeJoin>[];
+    }
+    if (depth > 3) {
+      return null;
+    }
+
+    final joins = <_SimpleSingularIncludeJoin>[];
+    for (final relationEntry in include.relations.entries) {
+      final entry = relationEntry.value;
+      final relation = entry.relation;
+      if (relation.cardinality != QueryRelationCardinality.one ||
+          relation.storageKind != QueryRelationStorageKind.direct ||
+          relation.localKeyFields.length != 1 ||
+          relation.targetKeyFields.length != 1) {
+        return null;
+      }
+
+      final alias = context.nextAlias();
+      final children = _simpleSingularIncludeJoins(
+        sourceModel: relation.targetModel,
+        parentAlias: alias,
+        include: entry.include,
+        context: context,
+        depth: depth + 1,
+      );
+      if (children == null) {
+        return null;
+      }
+
+      joins.add(
+        _SimpleSingularIncludeJoin(
+          alias: alias,
+          parentAlias: parentAlias,
+          sourceModel: sourceModel,
+          includeKey: relationEntry.key,
+          entry: entry,
+          children: children,
+        ),
+      );
+    }
+    return joins;
+  }
+
+  List<_SimpleSingularIncludeJoin> _flattenSimpleSingularIncludeJoins(
+    List<_SimpleSingularIncludeJoin> joins,
+  ) {
+    final flat = <_SimpleSingularIncludeJoin>[];
+
+    void visit(List<_SimpleSingularIncludeJoin> nested) {
+      for (final join in nested) {
+        flat.add(join);
+        visit(join.children);
+      }
+    }
+
+    visit(joins);
+    return flat;
+  }
+
+  /// Materializes a batch of records, resolving includes with a single query
+  /// per relation level instead of one query per parent row (N+1 avoidance).
+  Future<List<Map<String, Object?>>> _materializeRecordsBatch(
+    String model,
+    List<Map<String, Object?>> rawRecords, {
+    required QueryInclude? include,
+    required QuerySelect? select,
+  }) async {
+    if (rawRecords.isEmpty) return const <Map<String, Object?>>[];
+
+    final results = rawRecords
+        .map(
+          (raw) => SqliteQuerySupport.selectMaterializedRecordFields(
+            record: raw,
+            select: select,
+          ),
+        )
+        .toList(growable: false);
+
+    if (include == null) return results;
+
+    for (final entry in include.relations.entries) {
+      await _applyBatchInclude(
+        model: model,
+        rawRecords: rawRecords,
+        results: results,
+        includeKey: entry.key,
+        entry: entry.value,
+      );
+    }
+
+    return results;
+  }
+
+  /// Resolves a single include relation across all parent records at once.
+  /// Falls back to per-row resolution for M2M and compound FK relations.
+  Future<void> _applyBatchInclude({
+    required String model,
+    required List<Map<String, Object?>> rawRecords,
+    required List<Map<String, Object?>> results,
+    required String includeKey,
+    required QueryIncludeEntry entry,
+  }) async {
+    final relation = entry.relation;
+
+    if (relation.storageKind == QueryRelationStorageKind.implicitManyToMany) {
+      await _applyImplicitManyToManyBatchInclude(
+        model: model,
+        rawRecords: rawRecords,
+        results: results,
+        includeKey: includeKey,
+        entry: entry,
+      );
+      return;
+    }
+
+    if (relation.localKeyFields.length > 1) {
+      // Fall back to per-row resolution for compound FKs.
+      for (var i = 0; i < rawRecords.length; i++) {
+        results[i][includeKey] = await _resolveInclude(
+          model,
+          rawRecords[i],
+          entry,
+        );
+      }
+      return;
+    }
+
+    final localField = relation.localKeyField;
+    final targetField = relation.targetKeyField;
+
+    final fkValues = rawRecords
+        .map((r) => r[localField])
+        .where((v) => v != null)
+        .toSet()
+        .toList(growable: false);
+
+    if (fkValues.isEmpty) {
+      final defaultValue = relation.cardinality == QueryRelationCardinality.many
+          ? const <Map<String, Object?>>[]
+          : null;
+      for (final result in results) {
+        result[includeKey] = defaultValue;
+      }
+      return;
+    }
+
+    // Single batch query for all parent rows.
+    final targetRows = await _selectRows(
+      model: relation.targetModel,
+      where: [
+        QueryPredicate(field: targetField, operator: 'in', value: fkValues),
+      ],
+      orderBy: const <QueryOrderBy>[],
+    );
+
+    // Recursively materialize related rows in batch.
+    final rawTargets = targetRows.map((r) => r.record).toList(growable: false);
+    final materializedTargets = await _materializeRecordsBatch(
+      relation.targetModel,
+      rawTargets,
+      include: entry.include,
+      select: entry.select,
+    );
+
+    // Build lookup: targetField value → list of materialized records.
+    final lookup = <Object?, List<Map<String, Object?>>>{};
+    for (var i = 0; i < targetRows.length; i++) {
+      final key = targetRows[i].record[targetField];
+      (lookup[key] ??= []).add(materializedTargets[i]);
+    }
+
+    // Attach results to parent records.
+    for (var i = 0; i < rawRecords.length; i++) {
+      final fkValue = rawRecords[i][localField];
+      final matches = fkValue != null
+          ? lookup[fkValue] ?? const <Map<String, Object?>>[]
+          : const <Map<String, Object?>>[];
+      if (relation.cardinality == QueryRelationCardinality.one) {
+        results[i][includeKey] = matches.isEmpty
+            ? null
+            : Map<String, Object?>.unmodifiable(matches.first);
+      } else {
+        results[i][includeKey] = List<Map<String, Object?>>.unmodifiable(
+          matches,
+        );
+      }
+    }
+  }
+
+  Future<void> _applyImplicitManyToManyBatchInclude({
+    required String model,
+    required List<Map<String, Object?>> rawRecords,
+    required List<Map<String, Object?>> results,
+    required String includeKey,
+    required QueryIncludeEntry entry,
+  }) async {
+    final relation = entry.relation;
+    final parentIndicesByKey = <_RelationKey, List<int>>{};
+    final dedupedSourceRecords = <_RelationKey, Map<String, Object?>>{};
+
+    for (var index = 0; index < rawRecords.length; index++) {
+      final record = rawRecords[index];
+      if (!_recordContainsAllRelationKeyFields(
+        record,
+        relation.localKeyFields,
+      )) {
+        results[index][includeKey] = const <Map<String, Object?>>[];
+        continue;
+      }
+
+      final key = _RelationKey(
+        relation.localKeyFields
+            .map((field) => record[field])
+            .toList(growable: false),
+      );
+      (parentIndicesByKey[key] ??= <int>[]).add(index);
+      dedupedSourceRecords.putIfAbsent(key, () => record);
+    }
+
+    if (dedupedSourceRecords.isEmpty) {
+      return;
+    }
+
+    final relatedRows = await _selectImplicitManyToManyRowsBatch(
+      sourceModel: model,
+      sourceRecords: dedupedSourceRecords.values.toList(growable: false),
+      relation: relation,
+    );
+    final materializedTargets = await _materializeRecordsBatch(
+      relation.targetModel,
+      relatedRows.map((row) => row.record).toList(growable: false),
+      include: entry.include,
+      select: entry.select,
+    );
+
+    final targetsByParentKey = <_RelationKey, List<Map<String, Object?>>>{};
+    for (var index = 0; index < relatedRows.length; index++) {
+      (targetsByParentKey[relatedRows[index].sourceKey] ??=
+              <Map<String, Object?>>[])
+          .add(materializedTargets[index]);
+    }
+
+    for (final entryByKey in parentIndicesByKey.entries) {
+      final matches = List<Map<String, Object?>>.unmodifiable(
+        targetsByParentKey[entryByKey.key] ?? const <Map<String, Object?>>[],
+      );
+      for (final parentIndex in entryByKey.value) {
+        results[parentIndex][includeKey] = matches;
+      }
+    }
+  }
+
   Future<Object?> _resolveInclude(
     String sourceModel,
     Map<String, Object?> sourceRecord,
@@ -868,6 +1365,16 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
       rowIdColumn: _rowIdColumn,
     );
     return _SelectedRow(rowId: row[_rowIdColumn] as int, record: record);
+  }
+
+  Iterable<RuntimeFieldView> _storedFields(String model) {
+    final modelDefinition = _schema.findModel(model);
+    if (modelDefinition == null) {
+      return const <RuntimeFieldView>[];
+    }
+    return modelDefinition.fields.where(
+      (field) => field.kind != RuntimeFieldKind.relation,
+    );
   }
 
   _SqlClause _buildWhereClause(
@@ -1021,6 +1528,83 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
         .toList(growable: false);
   }
 
+  Future<List<_ImplicitManyToManyBatchRow>> _selectImplicitManyToManyRowsBatch({
+    required String sourceModel,
+    required List<Map<String, Object?>> sourceRecords,
+    required QueryRelation relation,
+  }) async {
+    if (sourceRecords.isEmpty) {
+      return const <_ImplicitManyToManyBatchRow>[];
+    }
+
+    final storage = _implicitManyToManyStorage(sourceModel, relation);
+    final context = _SqlBuildContext();
+    final targetAlias = context.nextAlias();
+    final joinAlias = context.nextAlias();
+    final parameters = <Object?>[];
+    final whereBranches = <String>[];
+    for (final sourceRecord in sourceRecords) {
+      final branchClauses = <String>[];
+      for (var index = 0; index < storage.sourceJoinColumns.length; index++) {
+        branchClauses.add(
+          '${_qualifiedRawField(joinAlias, storage.sourceJoinColumns[index])} = ?',
+        );
+        parameters.add(
+          _normalizeValueForStorage(
+            sourceModel,
+            relation.localKeyFields[index],
+            sourceRecord[relation.localKeyFields[index]],
+          ),
+        );
+      }
+      whereBranches.add('(${branchClauses.join(' AND ')})');
+    }
+
+    final sourceSelects = <String>[];
+    for (var index = 0; index < storage.sourceJoinColumns.length; index++) {
+      sourceSelects.add(
+        '${_qualifiedRawField(joinAlias, storage.sourceJoinColumns[index])} AS ${_quoteIdentifier('__src_$index')}',
+      );
+    }
+
+    final result = await _executor.rawQuery(
+      'SELECT ${sourceSelects.join(', ')}, ${_quoteIdentifier(targetAlias)}.* '
+      'FROM ${_tableReference(relation.targetModel, targetAlias)} '
+      'JOIN ${_rawTableReference(storage.tableName, joinAlias)} '
+      'ON ${_qualifiedFieldEqualityClause(leftAlias: joinAlias, leftModel: relation.targetModel, leftFields: storage.targetJoinColumns, leftRaw: true, rightAlias: targetAlias, rightModel: relation.targetModel, rightFields: relation.targetKeyFields)} '
+      'WHERE ${whereBranches.join(' OR ')}',
+      parameters,
+    );
+
+    return result
+        .map((row) {
+          final sourceKey = _RelationKey(
+            List<Object?>.generate(
+              storage.sourceJoinColumns.length,
+              (index) => _normalizeValueFromStorage(
+                sourceModel,
+                relation.localKeyFields[index],
+                row['__src_$index'],
+              ),
+              growable: false,
+            ),
+          );
+          final targetRecord = <String, Object?>{};
+          for (final field in _storedFields(relation.targetModel)) {
+            targetRecord[field.name] = _normalizeValueFromStorage(
+              relation.targetModel,
+              field.name,
+              row[field.databaseName],
+            );
+          }
+          return _ImplicitManyToManyBatchRow(
+            sourceKey: sourceKey,
+            record: targetRecord,
+          );
+        })
+        .toList(growable: false);
+  }
+
   _SqlClause _buildImplicitManyToManyRelationClause(
     _SqlBuildContext context,
     String sourceModel,
@@ -1089,6 +1673,18 @@ class SqliteFlutterDatabaseAdapter implements DatabaseAdapter {
       relation: relation,
       role: role,
     );
+  }
+
+  bool _recordContainsAllRelationKeyFields(
+    Map<String, Object?> record,
+    List<String> fields,
+  ) {
+    for (final field in fields) {
+      if (record[field] == null) {
+        return false;
+      }
+    }
+    return true;
   }
 
   String _qualifiedFieldEqualityClause({
@@ -1327,4 +1923,61 @@ class _SelectedRow {
 
   final int rowId;
   final Map<String, Object?> record;
+}
+
+class _SimpleSingularIncludeJoin {
+  const _SimpleSingularIncludeJoin({
+    required this.alias,
+    required this.parentAlias,
+    required this.sourceModel,
+    required this.includeKey,
+    required this.entry,
+    required this.children,
+  });
+
+  final String alias;
+  final String parentAlias;
+  final String sourceModel;
+  final String includeKey;
+  final QueryIncludeEntry entry;
+  final List<_SimpleSingularIncludeJoin> children;
+
+  QueryRelation get relation => entry.relation;
+
+  String columnAlias(String field) => '__join_${alias}_$field';
+}
+
+class _ImplicitManyToManyBatchRow {
+  const _ImplicitManyToManyBatchRow({
+    required this.sourceKey,
+    required this.record,
+  });
+
+  final _RelationKey sourceKey;
+  final Map<String, Object?> record;
+}
+
+class _RelationKey {
+  const _RelationKey(this.values);
+
+  final List<Object?> values;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! _RelationKey || other.values.length != values.length) {
+      return false;
+    }
+    for (var index = 0; index < values.length; index++) {
+      if (other.values[index] != values[index]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hashAll(values);
 }

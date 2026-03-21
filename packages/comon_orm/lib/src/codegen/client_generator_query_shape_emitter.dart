@@ -77,6 +77,10 @@ extension on ClientGenerator {
       )
       ..writeln('  }')
       ..writeln()
+      ..writeln('  QueryCursor toQueryCursor() {')
+      ..writeln('    return QueryCursor(where: toPredicates());')
+      ..writeln('  }')
+      ..writeln()
       ..writeln('  bool matchesRecord(Map<String, Object?> record) {')
       ..writeln('    var selectorCount = 0;')
       ..writeln('    var matches = false;');

@@ -18,6 +18,21 @@ model User {
     adapter.close();
   });
 
+  test('openInMemory enables foreign key enforcement', () async {
+    final adapter = SqliteDatabaseAdapter.openInMemory(
+      schema: const SchemaParser().parse('''
+model User {
+  id Int @id
+}
+'''),
+    );
+
+    final rows = await adapter.rawQuery('PRAGMA foreign_keys');
+    expect(rows.single['foreign_keys'], 1);
+
+    adapter.close();
+  });
+
   test('opens sqlite adapter from generated schema metadata', () async {
     late String openedDatabasePath;
     late RuntimeSchemaView openedSchema;
@@ -95,4 +110,38 @@ model User {
       }
     },
   );
+
+  test('default runtime open enables foreign key enforcement', () async {
+    final tempRoot = Directory.systemTemp.createTempSync(
+      'comon_orm_sqlite_foreign_keys_',
+    );
+    try {
+      final databasePath =
+          '${tempRoot.path}${Platform.pathSeparator}foreign_keys.db';
+
+      final adapter = await SqliteDatabaseAdapter.openFromGeneratedSchema(
+        schema: const GeneratedRuntimeSchema(
+          datasources: <GeneratedDatasourceMetadata>[
+            GeneratedDatasourceMetadata(
+              name: 'db',
+              provider: 'sqlite',
+              url: GeneratedDatasourceUrl(
+                kind: GeneratedDatasourceUrlKind.literal,
+                value: 'file:dev.db',
+              ),
+            ),
+          ],
+          models: <GeneratedModelMetadata>[],
+        ),
+        databasePath: databasePath,
+      );
+
+      final rows = await adapter.rawQuery('PRAGMA foreign_keys');
+      expect(rows.single['foreign_keys'], 1);
+
+      adapter.close();
+    } finally {
+      tempRoot.deleteSync(recursive: true);
+    }
+  });
 }

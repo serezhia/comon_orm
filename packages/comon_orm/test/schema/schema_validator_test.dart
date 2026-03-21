@@ -50,6 +50,26 @@ model Post {
       );
     });
 
+    test('skips relation validation for ignored models and fields', () {
+      const source = '''
+model User {
+  id     Int     @id
+  hidden Missing @ignore
+}
+
+model AuditLog {
+  broken Missing
+
+  @@ignore
+}
+''';
+
+      final schema = const SchemaParser().parse(source);
+      final issues = const SchemaValidator().validate(schema);
+
+      expect(issues, isEmpty);
+    });
+
     test('validates relation references against unique target fields', () {
       const source = '''
 model Account {
@@ -770,8 +790,13 @@ datasource db {
 
 model User {
   id         Int      @id
+  rank       Int      @db.SmallInt
+  total      BigInt   @db.BigInt
+  rating     Float    @db.DoublePrecision
   name       String   @db.VarChar(255)
+  code       String   @db.Char(4)
   bio        String?  @db.Text
+  document   String?  @db.Xml
   payload    Json     @db.JsonB
   metadata   Json?    @db.Json
   blob       Bytes    @db.ByteA
@@ -829,8 +854,13 @@ datasource db {
 model User {
   id        Int      @id
   name      String   @db.DoesNotExist
+  rank      String   @db.SmallInt
+  total     Int      @db.BigInt
+  rating    Decimal  @db.DoublePrecision
   nickname  String   @db.VarChar(foo)
+  code      String   @db.Char(foo)
   amount    String   @db.Numeric(10,2)
+  document  Int      @db.Xml
   createdAt DateTime @db.Timestamp(3)
 }
 ''';
@@ -850,7 +880,29 @@ model User {
       );
       expect(
         issues.map((issue) => issue.message),
+        contains('@db.SmallInt is only supported on singular Int fields.'),
+      );
+      expect(
+        issues.map((issue) => issue.message),
+        contains('@db.BigInt is only supported on singular BigInt fields.'),
+      );
+      expect(
+        issues.map((issue) => issue.message),
+        contains(
+          '@db.DoublePrecision is only supported on singular Float fields.',
+        ),
+      );
+      expect(
+        issues.map((issue) => issue.message),
+        contains('@db.Char requires a positive length argument.'),
+      );
+      expect(
+        issues.map((issue) => issue.message),
         contains('@db.Numeric is only supported on singular Decimal fields.'),
+      );
+      expect(
+        issues.map((issue) => issue.message),
+        contains('@db.Xml is only supported on singular String fields.'),
       );
       expect(
         issues.map((issue) => issue.message),
@@ -931,5 +983,121 @@ model Sample {
         contains('@db.Blob is only supported on singular Bytes fields.'),
       );
     });
+
+    // ── @map conflict detection ───────────────────────────────────────────
+
+    test('reports two fields in the same model mapping to the same column', () {
+      const source = '''
+model User {
+  id       Int    @id
+  name     String @map("display_name")
+  nickname String @map("display_name")
+}
+''';
+
+      final schema = const SchemaParser().parse(source);
+      final issues = const SchemaValidator().validate(schema);
+
+      expect(
+        issues.map((issue) => issue.message),
+        contains(
+          'Field database name "display_name" conflicts with another field in model "User".',
+        ),
+      );
+    });
+
+    test(
+      'reports a field whose implicit name clashes with another field @map',
+      () {
+        const source = '''
+model User {
+  id           Int    @id
+  display_name String
+  nickname     String @map("display_name")
+}
+''';
+
+        final schema = const SchemaParser().parse(source);
+        final issues = const SchemaValidator().validate(schema);
+
+        expect(
+          issues.map((issue) => issue.message),
+          contains(
+            'Field database name "display_name" conflicts with another field in model "User".',
+          ),
+        );
+      },
+    );
+
+    test('accepts two fields in different models sharing a column name', () {
+      // @map conflicts are only relevant within the same model.
+      const source = '''
+model User {
+  id    Int    @id
+  value String @map("col")
+}
+
+model Post {
+  id    Int    @id
+  value String @map("col")
+}
+''';
+
+      final schema = const SchemaParser().parse(source);
+      final issues = const SchemaValidator().validate(schema);
+
+      expect(issues, isEmpty);
+    });
+
+    test('reports two models mapping to the same database table', () {
+      const source = '''
+model User {
+  id Int @id
+
+  @@map("accounts")
+}
+
+model Account {
+  id Int @id
+
+  @@map("accounts")
+}
+''';
+
+      final schema = const SchemaParser().parse(source);
+      final issues = const SchemaValidator().validate(schema);
+
+      expect(
+        issues.map((issue) => issue.message),
+        contains(
+          'Database table name "accounts" conflicts with another model.',
+        ),
+      );
+    });
+
+    test(
+      'reports a model whose implicit name clashes with another model @@map',
+      () {
+        const source = '''
+model User {
+  id Int @id
+}
+
+model Member {
+  id Int @id
+
+  @@map("User")
+}
+''';
+
+        final schema = const SchemaParser().parse(source);
+        final issues = const SchemaValidator().validate(schema);
+
+        expect(
+          issues.map((issue) => issue.message),
+          contains('Database table name "User" conflicts with another model.'),
+        );
+      },
+    );
   });
 }

@@ -1,0 +1,172 @@
+---
+title: Models and fields
+description: Scalar types, optional fields, defaults, keys, maps, indexes, and Dart type mapping.
+---
+
+# Models and fields
+
+Models describe tables. Fields describe columns and relation endpoints.
+
+This page focuses on scalar fields, defaults, keys, maps, and indexes. Continue with [Relations](/docs/orm/schema/relations) for relation ownership and [Enums](/docs/orm/schema/enums) for enum blocks.
+
+## Scalar types and Dart mapping
+
+| Schema type | Typical Dart type |
+| --- | --- |
+| `Int` | `int` |
+| `String` | `String` |
+| `Boolean` | `bool` |
+| `DateTime` | `DateTime` |
+| `Float` | `double` |
+| `Decimal` | `Decimal` |
+| `Json` | `Object?` or JSON-compatible map/list structures |
+| `Bytes` | `List<int>` |
+| `BigInt` | `BigInt` |
+
+Optional fields use `?`.
+
+```prisma
+model User {
+  id    Int    @id @default(autoincrement())
+  email String @unique
+  name  String?
+}
+```
+
+Generated Dart usage:
+
+```dart
+await db.user.create(
+  data: const UserCreateInput(
+    email: 'alice@example.com',
+    name: 'Alice',
+  ),
+);
+```
+
+## Primary keys
+
+Single-field primary key:
+
+```prisma
+model User {
+  id Int @id @default(autoincrement())
+}
+```
+
+Compound primary key:
+
+```prisma
+model Membership {
+  tenantId Int
+  userId   Int
+
+  @@id([tenantId, userId])
+}
+```
+
+Generated unique selector for a compound id:
+
+```dart
+const MembershipWhereUniqueInput.tenantIdUserId(
+  tenantId: 7,
+  userId: 42,
+)
+```
+
+## Unique constraints
+
+Single-field unique:
+
+```prisma
+email String @unique
+```
+
+Compound unique:
+
+```prisma
+model UserSession {
+  userId    Int
+  deviceId  String
+  token     String
+
+  @@unique([userId, deviceId])
+}
+```
+
+## Defaults
+
+Common defaults:
+
+- `@default(autoincrement())`
+- `@default(now())`
+- `@default(true)` or `@default(false)`
+- `@default("literal")`
+- `@default(member)` for enum values
+
+```prisma
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+```
+
+## `@updatedAt`
+
+`@updatedAt` is runtime-aware. The adapters refresh it on updates and also initialize it on create when omitted.
+
+```prisma
+updatedAt DateTime @updatedAt
+```
+
+## Maps and physical names
+
+Use `@map` when the logical field name should differ from the database column name.
+
+```prisma
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @map("created_at")
+
+  @@map("users")
+}
+```
+
+This is especially useful when migrating an existing schema or when your database naming conventions differ from Dart naming conventions.
+
+## Indexes
+
+Use `@@index` for lookup-heavy access paths that are not already covered by `@id` or `@unique`.
+
+```prisma
+model Post {
+  id        Int      @id @default(autoincrement())
+  authorId  Int
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([authorId, status])
+  @@index([createdAt])
+}
+```
+
+## Lists
+
+List fields are mainly used for relations in the current generated-client workflow.
+
+```prisma
+model User {
+  id    Int    @id @default(autoincrement())
+  posts Post[]
+}
+```
+
+The schema validator enforces relation ownership rules and the generated client exposes nested inputs around those list relations.
+
+## Continue with
+
+- [Relations](/docs/orm/schema/relations) for one-to-one, one-to-many, self-relations, and compound references
+- [Enums](/docs/orm/schema/enums) for enum fields and migration implications
+- [Native types](/docs/orm/schema/native-types) for provider-specific `@db.*` coverage

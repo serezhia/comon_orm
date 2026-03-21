@@ -1,0 +1,57 @@
+---
+title: Aggregations
+description: Count, aggregate, and groupBy with generated inputs.
+---
+
+# Aggregations
+
+The generated client includes aggregate queries for analytical summaries that still fit the schema-driven query model.
+
+## Count
+
+```dart
+final count = await db.post.count(
+  where: const PostWhereInput(
+    status: EnumFilter<PostStatus>(equals: PostStatus.published),
+  ),
+);
+```
+
+## Aggregate
+
+```dart
+final result = await db.order.aggregate(
+  where: const OrderWhereInput(
+    paid: BoolFilter(equals: true),
+  ),
+  count: const OrderCountAggregateInput(all: true),
+  sum: const OrderSumAggregateInput(totalCents: true),
+  avg: const OrderAvgAggregateInput(totalCents: true),
+  min: const OrderMinAggregateInput(createdAt: true),
+  max: const OrderMaxAggregateInput(createdAt: true),
+);
+```
+
+Typical result shape:
+
+```dart
+print(result.count?.all);
+print(result.sum?.totalCents);
+print(result.avg?.totalCents);
+```
+
+## Group by
+
+```dart
+final rows = await db.post.groupBy(
+  by: const <PostScalarField>[
+    PostScalarField.status,
+    PostScalarField.authorId,
+  ],
+  count: const PostCountAggregateInput(all: true),
+);
+```
+
+Each row contains the grouped fields and the aggregate result bundle.
+
+Use `having`, `orderBy`, `skip`, and `take` when you need more control over grouped results.

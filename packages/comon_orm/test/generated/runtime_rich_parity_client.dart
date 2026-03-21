@@ -1,22 +1,24 @@
 // Generated code. Do not edit by hand.
 // ignore_for_file: unused_element, non_constant_identifier_names
+// schema-hash: f8dfeb2b2912e87cbed6e33e97a8b43971c1ce443133a35b13875b031e2d058d
 import 'package:comon_orm/comon_orm.dart';
 import 'package:comon_orm_sqlite/comon_orm_sqlite.dart';
 
 class GeneratedComonOrmClient {
   GeneratedComonOrmClient({required DatabaseAdapter adapter})
-    : _client = ComonOrmClient(adapter: adapter);
+    : _client = ComonOrmClient(adapter: adapter, schemaView: runtimeSchemaView);
 
   GeneratedComonOrmClient._fromClient(this._client);
 
-  static const GeneratedRuntimeSchema runtimeSchema =
-      GeneratedComonOrmMetadata.schema;
+  static const GeneratedRuntimeSchema runtimeSchema = GeneratedComonOrmMetadata.schema;
 
   static final RuntimeSchemaView runtimeSchemaView =
       runtimeSchemaViewFromGeneratedSchema(runtimeSchema);
 
   static InMemoryDatabaseAdapter createInMemoryAdapter() {
-    return InMemoryDatabaseAdapter.fromGeneratedSchema(schema: runtimeSchema);
+    return InMemoryDatabaseAdapter.fromGeneratedSchema(
+      schema: runtimeSchema,
+    );
   }
 
   factory GeneratedComonOrmClient.openInMemory() {
@@ -33,9 +35,7 @@ class GeneratedComonOrmClient {
   Future<T> transaction<T>(
     Future<T> Function(GeneratedComonOrmClient tx) action,
   ) {
-    return _client.transaction(
-      (tx) => action(GeneratedComonOrmClient._fromClient(tx)),
-    );
+    return _client.transaction((tx) => action(GeneratedComonOrmClient._fromClient(tx)));
   }
 
   Future<void> close() async {
@@ -71,10 +71,7 @@ class GeneratedComonOrmMetadata {
       GeneratedDatasourceMetadata(
         name: 'db',
         provider: 'sqlite',
-        url: GeneratedDatasourceUrl(
-          kind: GeneratedDatasourceUrlKind.env,
-          value: 'DATABASE_URL',
-        ),
+        url: GeneratedDatasourceUrl(kind: GeneratedDatasourceUrlKind.env, value: 'DATABASE_URL'),
       ),
     ],
     enums: <GeneratedEnumMetadata>[
@@ -89,9 +86,7 @@ class GeneratedComonOrmMetadata {
         name: 'User',
         databaseName: 'users',
         primaryKeyFields: <String>['id'],
-        compoundUniqueFieldSets: <List<String>>[
-          <String>['email', 'role'],
-        ],
+        compoundUniqueFieldSets: <List<String>>[<String>['email', 'role']],
         fields: <GeneratedFieldMetadata>[
           GeneratedFieldMetadata(
             name: 'id',
@@ -103,9 +98,7 @@ class GeneratedComonOrmMetadata {
             isId: true,
             isUnique: false,
             isUpdatedAt: false,
-            defaultValue: GeneratedFieldDefaultMetadata(
-              kind: GeneratedRuntimeDefaultKind.autoincrement,
-            ),
+            defaultValue: GeneratedFieldDefaultMetadata(kind: GeneratedRuntimeDefaultKind.autoincrement),
           ),
           GeneratedFieldMetadata(
             name: 'email',
@@ -128,9 +121,7 @@ class GeneratedComonOrmMetadata {
             isId: false,
             isUnique: false,
             isUpdatedAt: false,
-            defaultValue: GeneratedFieldDefaultMetadata(
-              kind: GeneratedRuntimeDefaultKind.now,
-            ),
+            defaultValue: GeneratedFieldDefaultMetadata(kind: GeneratedRuntimeDefaultKind.now),
           ),
           GeneratedFieldMetadata(
             name: 'updatedAt',
@@ -176,14 +167,14 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'User',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['managerId'],
-              targetFields: <String>['id'],
-              relationName: 'ManagerChain',
-              inverseField: 'reports',
-            ),
+            targetModel: 'User',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['managerId'],
+            targetFields: <String>['id'],
+            relationName: 'ManagerChain',
+            inverseField: 'reports',
+          ),
           ),
           GeneratedFieldMetadata(
             name: 'reports',
@@ -196,14 +187,14 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'User',
-              cardinality: GeneratedRuntimeRelationCardinality.many,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['id'],
-              targetFields: <String>['managerId'],
-              relationName: 'ManagerChain',
-              inverseField: 'manager',
-            ),
+            targetModel: 'User',
+            cardinality: GeneratedRuntimeRelationCardinality.many,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['id'],
+            targetFields: <String>['managerId'],
+            relationName: 'ManagerChain',
+            inverseField: 'manager',
+          ),
           ),
           GeneratedFieldMetadata(
             name: 'profile',
@@ -216,13 +207,13 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'Profile',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['id'],
-              targetFields: <String>['userId'],
-              inverseField: 'user',
-            ),
+            targetModel: 'Profile',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['id'],
+            targetFields: <String>['userId'],
+            inverseField: 'user',
+          ),
           ),
           GeneratedFieldMetadata(
             name: 'posts',
@@ -235,14 +226,14 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'Post',
-              cardinality: GeneratedRuntimeRelationCardinality.many,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['id'],
-              targetFields: <String>['authorId'],
-              relationName: 'UserPosts',
-              inverseField: 'author',
-            ),
+            targetModel: 'Post',
+            cardinality: GeneratedRuntimeRelationCardinality.many,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['id'],
+            targetFields: <String>['authorId'],
+            relationName: 'UserPosts',
+            inverseField: 'author',
+          ),
           ),
           GeneratedFieldMetadata(
             name: 'groups',
@@ -255,18 +246,16 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'Group',
-              cardinality: GeneratedRuntimeRelationCardinality.many,
-              storageKind:
-                  GeneratedRuntimeRelationStorageKind.implicitManyToMany,
-              localFields: <String>['id'],
-              targetFields: <String>['id'],
-              inverseField: 'users',
-              storageTableName:
-                  '_comon_orm_m2m__Z3JvdXBz__dXNlcnM__dXNlcnM__Z3JvdXBz',
-              sourceJoinColumns: <String>['m2m__dXNlcnM__Z3JvdXBz__aWQ'],
-              targetJoinColumns: <String>['m2m__Z3JvdXBz__dXNlcnM__aWQ'],
-            ),
+            targetModel: 'Group',
+            cardinality: GeneratedRuntimeRelationCardinality.many,
+            storageKind: GeneratedRuntimeRelationStorageKind.implicitManyToMany,
+            localFields: <String>['id'],
+            targetFields: <String>['id'],
+            inverseField: 'users',
+            storageTableName: '_comon_orm_m2m__Z3JvdXBz__dXNlcnM__dXNlcnM__Z3JvdXBz',
+            sourceJoinColumns: <String>['m2m__dXNlcnM__Z3JvdXBz__aWQ'],
+            targetJoinColumns: <String>['m2m__Z3JvdXBz__dXNlcnM__aWQ'],
+          ),
           ),
           GeneratedFieldMetadata(
             name: 'memberships',
@@ -279,13 +268,13 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'Membership',
-              cardinality: GeneratedRuntimeRelationCardinality.many,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['id'],
-              targetFields: <String>['userId'],
-              inverseField: 'user',
-            ),
+            targetModel: 'Membership',
+            cardinality: GeneratedRuntimeRelationCardinality.many,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['id'],
+            targetFields: <String>['userId'],
+            inverseField: 'user',
+          ),
           ),
         ],
       ),
@@ -328,14 +317,14 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'User',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['authorId'],
-              targetFields: <String>['id'],
-              relationName: 'UserPosts',
-              inverseField: 'posts',
-            ),
+            targetModel: 'User',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['authorId'],
+            targetFields: <String>['id'],
+            relationName: 'UserPosts',
+            inverseField: 'posts',
+          ),
           ),
         ],
       ),
@@ -378,13 +367,13 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'User',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['userId'],
-              targetFields: <String>['id'],
-              inverseField: 'profile',
-            ),
+            targetModel: 'User',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['userId'],
+            targetFields: <String>['id'],
+            inverseField: 'profile',
+          ),
           ),
         ],
       ),
@@ -416,18 +405,16 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'User',
-              cardinality: GeneratedRuntimeRelationCardinality.many,
-              storageKind:
-                  GeneratedRuntimeRelationStorageKind.implicitManyToMany,
-              localFields: <String>['id'],
-              targetFields: <String>['id'],
-              inverseField: 'groups',
-              storageTableName:
-                  '_comon_orm_m2m__Z3JvdXBz__dXNlcnM__dXNlcnM__Z3JvdXBz',
-              sourceJoinColumns: <String>['m2m__Z3JvdXBz__dXNlcnM__aWQ'],
-              targetJoinColumns: <String>['m2m__dXNlcnM__Z3JvdXBz__aWQ'],
-            ),
+            targetModel: 'User',
+            cardinality: GeneratedRuntimeRelationCardinality.many,
+            storageKind: GeneratedRuntimeRelationStorageKind.implicitManyToMany,
+            localFields: <String>['id'],
+            targetFields: <String>['id'],
+            inverseField: 'groups',
+            storageTableName: '_comon_orm_m2m__Z3JvdXBz__dXNlcnM__dXNlcnM__Z3JvdXBz',
+            sourceJoinColumns: <String>['m2m__Z3JvdXBz__dXNlcnM__aWQ'],
+            targetJoinColumns: <String>['m2m__dXNlcnM__Z3JvdXBz__aWQ'],
+          ),
           ),
         ],
       ),
@@ -481,13 +468,13 @@ class GeneratedComonOrmMetadata {
             isUnique: false,
             isUpdatedAt: false,
             relation: GeneratedRelationMetadata(
-              targetModel: 'User',
-              cardinality: GeneratedRuntimeRelationCardinality.one,
-              storageKind: GeneratedRuntimeRelationStorageKind.direct,
-              localFields: <String>['userId'],
-              targetFields: <String>['id'],
-              inverseField: 'memberships',
-            ),
+            targetModel: 'User',
+            cardinality: GeneratedRuntimeRelationCardinality.one,
+            storageKind: GeneratedRuntimeRelationStorageKind.direct,
+            localFields: <String>['userId'],
+            targetFields: <String>['id'],
+            inverseField: 'memberships',
+          ),
           ),
         ],
       ),
@@ -495,7 +482,10 @@ class GeneratedComonOrmMetadata {
   );
 }
 
-enum UserRole { admin, member }
+enum UserRole {
+  admin,
+  member
+}
 
 class StringFieldUpdateOperationsInput {
   const StringFieldUpdateOperationsInput({this.set = _undefined});
@@ -538,11 +528,7 @@ class JsonFieldUpdateOperationsInput {
 }
 
 class IntFieldUpdateOperationsInput {
-  const IntFieldUpdateOperationsInput({
-    this.set = _undefined,
-    this.increment,
-    this.decrement,
-  });
+  const IntFieldUpdateOperationsInput({this.set = _undefined, this.increment, this.decrement});
 
   final Object? set;
   final int? increment;
@@ -550,19 +536,11 @@ class IntFieldUpdateOperationsInput {
 
   bool get hasSet => !identical(set, _undefined);
   bool get hasComputedUpdate => increment != null || decrement != null;
-  bool get hasMultipleOperations =>
-      (hasSet ? 1 : 0) +
-          (increment != null ? 1 : 0) +
-          (decrement != null ? 1 : 0) >
-      1;
+  bool get hasMultipleOperations => (hasSet ? 1 : 0) + (increment != null ? 1 : 0) + (decrement != null ? 1 : 0) > 1;
 }
 
 class DoubleFieldUpdateOperationsInput {
-  const DoubleFieldUpdateOperationsInput({
-    this.set = _undefined,
-    this.increment,
-    this.decrement,
-  });
+  const DoubleFieldUpdateOperationsInput({this.set = _undefined, this.increment, this.decrement});
 
   final Object? set;
   final double? increment;
@@ -570,19 +548,11 @@ class DoubleFieldUpdateOperationsInput {
 
   bool get hasSet => !identical(set, _undefined);
   bool get hasComputedUpdate => increment != null || decrement != null;
-  bool get hasMultipleOperations =>
-      (hasSet ? 1 : 0) +
-          (increment != null ? 1 : 0) +
-          (decrement != null ? 1 : 0) >
-      1;
+  bool get hasMultipleOperations => (hasSet ? 1 : 0) + (increment != null ? 1 : 0) + (decrement != null ? 1 : 0) > 1;
 }
 
 class BigIntFieldUpdateOperationsInput {
-  const BigIntFieldUpdateOperationsInput({
-    this.set = _undefined,
-    this.increment,
-    this.decrement,
-  });
+  const BigIntFieldUpdateOperationsInput({this.set = _undefined, this.increment, this.decrement});
 
   final Object? set;
   final BigInt? increment;
@@ -590,11 +560,7 @@ class BigIntFieldUpdateOperationsInput {
 
   bool get hasSet => !identical(set, _undefined);
   bool get hasComputedUpdate => increment != null || decrement != null;
-  bool get hasMultipleOperations =>
-      (hasSet ? 1 : 0) +
-          (increment != null ? 1 : 0) +
-          (decrement != null ? 1 : 0) >
-      1;
+  bool get hasMultipleOperations => (hasSet ? 1 : 0) + (increment != null ? 1 : 0) + (decrement != null ? 1 : 0) > 1;
 }
 
 class EnumFieldUpdateOperationsInput<T extends Enum> {
@@ -606,20 +572,7 @@ class EnumFieldUpdateOperationsInput<T extends Enum> {
 }
 
 class User {
-  const User({
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-    this.manager,
-    this.reports,
-    this.profile,
-    this.posts,
-    this.groups,
-    this.memberships,
-  });
+  const User({this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, this.manager, this.reports, this.profile, this.posts, this.groups, this.memberships, });
 
   final int? id;
   final String? email;
@@ -640,28 +593,14 @@ class User {
       email: record['email'] as String?,
       createdAt: _asDateTime(record['createdAt']),
       updatedAt: _asDateTime(record['updatedAt']),
-      role: record['role'] == null
-          ? null
-          : UserRole.values.byName(record['role'] as String),
+      role: record['role'] == null ? null : UserRole.values.byName(record['role'] as String),
       managerId: record['managerId'] as int?,
-      manager: record['manager'] == null
-          ? null
-          : User.fromRecord(record['manager'] as Map<String, Object?>),
-      reports: (record['reports'] as List<Object?>?)
-          ?.map((item) => User.fromRecord(item as Map<String, Object?>))
-          .toList(growable: false),
-      profile: record['profile'] == null
-          ? null
-          : Profile.fromRecord(record['profile'] as Map<String, Object?>),
-      posts: (record['posts'] as List<Object?>?)
-          ?.map((item) => Post.fromRecord(item as Map<String, Object?>))
-          .toList(growable: false),
-      groups: (record['groups'] as List<Object?>?)
-          ?.map((item) => Group.fromRecord(item as Map<String, Object?>))
-          .toList(growable: false),
-      memberships: (record['memberships'] as List<Object?>?)
-          ?.map((item) => Membership.fromRecord(item as Map<String, Object?>))
-          .toList(growable: false),
+      manager: record['manager'] == null ? null : User.fromRecord(record['manager'] as Map<String, Object?>),
+      reports: (record['reports'] as List<Object?>?)?.map((item) => User.fromRecord(item as Map<String, Object?>)).toList(growable: false),
+      profile: record['profile'] == null ? null : Profile.fromRecord(record['profile'] as Map<String, Object?>),
+      posts: (record['posts'] as List<Object?>?)?.map((item) => Post.fromRecord(item as Map<String, Object?>)).toList(growable: false),
+      groups: (record['groups'] as List<Object?>?)?.map((item) => Group.fromRecord(item as Map<String, Object?>)).toList(growable: false),
+      memberships: (record['memberships'] as List<Object?>?)?.map((item) => Membership.fromRecord(item as Map<String, Object?>)).toList(growable: false),
     );
   }
 
@@ -671,28 +610,14 @@ class User {
       email: json['email'] as String?,
       createdAt: _asDateTime(json['createdAt']),
       updatedAt: _asDateTime(json['updatedAt']),
-      role: json['role'] == null
-          ? null
-          : UserRole.values.byName(json['role'] as String),
+      role: json['role'] == null ? null : UserRole.values.byName(json['role'] as String),
       managerId: json['managerId'] as int?,
-      manager: json['manager'] == null
-          ? null
-          : User.fromJson(json['manager'] as Map<String, Object?>),
-      reports: (json['reports'] as List<Object?>?)
-          ?.map((item) => User.fromJson(item as Map<String, Object?>))
-          .toList(growable: false),
-      profile: json['profile'] == null
-          ? null
-          : Profile.fromJson(json['profile'] as Map<String, Object?>),
-      posts: (json['posts'] as List<Object?>?)
-          ?.map((item) => Post.fromJson(item as Map<String, Object?>))
-          .toList(growable: false),
-      groups: (json['groups'] as List<Object?>?)
-          ?.map((item) => Group.fromJson(item as Map<String, Object?>))
-          .toList(growable: false),
-      memberships: (json['memberships'] as List<Object?>?)
-          ?.map((item) => Membership.fromJson(item as Map<String, Object?>))
-          .toList(growable: false),
+      manager: json['manager'] == null ? null : User.fromJson(json['manager'] as Map<String, Object?>),
+      reports: (json['reports'] as List<Object?>?)?.map((item) => User.fromJson(item as Map<String, Object?>)).toList(growable: false),
+      profile: json['profile'] == null ? null : Profile.fromJson(json['profile'] as Map<String, Object?>),
+      posts: (json['posts'] as List<Object?>?)?.map((item) => Post.fromJson(item as Map<String, Object?>)).toList(growable: false),
+      groups: (json['groups'] as List<Object?>?)?.map((item) => Group.fromJson(item as Map<String, Object?>)).toList(growable: false),
+      memberships: (json['memberships'] as List<Object?>?)?.map((item) => Membership.fromJson(item as Map<String, Object?>)).toList(growable: false),
     );
   }
 
@@ -713,12 +638,8 @@ class User {
     return User(
       id: id == _undefined ? this.id : id as int?,
       email: email == _undefined ? this.email : email as String?,
-      createdAt: createdAt == _undefined
-          ? this.createdAt
-          : createdAt as DateTime?,
-      updatedAt: updatedAt == _undefined
-          ? this.updatedAt
-          : updatedAt as DateTime?,
+      createdAt: createdAt == _undefined ? this.createdAt : createdAt as DateTime?,
+      updatedAt: updatedAt == _undefined ? this.updatedAt : updatedAt as DateTime?,
       role: role == _undefined ? this.role : role as UserRole?,
       managerId: managerId == _undefined ? this.managerId : managerId as int?,
       manager: manager == _undefined ? this.manager : manager as User?,
@@ -726,9 +647,7 @@ class User {
       profile: profile == _undefined ? this.profile : profile as Profile?,
       posts: posts == _undefined ? this.posts : posts as List<Post>?,
       groups: groups == _undefined ? this.groups : groups as List<Group>?,
-      memberships: memberships == _undefined
-          ? this.memberships
-          : memberships as List<Membership>?,
+      memberships: memberships == _undefined ? this.memberships : memberships as List<Membership>?,
     );
   }
 
@@ -756,27 +675,19 @@ class User {
       record['manager'] = manager!.toRecord();
     }
     if (reports != null) {
-      record['reports'] = reports!
-          .map((item) => item.toRecord())
-          .toList(growable: false);
+      record['reports'] = reports!.map((item) => item.toRecord()).toList(growable: false);
     }
     if (profile != null) {
       record['profile'] = profile!.toRecord();
     }
     if (posts != null) {
-      record['posts'] = posts!
-          .map((item) => item.toRecord())
-          .toList(growable: false);
+      record['posts'] = posts!.map((item) => item.toRecord()).toList(growable: false);
     }
     if (groups != null) {
-      record['groups'] = groups!
-          .map((item) => item.toRecord())
-          .toList(growable: false);
+      record['groups'] = groups!.map((item) => item.toRecord()).toList(growable: false);
     }
     if (memberships != null) {
-      record['memberships'] = memberships!
-          .map((item) => item.toRecord())
-          .toList(growable: false);
+      record['memberships'] = memberships!.map((item) => item.toRecord()).toList(growable: false);
     }
     return Map<String, Object?>.unmodifiable(record);
   }
@@ -805,51 +716,42 @@ class User {
       json['manager'] = manager!.toJson();
     }
     if (reports != null) {
-      json['reports'] = reports!
-          .map((item) => item.toJson())
-          .toList(growable: false);
+      json['reports'] = reports!.map((item) => item.toJson()).toList(growable: false);
     }
     if (profile != null) {
       json['profile'] = profile!.toJson();
     }
     if (posts != null) {
-      json['posts'] = posts!
-          .map((item) => item.toJson())
-          .toList(growable: false);
+      json['posts'] = posts!.map((item) => item.toJson()).toList(growable: false);
     }
     if (groups != null) {
-      json['groups'] = groups!
-          .map((item) => item.toJson())
-          .toList(growable: false);
+      json['groups'] = groups!.map((item) => item.toJson()).toList(growable: false);
     }
     if (memberships != null) {
-      json['memberships'] = memberships!
-          .map((item) => item.toJson())
-          .toList(growable: false);
+      json['memberships'] = memberships!.map((item) => item.toJson()).toList(growable: false);
     }
     return Map<String, Object?>.unmodifiable(json);
   }
 
   @override
-  String toString() =>
-      'User(id: $id, email: $email, createdAt: $createdAt, updatedAt: $updatedAt, role: $role, managerId: $managerId, manager: $manager, reports: $reports, profile: $profile, posts: $posts, groups: $groups, memberships: $memberships)';
+  String toString() => 'User(id: $id, email: $email, createdAt: $createdAt, updatedAt: $updatedAt, role: $role, managerId: $managerId, manager: $manager, reports: $reports, profile: $profile, posts: $posts, groups: $groups, memberships: $memberships)';
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is User &&
-            _deepEquals(id, other.id) &&
-            _deepEquals(email, other.email) &&
-            _deepEquals(createdAt, other.createdAt) &&
-            _deepEquals(updatedAt, other.updatedAt) &&
-            _deepEquals(role, other.role) &&
-            _deepEquals(managerId, other.managerId) &&
-            _deepEquals(manager, other.manager) &&
-            _deepEquals(reports, other.reports) &&
-            _deepEquals(profile, other.profile) &&
-            _deepEquals(posts, other.posts) &&
-            _deepEquals(groups, other.groups) &&
-            _deepEquals(memberships, other.memberships);
+        _deepEquals(id, other.id) &&
+        _deepEquals(email, other.email) &&
+        _deepEquals(createdAt, other.createdAt) &&
+        _deepEquals(updatedAt, other.updatedAt) &&
+        _deepEquals(role, other.role) &&
+        _deepEquals(managerId, other.managerId) &&
+        _deepEquals(manager, other.manager) &&
+        _deepEquals(reports, other.reports) &&
+        _deepEquals(profile, other.profile) &&
+        _deepEquals(posts, other.posts) &&
+        _deepEquals(groups, other.groups) &&
+        _deepEquals(memberships, other.memberships);
   }
 
   @override
@@ -871,7 +773,7 @@ class User {
 }
 
 class Post {
-  const Post({this.id, this.authorId, this.author});
+  const Post({this.id, this.authorId, this.author, });
 
   final int? id;
   final int? authorId;
@@ -881,9 +783,7 @@ class Post {
     return Post(
       id: record['id'] as int?,
       authorId: record['authorId'] as int?,
-      author: record['author'] == null
-          ? null
-          : User.fromRecord(record['author'] as Map<String, Object?>),
+      author: record['author'] == null ? null : User.fromRecord(record['author'] as Map<String, Object?>),
     );
   }
 
@@ -891,9 +791,7 @@ class Post {
     return Post(
       id: json['id'] as int?,
       authorId: json['authorId'] as int?,
-      author: json['author'] == null
-          ? null
-          : User.fromJson(json['author'] as Map<String, Object?>),
+      author: json['author'] == null ? null : User.fromJson(json['author'] as Map<String, Object?>),
     );
   }
 
@@ -944,9 +842,9 @@ class Post {
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is Post &&
-            _deepEquals(id, other.id) &&
-            _deepEquals(authorId, other.authorId) &&
-            _deepEquals(author, other.author);
+        _deepEquals(id, other.id) &&
+        _deepEquals(authorId, other.authorId) &&
+        _deepEquals(author, other.author);
   }
 
   @override
@@ -959,7 +857,7 @@ class Post {
 }
 
 class Profile {
-  const Profile({this.id, this.userId, this.user});
+  const Profile({this.id, this.userId, this.user, });
 
   final int? id;
   final int? userId;
@@ -969,9 +867,7 @@ class Profile {
     return Profile(
       id: record['id'] as int?,
       userId: record['userId'] as int?,
-      user: record['user'] == null
-          ? null
-          : User.fromRecord(record['user'] as Map<String, Object?>),
+      user: record['user'] == null ? null : User.fromRecord(record['user'] as Map<String, Object?>),
     );
   }
 
@@ -979,9 +875,7 @@ class Profile {
     return Profile(
       id: json['id'] as int?,
       userId: json['userId'] as int?,
-      user: json['user'] == null
-          ? null
-          : User.fromJson(json['user'] as Map<String, Object?>),
+      user: json['user'] == null ? null : User.fromJson(json['user'] as Map<String, Object?>),
     );
   }
 
@@ -1032,9 +926,9 @@ class Profile {
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is Profile &&
-            _deepEquals(id, other.id) &&
-            _deepEquals(userId, other.userId) &&
-            _deepEquals(user, other.user);
+        _deepEquals(id, other.id) &&
+        _deepEquals(userId, other.userId) &&
+        _deepEquals(user, other.user);
   }
 
   @override
@@ -1047,7 +941,7 @@ class Profile {
 }
 
 class Group {
-  const Group({this.id, this.users});
+  const Group({this.id, this.users, });
 
   final int? id;
   final List<User>? users;
@@ -1055,22 +949,21 @@ class Group {
   factory Group.fromRecord(Map<String, Object?> record) {
     return Group(
       id: record['id'] as int?,
-      users: (record['users'] as List<Object?>?)
-          ?.map((item) => User.fromRecord(item as Map<String, Object?>))
-          .toList(growable: false),
+      users: (record['users'] as List<Object?>?)?.map((item) => User.fromRecord(item as Map<String, Object?>)).toList(growable: false),
     );
   }
 
   factory Group.fromJson(Map<String, Object?> json) {
     return Group(
       id: json['id'] as int?,
-      users: (json['users'] as List<Object?>?)
-          ?.map((item) => User.fromJson(item as Map<String, Object?>))
-          .toList(growable: false),
+      users: (json['users'] as List<Object?>?)?.map((item) => User.fromJson(item as Map<String, Object?>)).toList(growable: false),
     );
   }
 
-  Group copyWith({Object? id = _undefined, Object? users = _undefined}) {
+  Group copyWith({
+    Object? id = _undefined,
+    Object? users = _undefined,
+  }) {
     return Group(
       id: id == _undefined ? this.id : id as int?,
       users: users == _undefined ? this.users : users as List<User>?,
@@ -1083,9 +976,7 @@ class Group {
       record['id'] = id;
     }
     if (users != null) {
-      record['users'] = users!
-          .map((item) => item.toRecord())
-          .toList(growable: false);
+      record['users'] = users!.map((item) => item.toRecord()).toList(growable: false);
     }
     return Map<String, Object?>.unmodifiable(record);
   }
@@ -1096,9 +987,7 @@ class Group {
       json['id'] = id;
     }
     if (users != null) {
-      json['users'] = users!
-          .map((item) => item.toJson())
-          .toList(growable: false);
+      json['users'] = users!.map((item) => item.toJson()).toList(growable: false);
     }
     return Map<String, Object?>.unmodifiable(json);
   }
@@ -1110,17 +999,20 @@ class Group {
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is Group &&
-            _deepEquals(id, other.id) &&
-            _deepEquals(users, other.users);
+        _deepEquals(id, other.id) &&
+        _deepEquals(users, other.users);
   }
 
   @override
-  int get hashCode =>
-      Object.hashAll(<Object?>[runtimeType, _deepHash(id), _deepHash(users)]);
+  int get hashCode => Object.hashAll(<Object?>[
+    runtimeType,
+    _deepHash(id),
+    _deepHash(users),
+  ]);
 }
 
 class Membership {
-  const Membership({this.tenantId, this.slug, this.userId, this.user});
+  const Membership({this.tenantId, this.slug, this.userId, this.user, });
 
   final int? tenantId;
   final String? slug;
@@ -1132,9 +1024,7 @@ class Membership {
       tenantId: record['tenantId'] as int?,
       slug: record['slug'] as String?,
       userId: record['userId'] as int?,
-      user: record['user'] == null
-          ? null
-          : User.fromRecord(record['user'] as Map<String, Object?>),
+      user: record['user'] == null ? null : User.fromRecord(record['user'] as Map<String, Object?>),
     );
   }
 
@@ -1143,9 +1033,7 @@ class Membership {
       tenantId: json['tenantId'] as int?,
       slug: json['slug'] as String?,
       userId: json['userId'] as int?,
-      user: json['user'] == null
-          ? null
-          : User.fromJson(json['user'] as Map<String, Object?>),
+      user: json['user'] == null ? null : User.fromJson(json['user'] as Map<String, Object?>),
     );
   }
 
@@ -1198,17 +1086,16 @@ class Membership {
   }
 
   @override
-  String toString() =>
-      'Membership(tenantId: $tenantId, slug: $slug, userId: $userId, user: $user)';
+  String toString() => 'Membership(tenantId: $tenantId, slug: $slug, userId: $userId, user: $user)';
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is Membership &&
-            _deepEquals(tenantId, other.tenantId) &&
-            _deepEquals(slug, other.slug) &&
-            _deepEquals(userId, other.userId) &&
-            _deepEquals(user, other.user);
+        _deepEquals(tenantId, other.tenantId) &&
+        _deepEquals(slug, other.slug) &&
+        _deepEquals(userId, other.userId) &&
+        _deepEquals(user, other.user);
   }
 
   @override
@@ -1232,16 +1119,14 @@ class UserDelegate {
     UserInclude? include,
     UserSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'User',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then((record) => record == null ? null : User.fromRecord(record));
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'User',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : User.fromRecord(record));
   }
 
   Future<User?> findFirst({
@@ -1254,44 +1139,22 @@ class UserDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'User',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'User',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then((record) => record == null ? null : User.fromRecord(record));
+      ),
+    ).then((record) => record == null ? null : User.fromRecord(record));
   }
 
   Future<List<User>> findMany({
@@ -1305,43 +1168,23 @@ class UserDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'User',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'User',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) => records.map(User.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(User.fromRecord).toList(growable: false));
   }
 
   Future<int> count({UserWhereInput? where}) {
@@ -1364,27 +1207,20 @@ class UserDelegate {
     UserMinAggregateInput? min,
     UserMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'User',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(UserAggregateResult.fromQueryResult);
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'User',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(UserAggregateResult.fromQueryResult);
   }
 
   Future<List<UserGroupByRow>> groupBy({
@@ -1400,38 +1236,28 @@ class UserDelegate {
     UserMinAggregateInput? min,
     UserMaxAggregateInput? max,
   }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'User',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(UserGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'User',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(UserGroupByRow.fromQueryResultRow).toList(growable: false));
   }
 
-  Future<User> create({required UserCreateInput data, UserInclude? include}) {
+  Future<User> create({
+    required UserCreateInput data,
+    UserInclude? include,
+  }) {
     final queryInclude = include?.toQueryInclude();
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
@@ -1453,26 +1279,26 @@ class UserDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'User',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'User', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -1507,7 +1333,10 @@ class UserDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'User', where: predicates),
+        FindUniqueQuery(
+          model: 'User',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in User.');
@@ -1537,7 +1366,10 @@ class UserDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('User');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'User', where: predicates),
+        FindUniqueQuery(
+          model: 'User',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -1568,7 +1400,10 @@ class UserDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('User');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'User', where: predicates),
+          FindManyQuery(
+            model: 'User',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -1584,77 +1419,12 @@ class UserDelegate {
       });
     }
     return _delegate.updateMany(
-      UpdateManyQuery(model: 'User', where: predicates, data: data.toData()),
-    );
-  }
-
-  Future<List<User>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required UserWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
+      UpdateManyQuery(
         model: 'User',
         where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
+        data: data.toData(),
       ),
     );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <User>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords.map(User.fromRecord).toList(growable: false);
-    }
-    final projectedRecords = <User>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'User',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'User.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(User.fromRecord(projected));
-    }
-    return List<User>.unmodifiable(projectedRecords);
   }
 
   Future<User> _performCreateWithRelationWrites({
@@ -1692,9 +1462,7 @@ class UserDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'User create branch could not reload the created record by primary key.',
-      );
+      throw StateError('User create branch could not reload the created record by primary key.');
     }
     return User.fromRecord(projected);
   }
@@ -1736,9 +1504,7 @@ class UserDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'User update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('User update branch could not reload the updated record for the provided unique selector.');
     }
     return User.fromRecord(projected);
   }
@@ -1758,43 +1524,38 @@ class UserDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for UserUpdateInput.manager.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for UserUpdateInput.manager.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related User record found for nested connect on User.manager.',
-          );
+          throw StateError('No related User record found for nested connect on User.manager.');
         }
-        await tx._client
-            .model('User')
-            .update(
-              UpdateQuery(
-                model: 'User',
-                where: predicates,
-                data: <String, Object?>{
-                  'managerId': _requireRecordValue(
-                    related,
-                    'id',
-                    'nested direct relation write on User.manager',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('User').update(
+          UpdateQuery(
+            model: 'User',
+            where: predicates,
+            data: <String, Object?>{
+              'managerId': _requireRecordValue(related, 'id', 'nested direct relation write on User.manager'),
+            },
+          ),
+        );
       }
       if (nested.connectOrCreate != null) {
         final entry = nested.connectOrCreate!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: entry.where.toPredicates(),
+          ),
         );
-        final relatedRecord =
-            related ??
+        final relatedRecord = related ??
             await tx.user._delegate.create(
               CreateQuery(
                 model: 'User',
@@ -1802,32 +1563,26 @@ class UserDelegate {
                 nestedCreates: entry.create.toNestedCreates(),
               ),
             );
-        await tx._client
-            .model('User')
-            .update(
-              UpdateQuery(
-                model: 'User',
-                where: predicates,
-                data: <String, Object?>{
-                  'managerId': _requireRecordValue(
-                    relatedRecord,
-                    'id',
-                    'nested direct relation write on User.manager',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('User').update(
+          UpdateQuery(
+            model: 'User',
+            where: predicates,
+            data: <String, Object?>{
+              'managerId': _requireRecordValue(relatedRecord, 'id', 'nested direct relation write on User.manager'),
+            },
+          ),
+        );
       }
       if (nested.disconnect) {
-        await tx._client
-            .model('User')
-            .update(
-              UpdateQuery(
-                model: 'User',
-                where: predicates,
-                data: <String, Object?>{'managerId': null},
-              ),
-            );
+        await tx._client.model('User').update(
+          UpdateQuery(
+            model: 'User',
+            where: predicates,
+            data: <String, Object?>{
+              'managerId': null,
+            },
+          ),
+        );
       }
     }
     if (data.reports == null) {
@@ -1835,32 +1590,21 @@ class UserDelegate {
     } else {
       final nested = data.reports!;
       final parentReferenceValues = <String, Object?>{
-        'managerId': _requireRecordValue(
-          existing,
-          'id',
-          'nested direct relation write on User.reports',
-        ),
+        'managerId': _requireRecordValue(existing, 'id', 'nested direct relation write on User.reports'),
       };
-      if (nested.set != null &&
-          (nested.connect.isNotEmpty ||
-              nested.disconnect.isNotEmpty ||
-              nested.connectOrCreate.isNotEmpty)) {
-        throw StateError(
-          'Only set or connect/disconnect/connectOrCreate may be provided for UserUpdateInput.reports.',
-        );
+      if (nested.set != null && (nested.connect.isNotEmpty || nested.disconnect.isNotEmpty || nested.connectOrCreate.isNotEmpty)) {
+        throw StateError('Only set or connect/disconnect/connectOrCreate may be provided for UserUpdateInput.reports.');
       }
       if (nested.set != null) {
         await tx.user._delegate.updateMany(
           UpdateManyQuery(
             model: 'User',
             where: <QueryPredicate>[
-              QueryPredicate(
-                field: 'managerId',
-                operator: 'equals',
-                value: parentReferenceValues['managerId'],
-              ),
+              QueryPredicate(field: 'managerId', operator: 'equals', value: parentReferenceValues['managerId']),
             ],
-            data: <String, Object?>{'managerId': null},
+            data: <String, Object?>{
+              'managerId': null,
+            },
           ),
         );
         for (final selector in nested.set!) {
@@ -1888,14 +1632,16 @@ class UserDelegate {
       }
       for (final entry in nested.connectOrCreate) {
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: entry.where.toPredicates(),
+          ),
         );
         if (related == null) {
           await tx.user._delegate.create(
             CreateQuery(
               model: 'User',
-              data: <String, Object?>{
-                ...entry.create.toData(),
+              data: <String, Object?>{...entry.create.toData(),
                 'managerId': parentReferenceValues['managerId'],
               },
               nestedCreates: entry.create.toNestedCreates(),
@@ -1918,7 +1664,9 @@ class UserDelegate {
           UpdateQuery(
             model: 'User',
             where: selector.toPredicates(),
-            data: <String, Object?>{'managerId': null},
+            data: <String, Object?>{
+              'managerId': null,
+            },
           ),
         );
       }
@@ -1928,21 +1676,13 @@ class UserDelegate {
     } else {
       final nested = data.profile!;
       final parentReferenceValues = <String, Object?>{
-        'userId': _requireRecordValue(
-          existing,
-          'id',
-          'nested inverse one-to-one relation write on User.profile',
-        ),
+        'userId': _requireRecordValue(existing, 'id', 'nested inverse one-to-one relation write on User.profile'),
       };
       final currentRelated = await tx.profile._delegate.findFirst(
         FindFirstQuery(
           model: 'Profile',
           where: <QueryPredicate>[
-            QueryPredicate(
-              field: 'userId',
-              operator: 'equals',
-              value: parentReferenceValues['userId'],
-            ),
+            QueryPredicate(field: 'userId', operator: 'equals', value: parentReferenceValues['userId']),
           ],
         ),
       );
@@ -1951,35 +1691,33 @@ class UserDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for UserUpdateInput.profile.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for UserUpdateInput.profile.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
         final related = await tx.profile._delegate.findUnique(
-          FindUniqueQuery(model: 'Profile', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'Profile',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related Profile record found for nested connect on inverse one-to-one relation User.profile.',
-          );
+          throw StateError('No related Profile record found for nested connect on inverse one-to-one relation User.profile.');
         }
         final alreadyConnected =
-            related['userId'] == parentReferenceValues['userId'];
+            related['userId'] == parentReferenceValues['userId']
+        ;
         if (!alreadyConnected) {
           if (currentRelated != null) {
             await tx.profile._delegate.updateMany(
               UpdateManyQuery(
                 model: 'Profile',
                 where: <QueryPredicate>[
-                  QueryPredicate(
-                    field: 'userId',
-                    operator: 'equals',
-                    value: parentReferenceValues['userId'],
-                  ),
+                  QueryPredicate(field: 'userId', operator: 'equals', value: parentReferenceValues['userId']),
                 ],
-                data: <String, Object?>{'userId': null},
+                data: <String, Object?>{
+                  'userId': null,
+                },
               ),
             );
           }
@@ -1997,24 +1735,26 @@ class UserDelegate {
       if (nested.connectOrCreate != null) {
         final entry = nested.connectOrCreate!;
         final related = await tx.profile._delegate.findUnique(
-          FindUniqueQuery(model: 'Profile', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'Profile',
+            where: entry.where.toPredicates(),
+          ),
         );
         if (related != null) {
           final alreadyConnected =
-              related['userId'] == parentReferenceValues['userId'];
+              related['userId'] == parentReferenceValues['userId']
+          ;
           if (!alreadyConnected) {
             if (currentRelated != null) {
               await tx.profile._delegate.updateMany(
                 UpdateManyQuery(
                   model: 'Profile',
                   where: <QueryPredicate>[
-                    QueryPredicate(
-                      field: 'userId',
-                      operator: 'equals',
-                      value: parentReferenceValues['userId'],
-                    ),
+                    QueryPredicate(field: 'userId', operator: 'equals', value: parentReferenceValues['userId']),
                   ],
-                  data: <String, Object?>{'userId': null},
+                  data: <String, Object?>{
+                    'userId': null,
+                  },
                 ),
               );
             }
@@ -2034,21 +1774,18 @@ class UserDelegate {
               UpdateManyQuery(
                 model: 'Profile',
                 where: <QueryPredicate>[
-                  QueryPredicate(
-                    field: 'userId',
-                    operator: 'equals',
-                    value: parentReferenceValues['userId'],
-                  ),
+                  QueryPredicate(field: 'userId', operator: 'equals', value: parentReferenceValues['userId']),
                 ],
-                data: <String, Object?>{'userId': null},
+                data: <String, Object?>{
+                  'userId': null,
+                },
               ),
             );
           }
           await tx.profile._delegate.create(
             CreateQuery(
               model: 'Profile',
-              data: <String, Object?>{
-                ...entry.create.toData(),
+              data: <String, Object?>{...entry.create.toData(),
                 'userId': parentReferenceValues['userId'],
               },
               nestedCreates: entry.create.toNestedCreates(),
@@ -2061,13 +1798,11 @@ class UserDelegate {
           UpdateManyQuery(
             model: 'Profile',
             where: <QueryPredicate>[
-              QueryPredicate(
-                field: 'userId',
-                operator: 'equals',
-                value: parentReferenceValues['userId'],
-              ),
+              QueryPredicate(field: 'userId', operator: 'equals', value: parentReferenceValues['userId']),
             ],
-            data: <String, Object?>{'userId': null},
+            data: <String, Object?>{
+              'userId': null,
+            },
           ),
         );
       }
@@ -2077,29 +1812,16 @@ class UserDelegate {
     } else {
       final nested = data.posts!;
       final parentReferenceValues = <String, Object?>{
-        'authorId': _requireRecordValue(
-          existing,
-          'id',
-          'nested direct relation write on User.posts',
-        ),
+        'authorId': _requireRecordValue(existing, 'id', 'nested direct relation write on User.posts'),
       };
-      if (nested.set != null &&
-          (nested.connect.isNotEmpty ||
-              nested.disconnect.isNotEmpty ||
-              nested.connectOrCreate.isNotEmpty)) {
-        throw StateError(
-          'Only set or connect/disconnect/connectOrCreate may be provided for UserUpdateInput.posts.',
-        );
+      if (nested.set != null && (nested.connect.isNotEmpty || nested.disconnect.isNotEmpty || nested.connectOrCreate.isNotEmpty)) {
+        throw StateError('Only set or connect/disconnect/connectOrCreate may be provided for UserUpdateInput.posts.');
       }
       final currentRelatedRecords = await tx.post._delegate.findMany(
         FindManyQuery(
           model: 'Post',
           where: <QueryPredicate>[
-            QueryPredicate(
-              field: 'authorId',
-              operator: 'equals',
-              value: parentReferenceValues['authorId'],
-            ),
+            QueryPredicate(field: 'authorId', operator: 'equals', value: parentReferenceValues['authorId']),
           ],
         ),
       );
@@ -2107,32 +1829,30 @@ class UserDelegate {
         final targetRecords = <Map<String, Object?>>[];
         for (final selector in nested.set!) {
           final related = await tx.post._delegate.findUnique(
-            FindUniqueQuery(model: 'Post', where: selector.toPredicates()),
+            FindUniqueQuery(
+              model: 'Post',
+              where: selector.toPredicates(),
+            ),
           );
           if (related == null) {
-            throw StateError(
-              'No related Post record found for nested set on User.posts.',
-            );
+            throw StateError('No related Post record found for nested set on User.posts.');
           }
           targetRecords.add(related);
         }
         for (final current in currentRelatedRecords) {
           final stillIncluded = targetRecords.any((target) {
-            return current['id'] == target['id'];
+            return current['id'] == target['id']
+          ;
           });
           if (!stillIncluded) {
-            throw StateError(
-              'Nested set is not supported for required relation User.posts when it would disconnect already attached required related records.',
-            );
+            throw StateError('Nested set is not supported for required relation User.posts when it would disconnect already attached required related records.');
           }
         }
         for (final related in targetRecords) {
           await tx.post._delegate.update(
             UpdateQuery(
               model: 'Post',
-              where: tx.post
-                  ._primaryKeyWhereUniqueFromRecord(related)
-                  .toPredicates(),
+              where: tx.post._primaryKeyWhereUniqueFromRecord(related).toPredicates(),
               data: <String, Object?>{
                 'authorId': parentReferenceValues['authorId'],
               },
@@ -2153,14 +1873,16 @@ class UserDelegate {
       }
       for (final entry in nested.connectOrCreate) {
         final related = await tx.post._delegate.findUnique(
-          FindUniqueQuery(model: 'Post', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'Post',
+            where: entry.where.toPredicates(),
+          ),
         );
         if (related == null) {
           await tx.post._delegate.create(
             CreateQuery(
               model: 'Post',
-              data: <String, Object?>{
-                ...entry.create.toData(),
+              data: <String, Object?>{...entry.create.toData(),
                 'authorId': parentReferenceValues['authorId'],
               },
               nestedCreates: entry.create.toNestedCreates(),
@@ -2180,20 +1902,20 @@ class UserDelegate {
       }
       for (final selector in nested.disconnect) {
         final related = await tx.post._delegate.findUnique(
-          FindUniqueQuery(model: 'Post', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'Post',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related Post record found for nested disconnect on User.posts.',
-          );
+          throw StateError('No related Post record found for nested disconnect on User.posts.');
         }
         final isCurrentlyAttached = currentRelatedRecords.any((current) {
-          return current['id'] == related['id'];
+          return current['id'] == related['id']
+        ;
         });
         if (isCurrentlyAttached) {
-          throw StateError(
-            'Nested disconnect is not supported for required relation User.posts when it would disconnect already attached required related records.',
-          );
+          throw StateError('Nested disconnect is not supported for required relation User.posts when it would disconnect already attached required related records.');
         }
       }
     }
@@ -2201,95 +1923,65 @@ class UserDelegate {
       // No nested writes for groups.
     } else {
       final nested = data.groups!;
-      final relation = QueryRelation(
-        field: 'groups',
-        targetModel: 'Group',
-        cardinality: QueryRelationCardinality.many,
-        localKeyField: 'id',
-        targetKeyField: 'id',
-        localKeyFields: const <String>['id'],
-        targetKeyFields: const <String>['id'],
-        storageKind: QueryRelationStorageKind.implicitManyToMany,
-        sourceModel: 'User',
-        inverseField: 'users',
-      );
+      final relation = QueryRelation(field: 'groups', targetModel: 'Group', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'User', inverseField: 'users');
       final parentKeyValues = <String, Object?>{
-        'id': _requireRecordValue(
-          existing,
-          'id',
-          'nested implicit many-to-many write on User.groups',
-        ),
+        'id': _requireRecordValue(existing, 'id', 'nested implicit many-to-many write on User.groups'),
       };
-      if (nested.set != null &&
-          (nested.connect.isNotEmpty ||
-              nested.disconnect.isNotEmpty ||
-              nested.connectOrCreate.isNotEmpty)) {
-        throw StateError(
-          'Only set or connect/disconnect/connectOrCreate may be provided for UserUpdateInput.groups.',
-        );
+      if (nested.set != null && (nested.connect.isNotEmpty || nested.disconnect.isNotEmpty || nested.connectOrCreate.isNotEmpty)) {
+        throw StateError('Only set or connect/disconnect/connectOrCreate may be provided for UserUpdateInput.groups.');
       }
       if (nested.set != null) {
-        await tx._client
-            .model('User')
-            .removeImplicitManyToManyLinks(
-              relation: relation,
-              sourceKeyValues: parentKeyValues,
-            );
+        await tx._client.model('User').removeImplicitManyToManyLinks(
+          relation: relation,
+          sourceKeyValues: parentKeyValues,
+        );
         for (final selector in nested.set!) {
           final related = await tx.group._delegate.findUnique(
-            FindUniqueQuery(model: 'Group', where: selector.toPredicates()),
+            FindUniqueQuery(
+              model: 'Group',
+              where: selector.toPredicates(),
+            ),
           );
           if (related == null) {
-            throw StateError(
-              'No related Group record found for nested set on User.groups.',
-            );
+            throw StateError('No related Group record found for nested set on User.groups.');
           }
           final targetKeyValues = <String, Object?>{
-            'id': _requireRecordValue(
-              related,
-              'id',
-              'nested implicit many-to-many write on User.groups',
-            ),
+            'id': _requireRecordValue(related, 'id', 'nested implicit many-to-many write on User.groups'),
           };
-          await tx._client
-              .model('User')
-              .addImplicitManyToManyLink(
-                relation: relation,
-                sourceKeyValues: parentKeyValues,
-                targetKeyValues: targetKeyValues,
-              );
+          await tx._client.model('User').addImplicitManyToManyLink(
+            relation: relation,
+            sourceKeyValues: parentKeyValues,
+            targetKeyValues: targetKeyValues,
+          );
         }
       }
       for (final selector in nested.connect) {
         final related = await tx.group._delegate.findUnique(
-          FindUniqueQuery(model: 'Group', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'Group',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related Group record found for nested connect on User.groups.',
-          );
+          throw StateError('No related Group record found for nested connect on User.groups.');
         }
         final targetKeyValues = <String, Object?>{
-          'id': _requireRecordValue(
-            related,
-            'id',
-            'nested implicit many-to-many write on User.groups',
-          ),
+          'id': _requireRecordValue(related, 'id', 'nested implicit many-to-many write on User.groups'),
         };
-        await tx._client
-            .model('User')
-            .addImplicitManyToManyLink(
-              relation: relation,
-              sourceKeyValues: parentKeyValues,
-              targetKeyValues: targetKeyValues,
-            );
+        await tx._client.model('User').addImplicitManyToManyLink(
+          relation: relation,
+          sourceKeyValues: parentKeyValues,
+          targetKeyValues: targetKeyValues,
+        );
       }
       for (final entry in nested.connectOrCreate) {
         final related = await tx.group._delegate.findUnique(
-          FindUniqueQuery(model: 'Group', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'Group',
+            where: entry.where.toPredicates(),
+          ),
         );
-        final relatedRecord =
-            related ??
+        final relatedRecord = related ??
             await tx.group._delegate.create(
               CreateQuery(
                 model: 'Group',
@@ -2298,43 +1990,32 @@ class UserDelegate {
               ),
             );
         final targetKeyValues = <String, Object?>{
-          'id': _requireRecordValue(
-            relatedRecord,
-            'id',
-            'nested implicit many-to-many write on User.groups',
-          ),
+          'id': _requireRecordValue(relatedRecord, 'id', 'nested implicit many-to-many write on User.groups'),
         };
-        await tx._client
-            .model('User')
-            .addImplicitManyToManyLink(
-              relation: relation,
-              sourceKeyValues: parentKeyValues,
-              targetKeyValues: targetKeyValues,
-            );
+        await tx._client.model('User').addImplicitManyToManyLink(
+          relation: relation,
+          sourceKeyValues: parentKeyValues,
+          targetKeyValues: targetKeyValues,
+        );
       }
       for (final selector in nested.disconnect) {
         final related = await tx.group._delegate.findUnique(
-          FindUniqueQuery(model: 'Group', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'Group',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related Group record found for nested disconnect on User.groups.',
-          );
+          throw StateError('No related Group record found for nested disconnect on User.groups.');
         }
         final targetKeyValues = <String, Object?>{
-          'id': _requireRecordValue(
-            related,
-            'id',
-            'nested implicit many-to-many write on User.groups',
-          ),
+          'id': _requireRecordValue(related, 'id', 'nested implicit many-to-many write on User.groups'),
         };
-        await tx._client
-            .model('User')
-            .removeImplicitManyToManyLinks(
-              relation: relation,
-              sourceKeyValues: parentKeyValues,
-              targetKeyValues: targetKeyValues,
-            );
+        await tx._client.model('User').removeImplicitManyToManyLinks(
+          relation: relation,
+          sourceKeyValues: parentKeyValues,
+          targetKeyValues: targetKeyValues,
+        );
       }
     }
     if (data.memberships == null) {
@@ -2342,29 +2023,16 @@ class UserDelegate {
     } else {
       final nested = data.memberships!;
       final parentReferenceValues = <String, Object?>{
-        'userId': _requireRecordValue(
-          existing,
-          'id',
-          'nested direct relation write on User.memberships',
-        ),
+        'userId': _requireRecordValue(existing, 'id', 'nested direct relation write on User.memberships'),
       };
-      if (nested.set != null &&
-          (nested.connect.isNotEmpty ||
-              nested.disconnect.isNotEmpty ||
-              nested.connectOrCreate.isNotEmpty)) {
-        throw StateError(
-          'Only set or connect/disconnect/connectOrCreate may be provided for UserUpdateInput.memberships.',
-        );
+      if (nested.set != null && (nested.connect.isNotEmpty || nested.disconnect.isNotEmpty || nested.connectOrCreate.isNotEmpty)) {
+        throw StateError('Only set or connect/disconnect/connectOrCreate may be provided for UserUpdateInput.memberships.');
       }
       final currentRelatedRecords = await tx.membership._delegate.findMany(
         FindManyQuery(
           model: 'Membership',
           where: <QueryPredicate>[
-            QueryPredicate(
-              field: 'userId',
-              operator: 'equals',
-              value: parentReferenceValues['userId'],
-            ),
+            QueryPredicate(field: 'userId', operator: 'equals', value: parentReferenceValues['userId']),
           ],
         ),
       );
@@ -2378,30 +2046,25 @@ class UserDelegate {
             ),
           );
           if (related == null) {
-            throw StateError(
-              'No related Membership record found for nested set on User.memberships.',
-            );
+            throw StateError('No related Membership record found for nested set on User.memberships.');
           }
           targetRecords.add(related);
         }
         for (final current in currentRelatedRecords) {
           final stillIncluded = targetRecords.any((target) {
-            return current['tenantId'] == target['tenantId'] &&
-                current['slug'] == target['slug'];
+            return current['tenantId'] == target['tenantId']
+                && current['slug'] == target['slug']
+          ;
           });
           if (!stillIncluded) {
-            throw StateError(
-              'Nested set is not supported for required relation User.memberships when it would disconnect already attached required related records.',
-            );
+            throw StateError('Nested set is not supported for required relation User.memberships when it would disconnect already attached required related records.');
           }
         }
         for (final related in targetRecords) {
           await tx.membership._delegate.update(
             UpdateQuery(
               model: 'Membership',
-              where: tx.membership
-                  ._primaryKeyWhereUniqueFromRecord(related)
-                  .toPredicates(),
+              where: tx.membership._primaryKeyWhereUniqueFromRecord(related).toPredicates(),
               data: <String, Object?>{
                 'userId': parentReferenceValues['userId'],
               },
@@ -2414,7 +2077,9 @@ class UserDelegate {
           UpdateQuery(
             model: 'Membership',
             where: selector.toPredicates(),
-            data: <String, Object?>{'userId': parentReferenceValues['userId']},
+            data: <String, Object?>{
+              'userId': parentReferenceValues['userId'],
+            },
           ),
         );
       }
@@ -2429,8 +2094,7 @@ class UserDelegate {
           await tx.membership._delegate.create(
             CreateQuery(
               model: 'Membership',
-              data: <String, Object?>{
-                ...entry.create.toData(),
+              data: <String, Object?>{...entry.create.toData(),
                 'userId': parentReferenceValues['userId'],
               },
               nestedCreates: entry.create.toNestedCreates(),
@@ -2450,81 +2114,56 @@ class UserDelegate {
       }
       for (final selector in nested.disconnect) {
         final related = await tx.membership._delegate.findUnique(
-          FindUniqueQuery(model: 'Membership', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'Membership',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related Membership record found for nested disconnect on User.memberships.',
-          );
+          throw StateError('No related Membership record found for nested disconnect on User.memberships.');
         }
         final isCurrentlyAttached = currentRelatedRecords.any((current) {
-          return current['tenantId'] == related['tenantId'] &&
-              current['slug'] == related['slug'];
+          return current['tenantId'] == related['tenantId']
+              && current['slug'] == related['slug']
+        ;
         });
         if (isCurrentlyAttached) {
-          throw StateError(
-            'Nested disconnect is not supported for required relation User.memberships when it would disconnect already attached required related records.',
-          );
+          throw StateError('Nested disconnect is not supported for required relation User.memberships when it would disconnect already attached required related records.');
         }
       }
     }
   }
+
 
   Future<User> delete({
     required UserWhereUniqueInput where,
     UserInclude? include,
     UserSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'User',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(User.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'User',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(User.fromRecord);
   }
 
-  Future<int> deleteMany({required UserWhereInput where}) {
+  Future<int> deleteMany({
+    required UserWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'User', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'User',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class UserWhereInput {
-  const UserWhereInput({
-    this.AND = const <UserWhereInput>[],
-    this.OR = const <UserWhereInput>[],
-    this.NOT = const <UserWhereInput>[],
-    this.id,
-    this.idFilter,
-    this.email,
-    this.emailFilter,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-    this.managerIdFilter,
-    this.reportsSome,
-    this.reportsNone,
-    this.reportsEvery,
-    this.postsSome,
-    this.postsNone,
-    this.postsEvery,
-    this.groupsSome,
-    this.groupsNone,
-    this.groupsEvery,
-    this.membershipsSome,
-    this.membershipsNone,
-    this.membershipsEvery,
-    this.managerIs,
-    this.managerIsNot,
-    this.profileIs,
-    this.profileIsNot,
-  });
+  const UserWhereInput({this.AND = const <UserWhereInput>[], this.OR = const <UserWhereInput>[], this.NOT = const <UserWhereInput>[], this.id, this.idFilter, this.email, this.emailFilter, this.createdAt, this.updatedAt, this.role, this.managerId, this.managerIdFilter, this.reportsSome, this.reportsNone, this.reportsEvery, this.postsSome, this.postsNone, this.postsEvery, this.groupsSome, this.groupsNone, this.groupsEvery, this.membershipsSome, this.membershipsNone, this.membershipsEvery, this.managerIs, this.managerIsNot, this.profileIs, this.profileIsNot, });
 
   final List<UserWhereInput> AND;
   final List<UserWhereInput> OR;
@@ -2558,437 +2197,95 @@ class UserWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (id != null) {
-      predicates.add(
-        QueryPredicate(field: 'id', operator: 'equals', value: id),
-      );
+      predicates.add(QueryPredicate(field: 'id', operator: 'equals', value: id));
     }
     if (idFilter != null) {
       predicates.addAll(idFilter!.toPredicates('id'));
     }
     if (email != null) {
-      predicates.add(
-        QueryPredicate(field: 'email', operator: 'equals', value: email),
-      );
+      predicates.add(QueryPredicate(field: 'email', operator: 'equals', value: email));
     }
     if (emailFilter != null) {
       predicates.addAll(emailFilter!.toPredicates('email'));
     }
     if (createdAt != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'createdAt',
-          operator: 'equals',
-          value: createdAt,
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'createdAt', operator: 'equals', value: createdAt));
     }
     if (updatedAt != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'updatedAt',
-          operator: 'equals',
-          value: updatedAt,
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'updatedAt', operator: 'equals', value: updatedAt));
     }
     if (role != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'role',
-          operator: 'equals',
-          value: _enumName(role),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'role', operator: 'equals', value: _enumName(role)));
     }
     if (managerId != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'managerId',
-          operator: 'equals',
-          value: managerId,
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'managerId', operator: 'equals', value: managerId));
     }
     if (managerIdFilter != null) {
       predicates.addAll(managerIdFilter!.toPredicates('managerId'));
     }
     if (reportsSome != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'reports',
-          operator: 'relationSome',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'reports',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'managerId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['managerId'],
-            ),
-            predicates: reportsSome!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'reports', operator: 'relationSome', value: QueryRelationFilter(relation: QueryRelation(field: 'reports', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'managerId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['managerId']), predicates: reportsSome!.toPredicates())));
     }
     if (reportsNone != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'reports',
-          operator: 'relationNone',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'reports',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'managerId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['managerId'],
-            ),
-            predicates: reportsNone!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'reports', operator: 'relationNone', value: QueryRelationFilter(relation: QueryRelation(field: 'reports', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'managerId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['managerId']), predicates: reportsNone!.toPredicates())));
     }
     if (reportsEvery != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'reports',
-          operator: 'relationEvery',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'reports',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'managerId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['managerId'],
-            ),
-            predicates: reportsEvery!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'reports', operator: 'relationEvery', value: QueryRelationFilter(relation: QueryRelation(field: 'reports', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'managerId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['managerId']), predicates: reportsEvery!.toPredicates())));
     }
     if (postsSome != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'posts',
-          operator: 'relationSome',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'posts',
-              targetModel: 'Post',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'authorId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['authorId'],
-            ),
-            predicates: postsSome!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'posts', operator: 'relationSome', value: QueryRelationFilter(relation: QueryRelation(field: 'posts', targetModel: 'Post', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'authorId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['authorId']), predicates: postsSome!.toPredicates())));
     }
     if (postsNone != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'posts',
-          operator: 'relationNone',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'posts',
-              targetModel: 'Post',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'authorId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['authorId'],
-            ),
-            predicates: postsNone!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'posts', operator: 'relationNone', value: QueryRelationFilter(relation: QueryRelation(field: 'posts', targetModel: 'Post', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'authorId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['authorId']), predicates: postsNone!.toPredicates())));
     }
     if (postsEvery != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'posts',
-          operator: 'relationEvery',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'posts',
-              targetModel: 'Post',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'authorId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['authorId'],
-            ),
-            predicates: postsEvery!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'posts', operator: 'relationEvery', value: QueryRelationFilter(relation: QueryRelation(field: 'posts', targetModel: 'Post', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'authorId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['authorId']), predicates: postsEvery!.toPredicates())));
     }
     if (groupsSome != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'groups',
-          operator: 'relationSome',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'groups',
-              targetModel: 'Group',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['id'],
-              storageKind: QueryRelationStorageKind.implicitManyToMany,
-              sourceModel: 'User',
-              inverseField: 'users',
-            ),
-            predicates: groupsSome!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'groups', operator: 'relationSome', value: QueryRelationFilter(relation: QueryRelation(field: 'groups', targetModel: 'Group', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'User', inverseField: 'users'), predicates: groupsSome!.toPredicates())));
     }
     if (groupsNone != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'groups',
-          operator: 'relationNone',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'groups',
-              targetModel: 'Group',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['id'],
-              storageKind: QueryRelationStorageKind.implicitManyToMany,
-              sourceModel: 'User',
-              inverseField: 'users',
-            ),
-            predicates: groupsNone!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'groups', operator: 'relationNone', value: QueryRelationFilter(relation: QueryRelation(field: 'groups', targetModel: 'Group', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'User', inverseField: 'users'), predicates: groupsNone!.toPredicates())));
     }
     if (groupsEvery != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'groups',
-          operator: 'relationEvery',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'groups',
-              targetModel: 'Group',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['id'],
-              storageKind: QueryRelationStorageKind.implicitManyToMany,
-              sourceModel: 'User',
-              inverseField: 'users',
-            ),
-            predicates: groupsEvery!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'groups', operator: 'relationEvery', value: QueryRelationFilter(relation: QueryRelation(field: 'groups', targetModel: 'Group', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'User', inverseField: 'users'), predicates: groupsEvery!.toPredicates())));
     }
     if (membershipsSome != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'memberships',
-          operator: 'relationSome',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'memberships',
-              targetModel: 'Membership',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'userId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['userId'],
-            ),
-            predicates: membershipsSome!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'memberships', operator: 'relationSome', value: QueryRelationFilter(relation: QueryRelation(field: 'memberships', targetModel: 'Membership', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']), predicates: membershipsSome!.toPredicates())));
     }
     if (membershipsNone != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'memberships',
-          operator: 'relationNone',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'memberships',
-              targetModel: 'Membership',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'userId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['userId'],
-            ),
-            predicates: membershipsNone!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'memberships', operator: 'relationNone', value: QueryRelationFilter(relation: QueryRelation(field: 'memberships', targetModel: 'Membership', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']), predicates: membershipsNone!.toPredicates())));
     }
     if (membershipsEvery != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'memberships',
-          operator: 'relationEvery',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'memberships',
-              targetModel: 'Membership',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'userId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['userId'],
-            ),
-            predicates: membershipsEvery!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'memberships', operator: 'relationEvery', value: QueryRelationFilter(relation: QueryRelation(field: 'memberships', targetModel: 'Membership', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']), predicates: membershipsEvery!.toPredicates())));
     }
     if (managerIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'manager',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'manager',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'managerId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['managerId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: managerIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'manager', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'manager', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'managerId', targetKeyField: 'id', localKeyFields: const <String>['managerId'], targetKeyFields: const <String>['id']), predicates: managerIs!.toPredicates())));
     }
     if (managerIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'manager',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'manager',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'managerId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['managerId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: managerIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'manager', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'manager', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'managerId', targetKeyField: 'id', localKeyFields: const <String>['managerId'], targetKeyFields: const <String>['id']), predicates: managerIsNot!.toPredicates())));
     }
     if (profileIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'profile',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'profile',
-              targetModel: 'Profile',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'id',
-              targetKeyField: 'userId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['userId'],
-            ),
-            predicates: profileIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'profile', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'profile', targetModel: 'Profile', cardinality: QueryRelationCardinality.one, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']), predicates: profileIs!.toPredicates())));
     }
     if (profileIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'profile',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'profile',
-              targetModel: 'Profile',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'id',
-              targetKeyField: 'userId',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['userId'],
-            ),
-            predicates: profileIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'profile', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'profile', targetModel: 'Profile', cardinality: QueryRelationCardinality.one, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']), predicates: profileIsNot!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class UserEmailRoleCompoundUniqueInput {
-  const UserEmailRoleCompoundUniqueInput({
-    required this.email,
-    required this.role,
-  });
+  const UserEmailRoleCompoundUniqueInput({required this.email, required this.role, });
 
   final String email;
   final UserRole role;
@@ -3006,7 +2303,7 @@ class UserEmailRoleCompoundUniqueInput {
 }
 
 class UserWhereUniqueInput {
-  const UserWhereUniqueInput({this.id, this.email, this.email_role});
+  const UserWhereUniqueInput({this.id, this.email, this.email_role, });
 
   final int? id;
   final String? email;
@@ -3028,11 +2325,13 @@ class UserWhereUniqueInput {
       selectors.add(email_role!.toPredicates());
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for UserWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for UserWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -3051,23 +2350,14 @@ class UserWhereUniqueInput {
       matches = email_role!.matchesRecord(record);
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for UserWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for UserWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class UserOrderByInput {
-  const UserOrderByInput({
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-  });
+  const UserOrderByInput({this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, });
 
   final SortOrder? id;
   final SortOrder? email;
@@ -3100,18 +2390,17 @@ class UserOrderByInput {
   }
 }
 
-enum UserScalarField { id, email, createdAt, updatedAt, role, managerId }
+enum UserScalarField {
+  id,
+  email,
+  createdAt,
+  updatedAt,
+  role,
+  managerId
+}
 
 class UserCountAggregateInput {
-  const UserCountAggregateInput({
-    this.all = false,
-    this.id = false,
-    this.email = false,
-    this.createdAt = false,
-    this.updatedAt = false,
-    this.role = false,
-    this.managerId = false,
-  });
+  const UserCountAggregateInput({this.all = false, this.id = false, this.email = false, this.createdAt = false, this.updatedAt = false, this.role = false, this.managerId = false, });
 
   final bool all;
   final bool id;
@@ -3141,15 +2430,12 @@ class UserCountAggregateInput {
     if (managerId) {
       fields.add('managerId');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class UserAvgAggregateInput {
-  const UserAvgAggregateInput({this.id = false, this.managerId = false});
+  const UserAvgAggregateInput({this.id = false, this.managerId = false, });
 
   final bool id;
   final bool managerId;
@@ -3167,7 +2453,7 @@ class UserAvgAggregateInput {
 }
 
 class UserSumAggregateInput {
-  const UserSumAggregateInput({this.id = false, this.managerId = false});
+  const UserSumAggregateInput({this.id = false, this.managerId = false, });
 
   final bool id;
   final bool managerId;
@@ -3185,14 +2471,7 @@ class UserSumAggregateInput {
 }
 
 class UserMinAggregateInput {
-  const UserMinAggregateInput({
-    this.id = false,
-    this.email = false,
-    this.createdAt = false,
-    this.updatedAt = false,
-    this.role = false,
-    this.managerId = false,
-  });
+  const UserMinAggregateInput({this.id = false, this.email = false, this.createdAt = false, this.updatedAt = false, this.role = false, this.managerId = false, });
 
   final bool id;
   final bool email;
@@ -3226,14 +2505,7 @@ class UserMinAggregateInput {
 }
 
 class UserMaxAggregateInput {
-  const UserMaxAggregateInput({
-    this.id = false,
-    this.email = false,
-    this.createdAt = false,
-    this.updatedAt = false,
-    this.role = false,
-    this.managerId = false,
-  });
+  const UserMaxAggregateInput({this.id = false, this.email = false, this.createdAt = false, this.updatedAt = false, this.role = false, this.managerId = false, });
 
   final bool id;
   final bool email;
@@ -3267,15 +2539,7 @@ class UserMaxAggregateInput {
 }
 
 class UserCountAggregateResult {
-  const UserCountAggregateResult({
-    this.all,
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-  });
+  const UserCountAggregateResult({this.all, this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, });
 
   final int? all;
   final int? id;
@@ -3285,9 +2549,7 @@ class UserCountAggregateResult {
   final int? role;
   final int? managerId;
 
-  factory UserCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
+  factory UserCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
     return UserCountAggregateResult(
       all: result.all,
       id: result.fields['id'],
@@ -3301,7 +2563,7 @@ class UserCountAggregateResult {
 }
 
 class UserAvgAggregateResult {
-  const UserAvgAggregateResult({this.id, this.managerId});
+  const UserAvgAggregateResult({this.id, this.managerId, });
 
   final double? id;
   final double? managerId;
@@ -3315,7 +2577,7 @@ class UserAvgAggregateResult {
 }
 
 class UserSumAggregateResult {
-  const UserSumAggregateResult({this.id, this.managerId});
+  const UserSumAggregateResult({this.id, this.managerId, });
 
   final int? id;
   final int? managerId;
@@ -3329,14 +2591,7 @@ class UserSumAggregateResult {
 }
 
 class UserMinAggregateResult {
-  const UserMinAggregateResult({
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-  });
+  const UserMinAggregateResult({this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, });
 
   final int? id;
   final String? email;
@@ -3351,23 +2606,14 @@ class UserMinAggregateResult {
       email: values['email'] as String?,
       createdAt: _asDateTime(values['createdAt']),
       updatedAt: _asDateTime(values['updatedAt']),
-      role: values['role'] == null
-          ? null
-          : UserRole.values.byName(values['role'] as String),
+      role: values['role'] == null ? null : UserRole.values.byName(values['role'] as String),
       managerId: values['managerId'] as int?,
     );
   }
 }
 
 class UserMaxAggregateResult {
-  const UserMaxAggregateResult({
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-  });
+  const UserMaxAggregateResult({this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, });
 
   final int? id;
   final String? email;
@@ -3382,9 +2628,7 @@ class UserMaxAggregateResult {
       email: values['email'] as String?,
       createdAt: _asDateTime(values['createdAt']),
       updatedAt: _asDateTime(values['updatedAt']),
-      role: values['role'] == null
-          ? null
-          : UserRole.values.byName(values['role'] as String),
+      role: values['role'] == null ? null : UserRole.values.byName(values['role'] as String),
       managerId: values['managerId'] as int?,
     );
   }
@@ -3407,27 +2651,17 @@ class UserAggregateResult {
 
   factory UserAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return UserAggregateResult(
-      count: result.count == null
-          ? null
-          : UserCountAggregateResult.fromQueryCountResult(result.count!),
-      avg: result.avg == null
-          ? null
-          : UserAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : UserSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : UserMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : UserMaxAggregateResult.fromMap(result.max!),
+      count: result.count == null ? null : UserCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : UserAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : UserSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : UserMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : UserMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class UserGroupByHavingInput {
-  const UserGroupByHavingInput({this.id, this.managerId});
+  const UserGroupByHavingInput({this.id, this.managerId, });
 
   final NumericAggregatesFilter? id;
   final NumericAggregatesFilter? managerId;
@@ -3445,15 +2679,7 @@ class UserGroupByHavingInput {
 }
 
 class UserCountAggregateOrderByInput {
-  const UserCountAggregateOrderByInput({
-    this.all,
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-  });
+  const UserCountAggregateOrderByInput({this.all, this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, });
 
   final SortOrder? all;
   final SortOrder? id;
@@ -3466,70 +2692,32 @@ class UserCountAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
     }
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (email != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'email',
-          direction: email!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'email', direction: email!));
     }
     if (createdAt != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'createdAt',
-          direction: createdAt!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'createdAt', direction: createdAt!));
     }
     if (updatedAt != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'updatedAt',
-          direction: updatedAt!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'updatedAt', direction: updatedAt!));
     }
     if (role != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'role',
-          direction: role!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'role', direction: role!));
     }
     if (managerId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'managerId',
-          direction: managerId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'managerId', direction: managerId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserAvgAggregateOrderByInput {
-  const UserAvgAggregateOrderByInput({this.id, this.managerId});
+  const UserAvgAggregateOrderByInput({this.id, this.managerId, });
 
   final SortOrder? id;
   final SortOrder? managerId;
@@ -3537,29 +2725,17 @@ class UserAvgAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (managerId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'managerId',
-          direction: managerId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'managerId', direction: managerId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserSumAggregateOrderByInput {
-  const UserSumAggregateOrderByInput({this.id, this.managerId});
+  const UserSumAggregateOrderByInput({this.id, this.managerId, });
 
   final SortOrder? id;
   final SortOrder? managerId;
@@ -3567,36 +2743,17 @@ class UserSumAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (managerId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'managerId',
-          direction: managerId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'managerId', direction: managerId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserMinAggregateOrderByInput {
-  const UserMinAggregateOrderByInput({
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-  });
+  const UserMinAggregateOrderByInput({this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, });
 
   final SortOrder? id;
   final SortOrder? email;
@@ -3608,72 +2765,29 @@ class UserMinAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (email != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'email',
-          direction: email!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'email', direction: email!));
     }
     if (createdAt != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'createdAt',
-          direction: createdAt!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'createdAt', direction: createdAt!));
     }
     if (updatedAt != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'updatedAt',
-          direction: updatedAt!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'updatedAt', direction: updatedAt!));
     }
     if (role != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'role',
-          direction: role!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'role', direction: role!));
     }
     if (managerId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'managerId',
-          direction: managerId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'managerId', direction: managerId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserMaxAggregateOrderByInput {
-  const UserMaxAggregateOrderByInput({
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-  });
+  const UserMaxAggregateOrderByInput({this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, });
 
   final SortOrder? id;
   final SortOrder? email;
@@ -3685,77 +2799,29 @@ class UserMaxAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (email != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'email',
-          direction: email!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'email', direction: email!));
     }
     if (createdAt != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'createdAt',
-          direction: createdAt!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'createdAt', direction: createdAt!));
     }
     if (updatedAt != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'updatedAt',
-          direction: updatedAt!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'updatedAt', direction: updatedAt!));
     }
     if (role != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'role',
-          direction: role!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'role', direction: role!));
     }
     if (managerId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'managerId',
-          direction: managerId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'managerId', direction: managerId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class UserGroupByOrderByInput {
-  const UserGroupByOrderByInput({
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const UserGroupByOrderByInput({this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, this.count, this.avg, this.sum, this.min, this.max});
 
   final SortOrder? id;
   final SortOrder? email;
@@ -3778,22 +2844,16 @@ class UserGroupByOrderByInput {
       orderings.add(GroupByOrderBy.field(field: 'email', direction: email!));
     }
     if (createdAt != null) {
-      orderings.add(
-        GroupByOrderBy.field(field: 'createdAt', direction: createdAt!),
-      );
+      orderings.add(GroupByOrderBy.field(field: 'createdAt', direction: createdAt!));
     }
     if (updatedAt != null) {
-      orderings.add(
-        GroupByOrderBy.field(field: 'updatedAt', direction: updatedAt!),
-      );
+      orderings.add(GroupByOrderBy.field(field: 'updatedAt', direction: updatedAt!));
     }
     if (role != null) {
       orderings.add(GroupByOrderBy.field(field: 'role', direction: role!));
     }
     if (managerId != null) {
-      orderings.add(
-        GroupByOrderBy.field(field: 'managerId', direction: managerId!),
-      );
+      orderings.add(GroupByOrderBy.field(field: 'managerId', direction: managerId!));
     }
     if (count != null) {
       orderings.addAll(count!.toGroupByOrderBy(QueryAggregateFunction.count));
@@ -3815,19 +2875,7 @@ class UserGroupByOrderByInput {
 }
 
 class UserGroupByRow {
-  const UserGroupByRow({
-    this.id,
-    this.email,
-    this.createdAt,
-    this.updatedAt,
-    this.role,
-    this.managerId,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const UserGroupByRow({this.id, this.email, this.createdAt, this.updatedAt, this.role, this.managerId, this.count, this.avg, this.sum, this.min, this.max});
 
   final int? id;
   final String? email;
@@ -3847,40 +2895,19 @@ class UserGroupByRow {
       email: row.group['email'] as String?,
       createdAt: _asDateTime(row.group['createdAt']),
       updatedAt: _asDateTime(row.group['updatedAt']),
-      role: row.group['role'] == null
-          ? null
-          : UserRole.values.byName(row.group['role'] as String),
+      role: row.group['role'] == null ? null : UserRole.values.byName(row.group['role'] as String),
       managerId: row.group['managerId'] as int?,
-      count: row.aggregates.count == null
-          ? null
-          : UserCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : UserAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : UserSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : UserMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : UserMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: row.aggregates.count == null ? null : UserCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : UserAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : UserSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : UserMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : UserMaxAggregateResult.fromMap(row.aggregates.max!),
     );
   }
 }
 
 class UserInclude {
-  const UserInclude({
-    this.manager = false,
-    this.reports = false,
-    this.profile = false,
-    this.posts = false,
-    this.groups = false,
-    this.memberships = false,
-  });
+  const UserInclude({this.manager = false, this.reports = false, this.profile = false, this.posts = false, this.groups = false, this.memberships = false, });
 
   final bool manager;
   final bool reports;
@@ -3892,85 +2919,22 @@ class UserInclude {
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (manager) {
-      relations['manager'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'manager',
-          targetModel: 'User',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'managerId',
-          targetKeyField: 'id',
-          localKeyFields: const <String>['managerId'],
-          targetKeyFields: const <String>['id'],
-        ),
-      );
+      relations['manager'] = QueryIncludeEntry(relation: QueryRelation(field: 'manager', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'managerId', targetKeyField: 'id', localKeyFields: const <String>['managerId'], targetKeyFields: const <String>['id']));
     }
     if (reports) {
-      relations['reports'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'reports',
-          targetModel: 'User',
-          cardinality: QueryRelationCardinality.many,
-          localKeyField: 'id',
-          targetKeyField: 'managerId',
-          localKeyFields: const <String>['id'],
-          targetKeyFields: const <String>['managerId'],
-        ),
-      );
+      relations['reports'] = QueryIncludeEntry(relation: QueryRelation(field: 'reports', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'managerId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['managerId']));
     }
     if (profile) {
-      relations['profile'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'profile',
-          targetModel: 'Profile',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'id',
-          targetKeyField: 'userId',
-          localKeyFields: const <String>['id'],
-          targetKeyFields: const <String>['userId'],
-        ),
-      );
+      relations['profile'] = QueryIncludeEntry(relation: QueryRelation(field: 'profile', targetModel: 'Profile', cardinality: QueryRelationCardinality.one, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']));
     }
     if (posts) {
-      relations['posts'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'posts',
-          targetModel: 'Post',
-          cardinality: QueryRelationCardinality.many,
-          localKeyField: 'id',
-          targetKeyField: 'authorId',
-          localKeyFields: const <String>['id'],
-          targetKeyFields: const <String>['authorId'],
-        ),
-      );
+      relations['posts'] = QueryIncludeEntry(relation: QueryRelation(field: 'posts', targetModel: 'Post', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'authorId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['authorId']));
     }
     if (groups) {
-      relations['groups'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'groups',
-          targetModel: 'Group',
-          cardinality: QueryRelationCardinality.many,
-          localKeyField: 'id',
-          targetKeyField: 'id',
-          localKeyFields: const <String>['id'],
-          targetKeyFields: const <String>['id'],
-          storageKind: QueryRelationStorageKind.implicitManyToMany,
-          sourceModel: 'User',
-          inverseField: 'users',
-        ),
-      );
+      relations['groups'] = QueryIncludeEntry(relation: QueryRelation(field: 'groups', targetModel: 'Group', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'User', inverseField: 'users'));
     }
     if (memberships) {
-      relations['memberships'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'memberships',
-          targetModel: 'Membership',
-          cardinality: QueryRelationCardinality.many,
-          localKeyField: 'id',
-          targetKeyField: 'userId',
-          localKeyFields: const <String>['id'],
-          targetKeyFields: const <String>['userId'],
-        ),
-      );
+      relations['memberships'] = QueryIncludeEntry(relation: QueryRelation(field: 'memberships', targetModel: 'Membership', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId']));
     }
     if (relations.isEmpty) {
       return null;
@@ -3980,14 +2944,7 @@ class UserInclude {
 }
 
 class UserSelect {
-  const UserSelect({
-    this.id = false,
-    this.email = false,
-    this.createdAt = false,
-    this.updatedAt = false,
-    this.role = false,
-    this.managerId = false,
-  });
+  const UserSelect({this.id = false, this.email = false, this.createdAt = false, this.updatedAt = false, this.role = false, this.managerId = false, });
 
   final bool id;
   final bool email;
@@ -4024,20 +2981,7 @@ class UserSelect {
 }
 
 class UserCreateInput {
-  const UserCreateInput({
-    this.id,
-    required this.email,
-    this.createdAt,
-    this.updatedAt,
-    required this.role,
-    this.managerId,
-    this.manager,
-    this.reports,
-    this.profile,
-    this.posts,
-    this.groups,
-    this.memberships,
-  });
+  const UserCreateInput({this.id, required this.email, this.createdAt, this.updatedAt, required this.role, this.managerId, this.manager, this.reports, this.profile, this.posts, this.groups, this.memberships, });
 
   final int? id;
   final String email;
@@ -4078,123 +3022,41 @@ class UserCreateInput {
         QueryPredicate(field: 'id', operator: 'equals', value: id),
       ]);
     }
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'email', operator: 'equals', value: email),
-    ]);
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'email', operator: 'equals', value: email),
-      QueryPredicate(field: 'role', operator: 'equals', value: _enumName(role)),
-    ]);
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'email', operator: 'equals', value: email),
+      ]);
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'email', operator: 'equals', value: email),
+        QueryPredicate(field: 'role', operator: 'equals', value: _enumName(role)),
+      ]);
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (manager != null) {
-      writes.addAll(
-        manager!.toRelationWrites(
-          QueryRelation(
-            field: 'manager',
-            targetModel: 'User',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'managerId',
-            targetKeyField: 'id',
-            localKeyFields: const <String>['managerId'],
-            targetKeyFields: const <String>['id'],
-          ),
-        ),
-      );
+      writes.addAll(manager!.toRelationWrites(QueryRelation(field: 'manager', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'managerId', targetKeyField: 'id', localKeyFields: const <String>['managerId'], targetKeyFields: const <String>['id'])));
     }
     if (reports != null) {
-      writes.addAll(
-        reports!.toRelationWrites(
-          QueryRelation(
-            field: 'reports',
-            targetModel: 'User',
-            cardinality: QueryRelationCardinality.many,
-            localKeyField: 'id',
-            targetKeyField: 'managerId',
-            localKeyFields: const <String>['id'],
-            targetKeyFields: const <String>['managerId'],
-          ),
-        ),
-      );
+      writes.addAll(reports!.toRelationWrites(QueryRelation(field: 'reports', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'managerId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['managerId'])));
     }
     if (profile != null) {
-      writes.addAll(
-        profile!.toRelationWrites(
-          QueryRelation(
-            field: 'profile',
-            targetModel: 'Profile',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'id',
-            targetKeyField: 'userId',
-            localKeyFields: const <String>['id'],
-            targetKeyFields: const <String>['userId'],
-          ),
-        ),
-      );
+      writes.addAll(profile!.toRelationWrites(QueryRelation(field: 'profile', targetModel: 'Profile', cardinality: QueryRelationCardinality.one, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId'])));
     }
     if (posts != null) {
-      writes.addAll(
-        posts!.toRelationWrites(
-          QueryRelation(
-            field: 'posts',
-            targetModel: 'Post',
-            cardinality: QueryRelationCardinality.many,
-            localKeyField: 'id',
-            targetKeyField: 'authorId',
-            localKeyFields: const <String>['id'],
-            targetKeyFields: const <String>['authorId'],
-          ),
-        ),
-      );
+      writes.addAll(posts!.toRelationWrites(QueryRelation(field: 'posts', targetModel: 'Post', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'authorId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['authorId'])));
     }
     if (groups != null) {
-      writes.addAll(
-        groups!.toRelationWrites(
-          QueryRelation(
-            field: 'groups',
-            targetModel: 'Group',
-            cardinality: QueryRelationCardinality.many,
-            localKeyField: 'id',
-            targetKeyField: 'id',
-            localKeyFields: const <String>['id'],
-            targetKeyFields: const <String>['id'],
-            storageKind: QueryRelationStorageKind.implicitManyToMany,
-            sourceModel: 'User',
-            inverseField: 'users',
-          ),
-        ),
-      );
+      writes.addAll(groups!.toRelationWrites(QueryRelation(field: 'groups', targetModel: 'Group', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'User', inverseField: 'users')));
     }
     if (memberships != null) {
-      writes.addAll(
-        memberships!.toRelationWrites(
-          QueryRelation(
-            field: 'memberships',
-            targetModel: 'Membership',
-            cardinality: QueryRelationCardinality.many,
-            localKeyField: 'id',
-            targetKeyField: 'userId',
-            localKeyFields: const <String>['id'],
-            targetKeyFields: const <String>['userId'],
-          ),
-        ),
-      );
+      writes.addAll(memberships!.toRelationWrites(QueryRelation(field: 'memberships', targetModel: 'Membership', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'userId', localKeyFields: const <String>['id'], targetKeyFields: const <String>['userId'])));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
 
   bool get hasDeferredRelationWrites {
-    return (manager?.hasDeferredWrites ?? false) ||
-        (reports?.hasDeferredWrites ?? false) ||
-        (profile?.hasDeferredWrites ?? false) ||
-        (posts?.hasDeferredWrites ?? false) ||
-        (groups?.hasDeferredWrites ?? false) ||
-        (memberships?.hasDeferredWrites ?? false);
+    return (manager?.hasDeferredWrites ?? false) || (reports?.hasDeferredWrites ?? false) || (profile?.hasDeferredWrites ?? false) || (posts?.hasDeferredWrites ?? false) || (groups?.hasDeferredWrites ?? false) || (memberships?.hasDeferredWrites ?? false);
   }
 
   UserUpdateInput toDeferredRelationUpdateInput() {
@@ -4210,24 +3072,7 @@ class UserCreateInput {
 }
 
 class UserUpdateInput {
-  const UserUpdateInput({
-    this.email,
-    this.emailOps,
-    this.createdAt,
-    this.createdAtOps,
-    this.updatedAt,
-    this.updatedAtOps,
-    this.role,
-    this.roleOps,
-    this.managerId,
-    this.managerIdOps,
-    this.manager,
-    this.reports,
-    this.profile,
-    this.posts,
-    this.groups,
-    this.memberships,
-  });
+  const UserUpdateInput({this.email, this.emailOps, this.createdAt, this.createdAtOps, this.updatedAt, this.updatedAtOps, this.role, this.roleOps, this.managerId, this.managerIdOps, this.manager, this.reports, this.profile, this.posts, this.groups, this.memberships, });
 
   final String? email;
   final StringFieldUpdateOperationsInput? emailOps;
@@ -4251,20 +3096,13 @@ class UserUpdateInput {
   }
 
   bool get hasRelationWrites {
-    return manager?.hasWrites == true ||
-        reports?.hasWrites == true ||
-        profile?.hasWrites == true ||
-        posts?.hasWrites == true ||
-        groups?.hasWrites == true ||
-        memberships?.hasWrites == true;
+    return manager?.hasWrites == true || reports?.hasWrites == true || profile?.hasWrites == true || posts?.hasWrites == true || groups?.hasWrites == true || memberships?.hasWrites == true;
   }
 
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
     if (email != null && emailOps != null) {
-      throw StateError(
-        'Only one of email or emailOps may be provided for UserUpdateInput.email.',
-      );
+      throw StateError('Only one of email or emailOps may be provided for UserUpdateInput.email.');
     }
     if (email != null) {
       data['email'] = email;
@@ -4276,9 +3114,7 @@ class UserUpdateInput {
       }
     }
     if (createdAt != null && createdAtOps != null) {
-      throw StateError(
-        'Only one of createdAt or createdAtOps may be provided for UserUpdateInput.createdAt.',
-      );
+      throw StateError('Only one of createdAt or createdAtOps may be provided for UserUpdateInput.createdAt.');
     }
     if (createdAt != null) {
       data['createdAt'] = createdAt;
@@ -4290,9 +3126,7 @@ class UserUpdateInput {
       }
     }
     if (updatedAt != null && updatedAtOps != null) {
-      throw StateError(
-        'Only one of updatedAt or updatedAtOps may be provided for UserUpdateInput.updatedAt.',
-      );
+      throw StateError('Only one of updatedAt or updatedAtOps may be provided for UserUpdateInput.updatedAt.');
     }
     if (updatedAt != null) {
       data['updatedAt'] = updatedAt;
@@ -4304,9 +3138,7 @@ class UserUpdateInput {
       }
     }
     if (role != null && roleOps != null) {
-      throw StateError(
-        'Only one of role or roleOps may be provided for UserUpdateInput.role.',
-      );
+      throw StateError('Only one of role or roleOps may be provided for UserUpdateInput.role.');
     }
     if (role != null) {
       data['role'] = _enumName(role);
@@ -4318,9 +3150,7 @@ class UserUpdateInput {
       }
     }
     if (managerId != null && managerIdOps != null) {
-      throw StateError(
-        'Only one of managerId or managerIdOps may be provided for UserUpdateInput.managerId.',
-      );
+      throw StateError('Only one of managerId or managerIdOps may be provided for UserUpdateInput.managerId.');
     }
     if (managerId != null) {
       data['managerId'] = managerId;
@@ -4328,14 +3158,10 @@ class UserUpdateInput {
     if (managerIdOps != null) {
       final ops = managerIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for UserUpdateInput.managerId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for UserUpdateInput.managerId.');
       }
       if (ops.hasComputedUpdate) {
-        throw StateError(
-          'Computed scalar update operators for UserUpdateInput.managerId require the current record value before they can be converted to raw update data.',
-        );
+        throw StateError('Computed scalar update operators for UserUpdateInput.managerId require the current record value before they can be converted to raw update data.');
       }
       if (ops.hasSet) {
         data['managerId'] = ops.set as int?;
@@ -4347,9 +3173,7 @@ class UserUpdateInput {
   Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
     final data = <String, Object?>{};
     if (email != null && emailOps != null) {
-      throw StateError(
-        'Only one of email or emailOps may be provided for UserUpdateInput.email.',
-      );
+      throw StateError('Only one of email or emailOps may be provided for UserUpdateInput.email.');
     }
     if (email != null) {
       data['email'] = email;
@@ -4361,9 +3185,7 @@ class UserUpdateInput {
       }
     }
     if (createdAt != null && createdAtOps != null) {
-      throw StateError(
-        'Only one of createdAt or createdAtOps may be provided for UserUpdateInput.createdAt.',
-      );
+      throw StateError('Only one of createdAt or createdAtOps may be provided for UserUpdateInput.createdAt.');
     }
     if (createdAt != null) {
       data['createdAt'] = createdAt;
@@ -4375,9 +3197,7 @@ class UserUpdateInput {
       }
     }
     if (updatedAt != null && updatedAtOps != null) {
-      throw StateError(
-        'Only one of updatedAt or updatedAtOps may be provided for UserUpdateInput.updatedAt.',
-      );
+      throw StateError('Only one of updatedAt or updatedAtOps may be provided for UserUpdateInput.updatedAt.');
     }
     if (updatedAt != null) {
       data['updatedAt'] = updatedAt;
@@ -4389,9 +3209,7 @@ class UserUpdateInput {
       }
     }
     if (role != null && roleOps != null) {
-      throw StateError(
-        'Only one of role or roleOps may be provided for UserUpdateInput.role.',
-      );
+      throw StateError('Only one of role or roleOps may be provided for UserUpdateInput.role.');
     }
     if (role != null) {
       data['role'] = _enumName(role);
@@ -4403,9 +3221,7 @@ class UserUpdateInput {
       }
     }
     if (managerId != null && managerIdOps != null) {
-      throw StateError(
-        'Only one of managerId or managerIdOps may be provided for UserUpdateInput.managerId.',
-      );
+      throw StateError('Only one of managerId or managerIdOps may be provided for UserUpdateInput.managerId.');
     }
     if (managerId != null) {
       data['managerId'] = managerId;
@@ -4413,9 +3229,7 @@ class UserUpdateInput {
     if (managerIdOps != null) {
       final ops = managerIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for UserUpdateInput.managerId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for UserUpdateInput.managerId.');
       }
       if (ops.hasSet) {
         data['managerId'] = ops.set as int?;
@@ -4423,17 +3237,13 @@ class UserUpdateInput {
         final currentValue = record['managerId'] as int?;
         if (ops.increment != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot increment UserUpdateInput.managerId because the current value is null.',
-            );
+            throw StateError('Cannot increment UserUpdateInput.managerId because the current value is null.');
           }
           data['managerId'] = currentValue + ops.increment!;
         }
         if (ops.decrement != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot decrement UserUpdateInput.managerId because the current value is null.',
-            );
+            throw StateError('Cannot decrement UserUpdateInput.managerId because the current value is null.');
           }
           data['managerId'] = currentValue - ops.decrement!;
         }
@@ -4444,13 +3254,7 @@ class UserUpdateInput {
 }
 
 class UserCreateWithoutManagerInput {
-  const UserCreateWithoutManagerInput({
-    this.id,
-    required this.email,
-    this.createdAt,
-    this.updatedAt,
-    required this.role,
-  });
+  const UserCreateWithoutManagerInput({this.id, required this.email, this.createdAt, this.updatedAt, required this.role, });
 
   final int? id;
   final String email;
@@ -4478,14 +3282,7 @@ class UserCreateWithoutManagerInput {
 }
 
 class UserCreateWithoutReportsInput {
-  const UserCreateWithoutReportsInput({
-    this.id,
-    required this.email,
-    this.createdAt,
-    this.updatedAt,
-    required this.role,
-    this.managerId,
-  });
+  const UserCreateWithoutReportsInput({this.id, required this.email, this.createdAt, this.updatedAt, required this.role, this.managerId, });
 
   final int? id;
   final String email;
@@ -4517,14 +3314,7 @@ class UserCreateWithoutReportsInput {
 }
 
 class UserCreateWithoutProfileInput {
-  const UserCreateWithoutProfileInput({
-    this.id,
-    required this.email,
-    this.createdAt,
-    this.updatedAt,
-    required this.role,
-    this.managerId,
-  });
+  const UserCreateWithoutProfileInput({this.id, required this.email, this.createdAt, this.updatedAt, required this.role, this.managerId, });
 
   final int? id;
   final String email;
@@ -4556,14 +3346,7 @@ class UserCreateWithoutProfileInput {
 }
 
 class UserCreateWithoutPostsInput {
-  const UserCreateWithoutPostsInput({
-    this.id,
-    required this.email,
-    this.createdAt,
-    this.updatedAt,
-    required this.role,
-    this.managerId,
-  });
+  const UserCreateWithoutPostsInput({this.id, required this.email, this.createdAt, this.updatedAt, required this.role, this.managerId, });
 
   final int? id;
   final String email;
@@ -4595,14 +3378,7 @@ class UserCreateWithoutPostsInput {
 }
 
 class UserCreateWithoutGroupsInput {
-  const UserCreateWithoutGroupsInput({
-    this.id,
-    required this.email,
-    this.createdAt,
-    this.updatedAt,
-    required this.role,
-    this.managerId,
-  });
+  const UserCreateWithoutGroupsInput({this.id, required this.email, this.createdAt, this.updatedAt, required this.role, this.managerId, });
 
   final int? id;
   final String email;
@@ -4634,14 +3410,7 @@ class UserCreateWithoutGroupsInput {
 }
 
 class UserCreateWithoutMembershipsInput {
-  const UserCreateWithoutMembershipsInput({
-    this.id,
-    required this.email,
-    this.createdAt,
-    this.updatedAt,
-    required this.role,
-    this.managerId,
-  });
+  const UserCreateWithoutMembershipsInput({this.id, required this.email, this.createdAt, this.updatedAt, required this.role, this.managerId, });
 
   final int? id;
   final String email;
@@ -4673,91 +3442,61 @@ class UserCreateWithoutMembershipsInput {
 }
 
 class UserConnectOrCreateWithoutReportsInput {
-  const UserConnectOrCreateWithoutReportsInput({
-    required this.where,
-    required this.create,
-  });
+  const UserConnectOrCreateWithoutReportsInput({required this.where, required this.create});
 
   final UserWhereUniqueInput where;
   final UserCreateWithoutReportsInput create;
 }
 
 class UserConnectOrCreateWithoutManagerInput {
-  const UserConnectOrCreateWithoutManagerInput({
-    required this.where,
-    required this.create,
-  });
+  const UserConnectOrCreateWithoutManagerInput({required this.where, required this.create});
 
   final UserWhereUniqueInput where;
   final UserCreateWithoutManagerInput create;
 }
 
 class ProfileConnectOrCreateWithoutUserInput {
-  const ProfileConnectOrCreateWithoutUserInput({
-    required this.where,
-    required this.create,
-  });
+  const ProfileConnectOrCreateWithoutUserInput({required this.where, required this.create});
 
   final ProfileWhereUniqueInput where;
   final ProfileCreateWithoutUserInput create;
 }
 
 class PostConnectOrCreateWithoutAuthorInput {
-  const PostConnectOrCreateWithoutAuthorInput({
-    required this.where,
-    required this.create,
-  });
+  const PostConnectOrCreateWithoutAuthorInput({required this.where, required this.create});
 
   final PostWhereUniqueInput where;
   final PostCreateWithoutAuthorInput create;
 }
 
 class GroupConnectOrCreateWithoutUsersInput {
-  const GroupConnectOrCreateWithoutUsersInput({
-    required this.where,
-    required this.create,
-  });
+  const GroupConnectOrCreateWithoutUsersInput({required this.where, required this.create});
 
   final GroupWhereUniqueInput where;
   final GroupCreateWithoutUsersInput create;
 }
 
 class MembershipConnectOrCreateWithoutUserInput {
-  const MembershipConnectOrCreateWithoutUserInput({
-    required this.where,
-    required this.create,
-  });
+  const MembershipConnectOrCreateWithoutUserInput({required this.where, required this.create});
 
   final MembershipWhereUniqueInput where;
   final MembershipCreateWithoutUserInput create;
 }
 
 class UserCreateNestedOneWithoutReportsInput {
-  const UserCreateNestedOneWithoutReportsInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserCreateNestedOneWithoutReportsInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserCreateWithoutReportsInput? create;
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutReportsInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutReportsInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutReportsInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -4771,35 +3510,19 @@ class UserCreateNestedOneWithoutReportsInput {
   }
 
   UserUpdateNestedOneWithoutReportsInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutReportsInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutReportsInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return UserUpdateNestedOneWithoutReportsInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return UserUpdateNestedOneWithoutReportsInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class UserCreateNestedManyWithoutManagerInput {
-  const UserCreateNestedManyWithoutManagerInput({
-    this.create = const <UserCreateWithoutManagerInput>[],
-    this.connect = const <UserWhereUniqueInput>[],
-    this.disconnect = const <UserWhereUniqueInput>[],
-    this.connectOrCreate = const <UserConnectOrCreateWithoutManagerInput>[],
-    this.set,
-  });
+  const UserCreateNestedManyWithoutManagerInput({this.create = const <UserCreateWithoutManagerInput>[], this.connect = const <UserWhereUniqueInput>[], this.disconnect = const <UserWhereUniqueInput>[], this.connectOrCreate = const <UserConnectOrCreateWithoutManagerInput>[], this.set});
 
   final List<UserCreateWithoutManagerInput> create;
   final List<UserWhereUniqueInput> connect;
@@ -4807,11 +3530,7 @@ class UserCreateNestedManyWithoutManagerInput {
   final List<UserConnectOrCreateWithoutManagerInput> connectOrCreate;
   final List<UserWhereUniqueInput>? set;
 
-  bool get hasDeferredWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasDeferredWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
     if (create.isEmpty) {
@@ -4829,41 +3548,24 @@ class UserCreateNestedManyWithoutManagerInput {
     if (!hasDeferredWrites) {
       return null;
     }
-    return UserUpdateNestedManyWithoutManagerInput(
-      connect: connect,
-      disconnect: disconnect,
-      connectOrCreate: connectOrCreate,
-      set: set,
-    );
+    return UserUpdateNestedManyWithoutManagerInput(connect: connect, disconnect: disconnect, connectOrCreate: connectOrCreate, set: set);
   }
 }
 
 class ProfileCreateNestedOneWithoutUserInput {
-  const ProfileCreateNestedOneWithoutUserInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const ProfileCreateNestedOneWithoutUserInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final ProfileCreateWithoutUserInput? create;
   final ProfileWhereUniqueInput? connect;
   final ProfileConnectOrCreateWithoutUserInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for ProfileCreateNestedOneWithoutUserInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for ProfileCreateNestedOneWithoutUserInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -4877,35 +3579,19 @@ class ProfileCreateNestedOneWithoutUserInput {
   }
 
   ProfileUpdateNestedOneWithoutUserInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for ProfileCreateNestedOneWithoutUserInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for ProfileCreateNestedOneWithoutUserInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return ProfileUpdateNestedOneWithoutUserInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return ProfileUpdateNestedOneWithoutUserInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class PostCreateNestedManyWithoutAuthorInput {
-  const PostCreateNestedManyWithoutAuthorInput({
-    this.create = const <PostCreateWithoutAuthorInput>[],
-    this.connect = const <PostWhereUniqueInput>[],
-    this.disconnect = const <PostWhereUniqueInput>[],
-    this.connectOrCreate = const <PostConnectOrCreateWithoutAuthorInput>[],
-    this.set,
-  });
+  const PostCreateNestedManyWithoutAuthorInput({this.create = const <PostCreateWithoutAuthorInput>[], this.connect = const <PostWhereUniqueInput>[], this.disconnect = const <PostWhereUniqueInput>[], this.connectOrCreate = const <PostConnectOrCreateWithoutAuthorInput>[], this.set});
 
   final List<PostCreateWithoutAuthorInput> create;
   final List<PostWhereUniqueInput> connect;
@@ -4913,11 +3599,7 @@ class PostCreateNestedManyWithoutAuthorInput {
   final List<PostConnectOrCreateWithoutAuthorInput> connectOrCreate;
   final List<PostWhereUniqueInput>? set;
 
-  bool get hasDeferredWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasDeferredWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
     if (create.isEmpty) {
@@ -4935,23 +3617,12 @@ class PostCreateNestedManyWithoutAuthorInput {
     if (!hasDeferredWrites) {
       return null;
     }
-    return PostUpdateNestedManyWithoutAuthorInput(
-      connect: connect,
-      disconnect: disconnect,
-      connectOrCreate: connectOrCreate,
-      set: set,
-    );
+    return PostUpdateNestedManyWithoutAuthorInput(connect: connect, disconnect: disconnect, connectOrCreate: connectOrCreate, set: set);
   }
 }
 
 class GroupCreateNestedManyWithoutUsersInput {
-  const GroupCreateNestedManyWithoutUsersInput({
-    this.create = const <GroupCreateWithoutUsersInput>[],
-    this.connect = const <GroupWhereUniqueInput>[],
-    this.disconnect = const <GroupWhereUniqueInput>[],
-    this.connectOrCreate = const <GroupConnectOrCreateWithoutUsersInput>[],
-    this.set,
-  });
+  const GroupCreateNestedManyWithoutUsersInput({this.create = const <GroupCreateWithoutUsersInput>[], this.connect = const <GroupWhereUniqueInput>[], this.disconnect = const <GroupWhereUniqueInput>[], this.connectOrCreate = const <GroupConnectOrCreateWithoutUsersInput>[], this.set});
 
   final List<GroupCreateWithoutUsersInput> create;
   final List<GroupWhereUniqueInput> connect;
@@ -4959,11 +3630,7 @@ class GroupCreateNestedManyWithoutUsersInput {
   final List<GroupConnectOrCreateWithoutUsersInput> connectOrCreate;
   final List<GroupWhereUniqueInput>? set;
 
-  bool get hasDeferredWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasDeferredWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
     if (create.isEmpty) {
@@ -4981,23 +3648,12 @@ class GroupCreateNestedManyWithoutUsersInput {
     if (!hasDeferredWrites) {
       return null;
     }
-    return GroupUpdateNestedManyWithoutUsersInput(
-      connect: connect,
-      disconnect: disconnect,
-      connectOrCreate: connectOrCreate,
-      set: set,
-    );
+    return GroupUpdateNestedManyWithoutUsersInput(connect: connect, disconnect: disconnect, connectOrCreate: connectOrCreate, set: set);
   }
 }
 
 class MembershipCreateNestedManyWithoutUserInput {
-  const MembershipCreateNestedManyWithoutUserInput({
-    this.create = const <MembershipCreateWithoutUserInput>[],
-    this.connect = const <MembershipWhereUniqueInput>[],
-    this.disconnect = const <MembershipWhereUniqueInput>[],
-    this.connectOrCreate = const <MembershipConnectOrCreateWithoutUserInput>[],
-    this.set,
-  });
+  const MembershipCreateNestedManyWithoutUserInput({this.create = const <MembershipCreateWithoutUserInput>[], this.connect = const <MembershipWhereUniqueInput>[], this.disconnect = const <MembershipWhereUniqueInput>[], this.connectOrCreate = const <MembershipConnectOrCreateWithoutUserInput>[], this.set});
 
   final List<MembershipCreateWithoutUserInput> create;
   final List<MembershipWhereUniqueInput> connect;
@@ -5005,11 +3661,7 @@ class MembershipCreateNestedManyWithoutUserInput {
   final List<MembershipConnectOrCreateWithoutUserInput> connectOrCreate;
   final List<MembershipWhereUniqueInput>? set;
 
-  bool get hasDeferredWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasDeferredWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
     if (create.isEmpty) {
@@ -5027,123 +3679,72 @@ class MembershipCreateNestedManyWithoutUserInput {
     if (!hasDeferredWrites) {
       return null;
     }
-    return MembershipUpdateNestedManyWithoutUserInput(
-      connect: connect,
-      disconnect: disconnect,
-      connectOrCreate: connectOrCreate,
-      set: set,
-    );
+    return MembershipUpdateNestedManyWithoutUserInput(connect: connect, disconnect: disconnect, connectOrCreate: connectOrCreate, set: set);
   }
 }
 
 class UserUpdateNestedOneWithoutReportsInput {
-  const UserUpdateNestedOneWithoutReportsInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserUpdateNestedOneWithoutReportsInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutReportsInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 class UserUpdateNestedManyWithoutManagerInput {
-  const UserUpdateNestedManyWithoutManagerInput({
-    this.connect = const <UserWhereUniqueInput>[],
-    this.disconnect = const <UserWhereUniqueInput>[],
-    this.connectOrCreate = const <UserConnectOrCreateWithoutManagerInput>[],
-    this.set,
-  });
+  const UserUpdateNestedManyWithoutManagerInput({this.connect = const <UserWhereUniqueInput>[], this.disconnect = const <UserWhereUniqueInput>[], this.connectOrCreate = const <UserConnectOrCreateWithoutManagerInput>[], this.set});
 
   final List<UserWhereUniqueInput> connect;
   final List<UserWhereUniqueInput> disconnect;
   final List<UserConnectOrCreateWithoutManagerInput> connectOrCreate;
   final List<UserWhereUniqueInput>? set;
 
-  bool get hasWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 }
 
 class ProfileUpdateNestedOneWithoutUserInput {
-  const ProfileUpdateNestedOneWithoutUserInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const ProfileUpdateNestedOneWithoutUserInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final ProfileWhereUniqueInput? connect;
   final ProfileConnectOrCreateWithoutUserInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 class PostUpdateNestedManyWithoutAuthorInput {
-  const PostUpdateNestedManyWithoutAuthorInput({
-    this.connect = const <PostWhereUniqueInput>[],
-    this.disconnect = const <PostWhereUniqueInput>[],
-    this.connectOrCreate = const <PostConnectOrCreateWithoutAuthorInput>[],
-    this.set,
-  });
+  const PostUpdateNestedManyWithoutAuthorInput({this.connect = const <PostWhereUniqueInput>[], this.disconnect = const <PostWhereUniqueInput>[], this.connectOrCreate = const <PostConnectOrCreateWithoutAuthorInput>[], this.set});
 
   final List<PostWhereUniqueInput> connect;
   final List<PostWhereUniqueInput> disconnect;
   final List<PostConnectOrCreateWithoutAuthorInput> connectOrCreate;
   final List<PostWhereUniqueInput>? set;
 
-  bool get hasWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 }
 
 class GroupUpdateNestedManyWithoutUsersInput {
-  const GroupUpdateNestedManyWithoutUsersInput({
-    this.connect = const <GroupWhereUniqueInput>[],
-    this.disconnect = const <GroupWhereUniqueInput>[],
-    this.connectOrCreate = const <GroupConnectOrCreateWithoutUsersInput>[],
-    this.set,
-  });
+  const GroupUpdateNestedManyWithoutUsersInput({this.connect = const <GroupWhereUniqueInput>[], this.disconnect = const <GroupWhereUniqueInput>[], this.connectOrCreate = const <GroupConnectOrCreateWithoutUsersInput>[], this.set});
 
   final List<GroupWhereUniqueInput> connect;
   final List<GroupWhereUniqueInput> disconnect;
   final List<GroupConnectOrCreateWithoutUsersInput> connectOrCreate;
   final List<GroupWhereUniqueInput>? set;
 
-  bool get hasWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 }
 
 class MembershipUpdateNestedManyWithoutUserInput {
-  const MembershipUpdateNestedManyWithoutUserInput({
-    this.connect = const <MembershipWhereUniqueInput>[],
-    this.disconnect = const <MembershipWhereUniqueInput>[],
-    this.connectOrCreate = const <MembershipConnectOrCreateWithoutUserInput>[],
-    this.set,
-  });
+  const MembershipUpdateNestedManyWithoutUserInput({this.connect = const <MembershipWhereUniqueInput>[], this.disconnect = const <MembershipWhereUniqueInput>[], this.connectOrCreate = const <MembershipConnectOrCreateWithoutUserInput>[], this.set});
 
   final List<MembershipWhereUniqueInput> connect;
   final List<MembershipWhereUniqueInput> disconnect;
   final List<MembershipConnectOrCreateWithoutUserInput> connectOrCreate;
   final List<MembershipWhereUniqueInput>? set;
 
-  bool get hasWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 }
 
 class PostDelegate {
@@ -5157,16 +3758,14 @@ class PostDelegate {
     PostInclude? include,
     PostSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'Post',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then((record) => record == null ? null : Post.fromRecord(record));
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'Post',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : Post.fromRecord(record));
   }
 
   Future<Post?> findFirst({
@@ -5179,44 +3778,22 @@ class PostDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'Post',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'Post',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then((record) => record == null ? null : Post.fromRecord(record));
+      ),
+    ).then((record) => record == null ? null : Post.fromRecord(record));
   }
 
   Future<List<Post>> findMany({
@@ -5230,43 +3807,23 @@ class PostDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'Post',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'Post',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) => records.map(Post.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(Post.fromRecord).toList(growable: false));
   }
 
   Future<int> count({PostWhereInput? where}) {
@@ -5289,27 +3846,20 @@ class PostDelegate {
     PostMinAggregateInput? min,
     PostMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'Post',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(PostAggregateResult.fromQueryResult);
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'Post',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(PostAggregateResult.fromQueryResult);
   }
 
   Future<List<PostGroupByRow>> groupBy({
@@ -5325,38 +3875,28 @@ class PostDelegate {
     PostMinAggregateInput? min,
     PostMaxAggregateInput? max,
   }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'Post',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(PostGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'Post',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(PostGroupByRow.fromQueryResultRow).toList(growable: false));
   }
 
-  Future<Post> create({required PostCreateInput data, PostInclude? include}) {
+  Future<Post> create({
+    required PostCreateInput data,
+    PostInclude? include,
+  }) {
     final queryInclude = include?.toQueryInclude();
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
@@ -5378,26 +3918,26 @@ class PostDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Post');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Post',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'Post', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -5432,7 +3972,10 @@ class PostDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Post');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Post', where: predicates),
+        FindUniqueQuery(
+          model: 'Post',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in Post.');
@@ -5462,7 +4005,10 @@ class PostDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Post');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Post', where: predicates),
+        FindUniqueQuery(
+          model: 'Post',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -5493,7 +4039,10 @@ class PostDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('Post');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'Post', where: predicates),
+          FindManyQuery(
+            model: 'Post',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -5509,77 +4058,12 @@ class PostDelegate {
       });
     }
     return _delegate.updateMany(
-      UpdateManyQuery(model: 'Post', where: predicates, data: data.toData()),
-    );
-  }
-
-  Future<List<Post>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required PostWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
+      UpdateManyQuery(
         model: 'Post',
         where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
+        data: data.toData(),
       ),
     );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <Post>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords.map(Post.fromRecord).toList(growable: false);
-    }
-    final projectedRecords = <Post>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'Post',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'Post.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(Post.fromRecord(projected));
-    }
-    return List<Post>.unmodifiable(projectedRecords);
   }
 
   Future<Post> _performCreateWithRelationWrites({
@@ -5617,9 +4101,7 @@ class PostDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Post create branch could not reload the created record by primary key.',
-      );
+      throw StateError('Post create branch could not reload the created record by primary key.');
     }
     return Post.fromRecord(projected);
   }
@@ -5661,9 +4143,7 @@ class PostDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Post update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('Post update branch could not reload the updated record for the provided unique selector.');
     }
     return Post.fromRecord(projected);
   }
@@ -5683,43 +4163,38 @@ class PostDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for PostUpdateInput.author.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for PostUpdateInput.author.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related User record found for nested connect on Post.author.',
-          );
+          throw StateError('No related User record found for nested connect on Post.author.');
         }
-        await tx._client
-            .model('Post')
-            .update(
-              UpdateQuery(
-                model: 'Post',
-                where: predicates,
-                data: <String, Object?>{
-                  'authorId': _requireRecordValue(
-                    related,
-                    'id',
-                    'nested direct relation write on Post.author',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('Post').update(
+          UpdateQuery(
+            model: 'Post',
+            where: predicates,
+            data: <String, Object?>{
+              'authorId': _requireRecordValue(related, 'id', 'nested direct relation write on Post.author'),
+            },
+          ),
+        );
       }
       if (nested.connectOrCreate != null) {
         final entry = nested.connectOrCreate!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: entry.where.toPredicates(),
+          ),
         );
-        final relatedRecord =
-            related ??
+        final relatedRecord = related ??
             await tx.user._delegate.create(
               CreateQuery(
                 model: 'User',
@@ -5727,66 +4202,52 @@ class PostDelegate {
                 nestedCreates: entry.create.toNestedCreates(),
               ),
             );
-        await tx._client
-            .model('Post')
-            .update(
-              UpdateQuery(
-                model: 'Post',
-                where: predicates,
-                data: <String, Object?>{
-                  'authorId': _requireRecordValue(
-                    relatedRecord,
-                    'id',
-                    'nested direct relation write on Post.author',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('Post').update(
+          UpdateQuery(
+            model: 'Post',
+            where: predicates,
+            data: <String, Object?>{
+              'authorId': _requireRecordValue(relatedRecord, 'id', 'nested direct relation write on Post.author'),
+            },
+          ),
+        );
       }
       if (nested.disconnect) {
-        throw StateError(
-          'Nested disconnect is not supported for required relation Post.author.',
-        );
+        throw StateError('Nested disconnect is not supported for required relation Post.author.');
       }
     }
   }
+
 
   Future<Post> delete({
     required PostWhereUniqueInput where,
     PostInclude? include,
     PostSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'Post',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(Post.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'Post',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(Post.fromRecord);
   }
 
-  Future<int> deleteMany({required PostWhereInput where}) {
+  Future<int> deleteMany({
+    required PostWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'Post', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'Post',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class PostWhereInput {
-  const PostWhereInput({
-    this.AND = const <PostWhereInput>[],
-    this.OR = const <PostWhereInput>[],
-    this.NOT = const <PostWhereInput>[],
-    this.id,
-    this.idFilter,
-    this.authorId,
-    this.authorIdFilter,
-    this.authorIs,
-    this.authorIsNot,
-  });
+  const PostWhereInput({this.AND = const <PostWhereInput>[], this.OR = const <PostWhereInput>[], this.NOT = const <PostWhereInput>[], this.id, this.idFilter, this.authorId, this.authorIdFilter, this.authorIs, this.authorIsNot, });
 
   final List<PostWhereInput> AND;
   final List<PostWhereInput> OR;
@@ -5801,106 +4262,38 @@ class PostWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (id != null) {
-      predicates.add(
-        QueryPredicate(field: 'id', operator: 'equals', value: id),
-      );
+      predicates.add(QueryPredicate(field: 'id', operator: 'equals', value: id));
     }
     if (idFilter != null) {
       predicates.addAll(idFilter!.toPredicates('id'));
     }
     if (authorId != null) {
-      predicates.add(
-        QueryPredicate(field: 'authorId', operator: 'equals', value: authorId),
-      );
+      predicates.add(QueryPredicate(field: 'authorId', operator: 'equals', value: authorId));
     }
     if (authorIdFilter != null) {
       predicates.addAll(authorIdFilter!.toPredicates('authorId'));
     }
     if (authorIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'author',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'author',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'authorId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['authorId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: authorIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'author', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'author', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'authorId', targetKeyField: 'id', localKeyFields: const <String>['authorId'], targetKeyFields: const <String>['id']), predicates: authorIs!.toPredicates())));
     }
     if (authorIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'author',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'author',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'authorId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['authorId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: authorIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'author', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'author', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'authorId', targetKeyField: 'id', localKeyFields: const <String>['authorId'], targetKeyFields: const <String>['id']), predicates: authorIsNot!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class PostWhereUniqueInput {
-  const PostWhereUniqueInput({this.id});
+  const PostWhereUniqueInput({this.id, });
 
   final int? id;
 
@@ -5912,11 +4305,13 @@ class PostWhereUniqueInput {
       ]);
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for PostWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for PostWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -5927,16 +4322,14 @@ class PostWhereUniqueInput {
       matches = record['id'] == id;
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for PostWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for PostWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class PostOrderByInput {
-  const PostOrderByInput({this.id, this.authorId});
+  const PostOrderByInput({this.id, this.authorId, });
 
   final SortOrder? id;
   final SortOrder? authorId;
@@ -5953,14 +4346,13 @@ class PostOrderByInput {
   }
 }
 
-enum PostScalarField { id, authorId }
+enum PostScalarField {
+  id,
+  authorId
+}
 
 class PostCountAggregateInput {
-  const PostCountAggregateInput({
-    this.all = false,
-    this.id = false,
-    this.authorId = false,
-  });
+  const PostCountAggregateInput({this.all = false, this.id = false, this.authorId = false, });
 
   final bool all;
   final bool id;
@@ -5974,15 +4366,12 @@ class PostCountAggregateInput {
     if (authorId) {
       fields.add('authorId');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class PostAvgAggregateInput {
-  const PostAvgAggregateInput({this.id = false, this.authorId = false});
+  const PostAvgAggregateInput({this.id = false, this.authorId = false, });
 
   final bool id;
   final bool authorId;
@@ -6000,7 +4389,7 @@ class PostAvgAggregateInput {
 }
 
 class PostSumAggregateInput {
-  const PostSumAggregateInput({this.id = false, this.authorId = false});
+  const PostSumAggregateInput({this.id = false, this.authorId = false, });
 
   final bool id;
   final bool authorId;
@@ -6018,7 +4407,7 @@ class PostSumAggregateInput {
 }
 
 class PostMinAggregateInput {
-  const PostMinAggregateInput({this.id = false, this.authorId = false});
+  const PostMinAggregateInput({this.id = false, this.authorId = false, });
 
   final bool id;
   final bool authorId;
@@ -6036,7 +4425,7 @@ class PostMinAggregateInput {
 }
 
 class PostMaxAggregateInput {
-  const PostMaxAggregateInput({this.id = false, this.authorId = false});
+  const PostMaxAggregateInput({this.id = false, this.authorId = false, });
 
   final bool id;
   final bool authorId;
@@ -6054,15 +4443,13 @@ class PostMaxAggregateInput {
 }
 
 class PostCountAggregateResult {
-  const PostCountAggregateResult({this.all, this.id, this.authorId});
+  const PostCountAggregateResult({this.all, this.id, this.authorId, });
 
   final int? all;
   final int? id;
   final int? authorId;
 
-  factory PostCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
+  factory PostCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
     return PostCountAggregateResult(
       all: result.all,
       id: result.fields['id'],
@@ -6072,7 +4459,7 @@ class PostCountAggregateResult {
 }
 
 class PostAvgAggregateResult {
-  const PostAvgAggregateResult({this.id, this.authorId});
+  const PostAvgAggregateResult({this.id, this.authorId, });
 
   final double? id;
   final double? authorId;
@@ -6086,7 +4473,7 @@ class PostAvgAggregateResult {
 }
 
 class PostSumAggregateResult {
-  const PostSumAggregateResult({this.id, this.authorId});
+  const PostSumAggregateResult({this.id, this.authorId, });
 
   final int? id;
   final int? authorId;
@@ -6100,7 +4487,7 @@ class PostSumAggregateResult {
 }
 
 class PostMinAggregateResult {
-  const PostMinAggregateResult({this.id, this.authorId});
+  const PostMinAggregateResult({this.id, this.authorId, });
 
   final int? id;
   final int? authorId;
@@ -6114,7 +4501,7 @@ class PostMinAggregateResult {
 }
 
 class PostMaxAggregateResult {
-  const PostMaxAggregateResult({this.id, this.authorId});
+  const PostMaxAggregateResult({this.id, this.authorId, });
 
   final int? id;
   final int? authorId;
@@ -6144,27 +4531,17 @@ class PostAggregateResult {
 
   factory PostAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return PostAggregateResult(
-      count: result.count == null
-          ? null
-          : PostCountAggregateResult.fromQueryCountResult(result.count!),
-      avg: result.avg == null
-          ? null
-          : PostAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : PostSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : PostMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : PostMaxAggregateResult.fromMap(result.max!),
+      count: result.count == null ? null : PostCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : PostAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : PostSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : PostMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : PostMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class PostGroupByHavingInput {
-  const PostGroupByHavingInput({this.id, this.authorId});
+  const PostGroupByHavingInput({this.id, this.authorId, });
 
   final NumericAggregatesFilter? id;
   final NumericAggregatesFilter? authorId;
@@ -6182,7 +4559,7 @@ class PostGroupByHavingInput {
 }
 
 class PostCountAggregateOrderByInput {
-  const PostCountAggregateOrderByInput({this.all, this.id, this.authorId});
+  const PostCountAggregateOrderByInput({this.all, this.id, this.authorId, });
 
   final SortOrder? all;
   final SortOrder? id;
@@ -6191,34 +4568,20 @@ class PostCountAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
     }
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (authorId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'authorId',
-          direction: authorId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'authorId', direction: authorId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class PostAvgAggregateOrderByInput {
-  const PostAvgAggregateOrderByInput({this.id, this.authorId});
+  const PostAvgAggregateOrderByInput({this.id, this.authorId, });
 
   final SortOrder? id;
   final SortOrder? authorId;
@@ -6226,29 +4589,17 @@ class PostAvgAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (authorId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'authorId',
-          direction: authorId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'authorId', direction: authorId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class PostSumAggregateOrderByInput {
-  const PostSumAggregateOrderByInput({this.id, this.authorId});
+  const PostSumAggregateOrderByInput({this.id, this.authorId, });
 
   final SortOrder? id;
   final SortOrder? authorId;
@@ -6256,29 +4607,17 @@ class PostSumAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (authorId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'authorId',
-          direction: authorId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'authorId', direction: authorId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class PostMinAggregateOrderByInput {
-  const PostMinAggregateOrderByInput({this.id, this.authorId});
+  const PostMinAggregateOrderByInput({this.id, this.authorId, });
 
   final SortOrder? id;
   final SortOrder? authorId;
@@ -6286,29 +4625,17 @@ class PostMinAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (authorId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'authorId',
-          direction: authorId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'authorId', direction: authorId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class PostMaxAggregateOrderByInput {
-  const PostMaxAggregateOrderByInput({this.id, this.authorId});
+  const PostMaxAggregateOrderByInput({this.id, this.authorId, });
 
   final SortOrder? id;
   final SortOrder? authorId;
@@ -6316,37 +4643,17 @@ class PostMaxAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (authorId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'authorId',
-          direction: authorId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'authorId', direction: authorId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class PostGroupByOrderByInput {
-  const PostGroupByOrderByInput({
-    this.id,
-    this.authorId,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const PostGroupByOrderByInput({this.id, this.authorId, this.count, this.avg, this.sum, this.min, this.max});
 
   final SortOrder? id;
   final SortOrder? authorId;
@@ -6362,9 +4669,7 @@ class PostGroupByOrderByInput {
       orderings.add(GroupByOrderBy.field(field: 'id', direction: id!));
     }
     if (authorId != null) {
-      orderings.add(
-        GroupByOrderBy.field(field: 'authorId', direction: authorId!),
-      );
+      orderings.add(GroupByOrderBy.field(field: 'authorId', direction: authorId!));
     }
     if (count != null) {
       orderings.addAll(count!.toGroupByOrderBy(QueryAggregateFunction.count));
@@ -6386,15 +4691,7 @@ class PostGroupByOrderByInput {
 }
 
 class PostGroupByRow {
-  const PostGroupByRow({
-    this.id,
-    this.authorId,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const PostGroupByRow({this.id, this.authorId, this.count, this.avg, this.sum, this.min, this.max});
 
   final int? id;
   final int? authorId;
@@ -6408,46 +4705,24 @@ class PostGroupByRow {
     return PostGroupByRow(
       id: row.group['id'] as int?,
       authorId: row.group['authorId'] as int?,
-      count: row.aggregates.count == null
-          ? null
-          : PostCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : PostAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : PostSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : PostMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : PostMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: row.aggregates.count == null ? null : PostCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : PostAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : PostSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : PostMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : PostMaxAggregateResult.fromMap(row.aggregates.max!),
     );
   }
 }
 
 class PostInclude {
-  const PostInclude({this.author = false});
+  const PostInclude({this.author = false, });
 
   final bool author;
 
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (author) {
-      relations['author'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'author',
-          targetModel: 'User',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'authorId',
-          targetKeyField: 'id',
-          localKeyFields: const <String>['authorId'],
-          targetKeyFields: const <String>['id'],
-        ),
-      );
+      relations['author'] = QueryIncludeEntry(relation: QueryRelation(field: 'author', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'authorId', targetKeyField: 'id', localKeyFields: const <String>['authorId'], targetKeyFields: const <String>['id']));
     }
     if (relations.isEmpty) {
       return null;
@@ -6457,7 +4732,7 @@ class PostInclude {
 }
 
 class PostSelect {
-  const PostSelect({this.id = false, this.authorId = false});
+  const PostSelect({this.id = false, this.authorId = false, });
 
   final bool id;
   final bool authorId;
@@ -6478,11 +4753,7 @@ class PostSelect {
 }
 
 class PostCreateInput {
-  const PostCreateInput({
-    required this.id,
-    required this.authorId,
-    this.author,
-  });
+  const PostCreateInput({required this.id, required this.authorId, this.author, });
 
   final int id;
   final int authorId;
@@ -6497,30 +4768,16 @@ class PostCreateInput {
 
   List<List<QueryPredicate>> toUniqueSelectorPredicates() {
     final selectors = <List<QueryPredicate>>[];
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'id', operator: 'equals', value: id),
-    ]);
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'id', operator: 'equals', value: id),
+      ]);
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (author != null) {
-      writes.addAll(
-        author!.toRelationWrites(
-          QueryRelation(
-            field: 'author',
-            targetModel: 'User',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'authorId',
-            targetKeyField: 'id',
-            localKeyFields: const <String>['authorId'],
-            targetKeyFields: const <String>['id'],
-          ),
-        ),
-      );
+      writes.addAll(author!.toRelationWrites(QueryRelation(field: 'author', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'authorId', targetKeyField: 'id', localKeyFields: const <String>['authorId'], targetKeyFields: const <String>['id'])));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
@@ -6530,12 +4787,14 @@ class PostCreateInput {
   }
 
   PostUpdateInput toDeferredRelationUpdateInput() {
-    return PostUpdateInput(author: author?.toDeferredUpdateWrite());
+    return PostUpdateInput(
+      author: author?.toDeferredUpdateWrite(),
+    );
   }
 }
 
 class PostUpdateInput {
-  const PostUpdateInput({this.authorId, this.authorIdOps, this.author});
+  const PostUpdateInput({this.authorId, this.authorIdOps, this.author, });
 
   final int? authorId;
   final IntFieldUpdateOperationsInput? authorIdOps;
@@ -6552,9 +4811,7 @@ class PostUpdateInput {
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
     if (authorId != null && authorIdOps != null) {
-      throw StateError(
-        'Only one of authorId or authorIdOps may be provided for PostUpdateInput.authorId.',
-      );
+      throw StateError('Only one of authorId or authorIdOps may be provided for PostUpdateInput.authorId.');
     }
     if (authorId != null) {
       data['authorId'] = authorId;
@@ -6562,14 +4819,10 @@ class PostUpdateInput {
     if (authorIdOps != null) {
       final ops = authorIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for PostUpdateInput.authorId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for PostUpdateInput.authorId.');
       }
       if (ops.hasComputedUpdate) {
-        throw StateError(
-          'Computed scalar update operators for PostUpdateInput.authorId require the current record value before they can be converted to raw update data.',
-        );
+        throw StateError('Computed scalar update operators for PostUpdateInput.authorId require the current record value before they can be converted to raw update data.');
       }
       if (ops.hasSet) {
         data['authorId'] = ops.set as int?;
@@ -6581,9 +4834,7 @@ class PostUpdateInput {
   Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
     final data = <String, Object?>{};
     if (authorId != null && authorIdOps != null) {
-      throw StateError(
-        'Only one of authorId or authorIdOps may be provided for PostUpdateInput.authorId.',
-      );
+      throw StateError('Only one of authorId or authorIdOps may be provided for PostUpdateInput.authorId.');
     }
     if (authorId != null) {
       data['authorId'] = authorId;
@@ -6591,9 +4842,7 @@ class PostUpdateInput {
     if (authorIdOps != null) {
       final ops = authorIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for PostUpdateInput.authorId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for PostUpdateInput.authorId.');
       }
       if (ops.hasSet) {
         data['authorId'] = ops.set as int?;
@@ -6601,17 +4850,13 @@ class PostUpdateInput {
         final currentValue = record['authorId'] as int?;
         if (ops.increment != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot increment PostUpdateInput.authorId because the current value is null.',
-            );
+            throw StateError('Cannot increment PostUpdateInput.authorId because the current value is null.');
           }
           data['authorId'] = currentValue + ops.increment!;
         }
         if (ops.decrement != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot decrement PostUpdateInput.authorId because the current value is null.',
-            );
+            throw StateError('Cannot decrement PostUpdateInput.authorId because the current value is null.');
           }
           data['authorId'] = currentValue - ops.decrement!;
         }
@@ -6622,7 +4867,7 @@ class PostUpdateInput {
 }
 
 class PostCreateWithoutAuthorInput {
-  const PostCreateWithoutAuthorInput({required this.id});
+  const PostCreateWithoutAuthorInput({required this.id, });
 
   final int id;
 
@@ -6636,41 +4881,26 @@ class PostCreateWithoutAuthorInput {
 }
 
 class UserConnectOrCreateWithoutPostsInput {
-  const UserConnectOrCreateWithoutPostsInput({
-    required this.where,
-    required this.create,
-  });
+  const UserConnectOrCreateWithoutPostsInput({required this.where, required this.create});
 
   final UserWhereUniqueInput where;
   final UserCreateWithoutPostsInput create;
 }
 
 class UserCreateNestedOneWithoutPostsInput {
-  const UserCreateNestedOneWithoutPostsInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserCreateNestedOneWithoutPostsInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserCreateWithoutPostsInput? create;
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutPostsInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutPostsInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutPostsInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -6684,40 +4914,25 @@ class UserCreateNestedOneWithoutPostsInput {
   }
 
   UserUpdateNestedOneWithoutPostsInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutPostsInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutPostsInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return UserUpdateNestedOneWithoutPostsInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return UserUpdateNestedOneWithoutPostsInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class UserUpdateNestedOneWithoutPostsInput {
-  const UserUpdateNestedOneWithoutPostsInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserUpdateNestedOneWithoutPostsInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutPostsInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 class ProfileDelegate {
@@ -6731,16 +4946,14 @@ class ProfileDelegate {
     ProfileInclude? include,
     ProfileSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'Profile',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then((record) => record == null ? null : Profile.fromRecord(record));
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'Profile',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : Profile.fromRecord(record));
   }
 
   Future<Profile?> findFirst({
@@ -6753,44 +4966,22 @@ class ProfileDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'Profile',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'Profile',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then((record) => record == null ? null : Profile.fromRecord(record));
+      ),
+    ).then((record) => record == null ? null : Profile.fromRecord(record));
   }
 
   Future<List<Profile>> findMany({
@@ -6804,43 +4995,23 @@ class ProfileDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'Profile',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'Profile',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) => records.map(Profile.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(Profile.fromRecord).toList(growable: false));
   }
 
   Future<int> count({ProfileWhereInput? where}) {
@@ -6863,27 +5034,20 @@ class ProfileDelegate {
     ProfileMinAggregateInput? min,
     ProfileMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'Profile',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(ProfileAggregateResult.fromQueryResult);
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'Profile',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(ProfileAggregateResult.fromQueryResult);
   }
 
   Future<List<ProfileGroupByRow>> groupBy({
@@ -6899,35 +5063,22 @@ class ProfileDelegate {
     ProfileMinAggregateInput? min,
     ProfileMaxAggregateInput? max,
   }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'Profile',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(ProfileGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'Profile',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(ProfileGroupByRow.fromQueryResultRow).toList(growable: false));
   }
 
   Future<Profile> create({
@@ -6955,26 +5106,26 @@ class ProfileDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Profile');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Profile',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'Profile', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -7009,7 +5160,10 @@ class ProfileDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Profile');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Profile', where: predicates),
+        FindUniqueQuery(
+          model: 'Profile',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in Profile.');
@@ -7039,7 +5193,10 @@ class ProfileDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Profile');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Profile', where: predicates),
+        FindUniqueQuery(
+          model: 'Profile',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -7070,7 +5227,10 @@ class ProfileDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('Profile');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'Profile', where: predicates),
+          FindManyQuery(
+            model: 'Profile',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -7086,77 +5246,12 @@ class ProfileDelegate {
       });
     }
     return _delegate.updateMany(
-      UpdateManyQuery(model: 'Profile', where: predicates, data: data.toData()),
-    );
-  }
-
-  Future<List<Profile>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required ProfileWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
+      UpdateManyQuery(
         model: 'Profile',
         where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
+        data: data.toData(),
       ),
     );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <Profile>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords.map(Profile.fromRecord).toList(growable: false);
-    }
-    final projectedRecords = <Profile>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'Profile',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'Profile.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(Profile.fromRecord(projected));
-    }
-    return List<Profile>.unmodifiable(projectedRecords);
   }
 
   Future<Profile> _performCreateWithRelationWrites({
@@ -7194,9 +5289,7 @@ class ProfileDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Profile create branch could not reload the created record by primary key.',
-      );
+      throw StateError('Profile create branch could not reload the created record by primary key.');
     }
     return Profile.fromRecord(projected);
   }
@@ -7238,9 +5331,7 @@ class ProfileDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Profile update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('Profile update branch could not reload the updated record for the provided unique selector.');
     }
     return Profile.fromRecord(projected);
   }
@@ -7260,43 +5351,38 @@ class ProfileDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for ProfileUpdateInput.user.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for ProfileUpdateInput.user.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related User record found for nested connect on Profile.user.',
-          );
+          throw StateError('No related User record found for nested connect on Profile.user.');
         }
-        await tx._client
-            .model('Profile')
-            .update(
-              UpdateQuery(
-                model: 'Profile',
-                where: predicates,
-                data: <String, Object?>{
-                  'userId': _requireRecordValue(
-                    related,
-                    'id',
-                    'nested direct relation write on Profile.user',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('Profile').update(
+          UpdateQuery(
+            model: 'Profile',
+            where: predicates,
+            data: <String, Object?>{
+              'userId': _requireRecordValue(related, 'id', 'nested direct relation write on Profile.user'),
+            },
+          ),
+        );
       }
       if (nested.connectOrCreate != null) {
         final entry = nested.connectOrCreate!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: entry.where.toPredicates(),
+          ),
         );
-        final relatedRecord =
-            related ??
+        final relatedRecord = related ??
             await tx.user._delegate.create(
               CreateQuery(
                 model: 'User',
@@ -7304,72 +5390,60 @@ class ProfileDelegate {
                 nestedCreates: entry.create.toNestedCreates(),
               ),
             );
-        await tx._client
-            .model('Profile')
-            .update(
-              UpdateQuery(
-                model: 'Profile',
-                where: predicates,
-                data: <String, Object?>{
-                  'userId': _requireRecordValue(
-                    relatedRecord,
-                    'id',
-                    'nested direct relation write on Profile.user',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('Profile').update(
+          UpdateQuery(
+            model: 'Profile',
+            where: predicates,
+            data: <String, Object?>{
+              'userId': _requireRecordValue(relatedRecord, 'id', 'nested direct relation write on Profile.user'),
+            },
+          ),
+        );
       }
       if (nested.disconnect) {
-        await tx._client
-            .model('Profile')
-            .update(
-              UpdateQuery(
-                model: 'Profile',
-                where: predicates,
-                data: <String, Object?>{'userId': null},
-              ),
-            );
+        await tx._client.model('Profile').update(
+          UpdateQuery(
+            model: 'Profile',
+            where: predicates,
+            data: <String, Object?>{
+              'userId': null,
+            },
+          ),
+        );
       }
     }
   }
+
 
   Future<Profile> delete({
     required ProfileWhereUniqueInput where,
     ProfileInclude? include,
     ProfileSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'Profile',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(Profile.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'Profile',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(Profile.fromRecord);
   }
 
-  Future<int> deleteMany({required ProfileWhereInput where}) {
+  Future<int> deleteMany({
+    required ProfileWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'Profile', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'Profile',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class ProfileWhereInput {
-  const ProfileWhereInput({
-    this.AND = const <ProfileWhereInput>[],
-    this.OR = const <ProfileWhereInput>[],
-    this.NOT = const <ProfileWhereInput>[],
-    this.id,
-    this.idFilter,
-    this.userId,
-    this.userIdFilter,
-    this.userIs,
-    this.userIsNot,
-  });
+  const ProfileWhereInput({this.AND = const <ProfileWhereInput>[], this.OR = const <ProfileWhereInput>[], this.NOT = const <ProfileWhereInput>[], this.id, this.idFilter, this.userId, this.userIdFilter, this.userIs, this.userIsNot, });
 
   final List<ProfileWhereInput> AND;
   final List<ProfileWhereInput> OR;
@@ -7384,106 +5458,38 @@ class ProfileWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (id != null) {
-      predicates.add(
-        QueryPredicate(field: 'id', operator: 'equals', value: id),
-      );
+      predicates.add(QueryPredicate(field: 'id', operator: 'equals', value: id));
     }
     if (idFilter != null) {
       predicates.addAll(idFilter!.toPredicates('id'));
     }
     if (userId != null) {
-      predicates.add(
-        QueryPredicate(field: 'userId', operator: 'equals', value: userId),
-      );
+      predicates.add(QueryPredicate(field: 'userId', operator: 'equals', value: userId));
     }
     if (userIdFilter != null) {
       predicates.addAll(userIdFilter!.toPredicates('userId'));
     }
     if (userIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'user',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'user',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'userId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['userId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: userIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'user', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']), predicates: userIs!.toPredicates())));
     }
     if (userIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'user',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'user',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'userId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['userId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: userIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'user', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']), predicates: userIsNot!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class ProfileWhereUniqueInput {
-  const ProfileWhereUniqueInput({this.id, this.userId});
+  const ProfileWhereUniqueInput({this.id, this.userId, });
 
   final int? id;
   final int? userId;
@@ -7501,11 +5507,13 @@ class ProfileWhereUniqueInput {
       ]);
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for ProfileWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for ProfileWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -7520,16 +5528,14 @@ class ProfileWhereUniqueInput {
       matches = record['userId'] == userId;
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for ProfileWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for ProfileWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class ProfileOrderByInput {
-  const ProfileOrderByInput({this.id, this.userId});
+  const ProfileOrderByInput({this.id, this.userId, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -7546,14 +5552,13 @@ class ProfileOrderByInput {
   }
 }
 
-enum ProfileScalarField { id, userId }
+enum ProfileScalarField {
+  id,
+  userId
+}
 
 class ProfileCountAggregateInput {
-  const ProfileCountAggregateInput({
-    this.all = false,
-    this.id = false,
-    this.userId = false,
-  });
+  const ProfileCountAggregateInput({this.all = false, this.id = false, this.userId = false, });
 
   final bool all;
   final bool id;
@@ -7567,15 +5572,12 @@ class ProfileCountAggregateInput {
     if (userId) {
       fields.add('userId');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class ProfileAvgAggregateInput {
-  const ProfileAvgAggregateInput({this.id = false, this.userId = false});
+  const ProfileAvgAggregateInput({this.id = false, this.userId = false, });
 
   final bool id;
   final bool userId;
@@ -7593,7 +5595,7 @@ class ProfileAvgAggregateInput {
 }
 
 class ProfileSumAggregateInput {
-  const ProfileSumAggregateInput({this.id = false, this.userId = false});
+  const ProfileSumAggregateInput({this.id = false, this.userId = false, });
 
   final bool id;
   final bool userId;
@@ -7611,7 +5613,7 @@ class ProfileSumAggregateInput {
 }
 
 class ProfileMinAggregateInput {
-  const ProfileMinAggregateInput({this.id = false, this.userId = false});
+  const ProfileMinAggregateInput({this.id = false, this.userId = false, });
 
   final bool id;
   final bool userId;
@@ -7629,7 +5631,7 @@ class ProfileMinAggregateInput {
 }
 
 class ProfileMaxAggregateInput {
-  const ProfileMaxAggregateInput({this.id = false, this.userId = false});
+  const ProfileMaxAggregateInput({this.id = false, this.userId = false, });
 
   final bool id;
   final bool userId;
@@ -7647,15 +5649,13 @@ class ProfileMaxAggregateInput {
 }
 
 class ProfileCountAggregateResult {
-  const ProfileCountAggregateResult({this.all, this.id, this.userId});
+  const ProfileCountAggregateResult({this.all, this.id, this.userId, });
 
   final int? all;
   final int? id;
   final int? userId;
 
-  factory ProfileCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
+  factory ProfileCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
     return ProfileCountAggregateResult(
       all: result.all,
       id: result.fields['id'],
@@ -7665,7 +5665,7 @@ class ProfileCountAggregateResult {
 }
 
 class ProfileAvgAggregateResult {
-  const ProfileAvgAggregateResult({this.id, this.userId});
+  const ProfileAvgAggregateResult({this.id, this.userId, });
 
   final double? id;
   final double? userId;
@@ -7679,7 +5679,7 @@ class ProfileAvgAggregateResult {
 }
 
 class ProfileSumAggregateResult {
-  const ProfileSumAggregateResult({this.id, this.userId});
+  const ProfileSumAggregateResult({this.id, this.userId, });
 
   final int? id;
   final int? userId;
@@ -7693,7 +5693,7 @@ class ProfileSumAggregateResult {
 }
 
 class ProfileMinAggregateResult {
-  const ProfileMinAggregateResult({this.id, this.userId});
+  const ProfileMinAggregateResult({this.id, this.userId, });
 
   final int? id;
   final int? userId;
@@ -7707,7 +5707,7 @@ class ProfileMinAggregateResult {
 }
 
 class ProfileMaxAggregateResult {
-  const ProfileMaxAggregateResult({this.id, this.userId});
+  const ProfileMaxAggregateResult({this.id, this.userId, });
 
   final int? id;
   final int? userId;
@@ -7737,27 +5737,17 @@ class ProfileAggregateResult {
 
   factory ProfileAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return ProfileAggregateResult(
-      count: result.count == null
-          ? null
-          : ProfileCountAggregateResult.fromQueryCountResult(result.count!),
-      avg: result.avg == null
-          ? null
-          : ProfileAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : ProfileSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : ProfileMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : ProfileMaxAggregateResult.fromMap(result.max!),
+      count: result.count == null ? null : ProfileCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : ProfileAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : ProfileSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : ProfileMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : ProfileMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class ProfileGroupByHavingInput {
-  const ProfileGroupByHavingInput({this.id, this.userId});
+  const ProfileGroupByHavingInput({this.id, this.userId, });
 
   final NumericAggregatesFilter? id;
   final NumericAggregatesFilter? userId;
@@ -7775,7 +5765,7 @@ class ProfileGroupByHavingInput {
 }
 
 class ProfileCountAggregateOrderByInput {
-  const ProfileCountAggregateOrderByInput({this.all, this.id, this.userId});
+  const ProfileCountAggregateOrderByInput({this.all, this.id, this.userId, });
 
   final SortOrder? all;
   final SortOrder? id;
@@ -7784,34 +5774,20 @@ class ProfileCountAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
     }
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileAvgAggregateOrderByInput {
-  const ProfileAvgAggregateOrderByInput({this.id, this.userId});
+  const ProfileAvgAggregateOrderByInput({this.id, this.userId, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -7819,29 +5795,17 @@ class ProfileAvgAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileSumAggregateOrderByInput {
-  const ProfileSumAggregateOrderByInput({this.id, this.userId});
+  const ProfileSumAggregateOrderByInput({this.id, this.userId, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -7849,29 +5813,17 @@ class ProfileSumAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileMinAggregateOrderByInput {
-  const ProfileMinAggregateOrderByInput({this.id, this.userId});
+  const ProfileMinAggregateOrderByInput({this.id, this.userId, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -7879,29 +5831,17 @@ class ProfileMinAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileMaxAggregateOrderByInput {
-  const ProfileMaxAggregateOrderByInput({this.id, this.userId});
+  const ProfileMaxAggregateOrderByInput({this.id, this.userId, });
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -7909,37 +5849,17 @@ class ProfileMaxAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'id', direction: id!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class ProfileGroupByOrderByInput {
-  const ProfileGroupByOrderByInput({
-    this.id,
-    this.userId,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const ProfileGroupByOrderByInput({this.id, this.userId, this.count, this.avg, this.sum, this.min, this.max});
 
   final SortOrder? id;
   final SortOrder? userId;
@@ -7977,15 +5897,7 @@ class ProfileGroupByOrderByInput {
 }
 
 class ProfileGroupByRow {
-  const ProfileGroupByRow({
-    this.id,
-    this.userId,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const ProfileGroupByRow({this.id, this.userId, this.count, this.avg, this.sum, this.min, this.max});
 
   final int? id;
   final int? userId;
@@ -7999,46 +5911,24 @@ class ProfileGroupByRow {
     return ProfileGroupByRow(
       id: row.group['id'] as int?,
       userId: row.group['userId'] as int?,
-      count: row.aggregates.count == null
-          ? null
-          : ProfileCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : ProfileAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : ProfileSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : ProfileMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : ProfileMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: row.aggregates.count == null ? null : ProfileCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : ProfileAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : ProfileSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : ProfileMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : ProfileMaxAggregateResult.fromMap(row.aggregates.max!),
     );
   }
 }
 
 class ProfileInclude {
-  const ProfileInclude({this.user = false});
+  const ProfileInclude({this.user = false, });
 
   final bool user;
 
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (user) {
-      relations['user'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'user',
-          targetModel: 'User',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'userId',
-          targetKeyField: 'id',
-          localKeyFields: const <String>['userId'],
-          targetKeyFields: const <String>['id'],
-        ),
-      );
+      relations['user'] = QueryIncludeEntry(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']));
     }
     if (relations.isEmpty) {
       return null;
@@ -8048,7 +5938,7 @@ class ProfileInclude {
 }
 
 class ProfileSelect {
-  const ProfileSelect({this.id = false, this.userId = false});
+  const ProfileSelect({this.id = false, this.userId = false, });
 
   final bool id;
   final bool userId;
@@ -8069,7 +5959,7 @@ class ProfileSelect {
 }
 
 class ProfileCreateInput {
-  const ProfileCreateInput({required this.id, this.userId, this.user});
+  const ProfileCreateInput({required this.id, this.userId, this.user, });
 
   final int id;
   final int? userId;
@@ -8086,35 +5976,21 @@ class ProfileCreateInput {
 
   List<List<QueryPredicate>> toUniqueSelectorPredicates() {
     final selectors = <List<QueryPredicate>>[];
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'id', operator: 'equals', value: id),
-    ]);
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'id', operator: 'equals', value: id),
+      ]);
     if (userId != null) {
       selectors.add(<QueryPredicate>[
         QueryPredicate(field: 'userId', operator: 'equals', value: userId),
       ]);
     }
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (user != null) {
-      writes.addAll(
-        user!.toRelationWrites(
-          QueryRelation(
-            field: 'user',
-            targetModel: 'User',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'userId',
-            targetKeyField: 'id',
-            localKeyFields: const <String>['userId'],
-            targetKeyFields: const <String>['id'],
-          ),
-        ),
-      );
+      writes.addAll(user!.toRelationWrites(QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id'])));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
@@ -8124,12 +6000,14 @@ class ProfileCreateInput {
   }
 
   ProfileUpdateInput toDeferredRelationUpdateInput() {
-    return ProfileUpdateInput(user: user?.toDeferredUpdateWrite());
+    return ProfileUpdateInput(
+      user: user?.toDeferredUpdateWrite(),
+    );
   }
 }
 
 class ProfileUpdateInput {
-  const ProfileUpdateInput({this.userId, this.userIdOps, this.user});
+  const ProfileUpdateInput({this.userId, this.userIdOps, this.user, });
 
   final int? userId;
   final IntFieldUpdateOperationsInput? userIdOps;
@@ -8146,9 +6024,7 @@ class ProfileUpdateInput {
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
     if (userId != null && userIdOps != null) {
-      throw StateError(
-        'Only one of userId or userIdOps may be provided for ProfileUpdateInput.userId.',
-      );
+      throw StateError('Only one of userId or userIdOps may be provided for ProfileUpdateInput.userId.');
     }
     if (userId != null) {
       data['userId'] = userId;
@@ -8156,14 +6032,10 @@ class ProfileUpdateInput {
     if (userIdOps != null) {
       final ops = userIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for ProfileUpdateInput.userId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for ProfileUpdateInput.userId.');
       }
       if (ops.hasComputedUpdate) {
-        throw StateError(
-          'Computed scalar update operators for ProfileUpdateInput.userId require the current record value before they can be converted to raw update data.',
-        );
+        throw StateError('Computed scalar update operators for ProfileUpdateInput.userId require the current record value before they can be converted to raw update data.');
       }
       if (ops.hasSet) {
         data['userId'] = ops.set as int?;
@@ -8175,9 +6047,7 @@ class ProfileUpdateInput {
   Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
     final data = <String, Object?>{};
     if (userId != null && userIdOps != null) {
-      throw StateError(
-        'Only one of userId or userIdOps may be provided for ProfileUpdateInput.userId.',
-      );
+      throw StateError('Only one of userId or userIdOps may be provided for ProfileUpdateInput.userId.');
     }
     if (userId != null) {
       data['userId'] = userId;
@@ -8185,9 +6055,7 @@ class ProfileUpdateInput {
     if (userIdOps != null) {
       final ops = userIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for ProfileUpdateInput.userId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for ProfileUpdateInput.userId.');
       }
       if (ops.hasSet) {
         data['userId'] = ops.set as int?;
@@ -8195,17 +6063,13 @@ class ProfileUpdateInput {
         final currentValue = record['userId'] as int?;
         if (ops.increment != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot increment ProfileUpdateInput.userId because the current value is null.',
-            );
+            throw StateError('Cannot increment ProfileUpdateInput.userId because the current value is null.');
           }
           data['userId'] = currentValue + ops.increment!;
         }
         if (ops.decrement != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot decrement ProfileUpdateInput.userId because the current value is null.',
-            );
+            throw StateError('Cannot decrement ProfileUpdateInput.userId because the current value is null.');
           }
           data['userId'] = currentValue - ops.decrement!;
         }
@@ -8216,7 +6080,7 @@ class ProfileUpdateInput {
 }
 
 class ProfileCreateWithoutUserInput {
-  const ProfileCreateWithoutUserInput({required this.id});
+  const ProfileCreateWithoutUserInput({required this.id, });
 
   final int id;
 
@@ -8230,41 +6094,26 @@ class ProfileCreateWithoutUserInput {
 }
 
 class UserConnectOrCreateWithoutProfileInput {
-  const UserConnectOrCreateWithoutProfileInput({
-    required this.where,
-    required this.create,
-  });
+  const UserConnectOrCreateWithoutProfileInput({required this.where, required this.create});
 
   final UserWhereUniqueInput where;
   final UserCreateWithoutProfileInput create;
 }
 
 class UserCreateNestedOneWithoutProfileInput {
-  const UserCreateNestedOneWithoutProfileInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserCreateNestedOneWithoutProfileInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserCreateWithoutProfileInput? create;
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutProfileInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutProfileInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutProfileInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -8278,40 +6127,25 @@ class UserCreateNestedOneWithoutProfileInput {
   }
 
   UserUpdateNestedOneWithoutProfileInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutProfileInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutProfileInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return UserUpdateNestedOneWithoutProfileInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return UserUpdateNestedOneWithoutProfileInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class UserUpdateNestedOneWithoutProfileInput {
-  const UserUpdateNestedOneWithoutProfileInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserUpdateNestedOneWithoutProfileInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutProfileInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 class GroupDelegate {
@@ -8325,16 +6159,14 @@ class GroupDelegate {
     GroupInclude? include,
     GroupSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'Group',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then((record) => record == null ? null : Group.fromRecord(record));
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'Group',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : Group.fromRecord(record));
   }
 
   Future<Group?> findFirst({
@@ -8347,44 +6179,22 @@ class GroupDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'Group',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'Group',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then((record) => record == null ? null : Group.fromRecord(record));
+      ),
+    ).then((record) => record == null ? null : Group.fromRecord(record));
   }
 
   Future<List<Group>> findMany({
@@ -8398,43 +6208,23 @@ class GroupDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'Group',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'Group',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) => records.map(Group.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(Group.fromRecord).toList(growable: false));
   }
 
   Future<int> count({GroupWhereInput? where}) {
@@ -8457,71 +6247,20 @@ class GroupDelegate {
     GroupMinAggregateInput? min,
     GroupMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'Group',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(GroupAggregateResult.fromQueryResult);
-  }
-
-  Future<List<GroupGroupByRow>> groupBy({
-    required List<GroupScalarField> by,
-    GroupWhereInput? where,
-    List<GroupGroupByOrderByInput>? orderBy,
-    GroupGroupByHavingInput? having,
-    int? skip,
-    int? take,
-    GroupCountAggregateInput? count,
-    GroupAvgAggregateInput? avg,
-    GroupSumAggregateInput? sum,
-    GroupMinAggregateInput? min,
-    GroupMaxAggregateInput? max,
-  }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'Group',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(GroupGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'Group',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(GroupAggregateResult.fromQueryResult);
   }
 
   Future<Group> create({
@@ -8549,26 +6288,26 @@ class GroupDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Group');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Group',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'Group', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -8603,7 +6342,10 @@ class GroupDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Group');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Group', where: predicates),
+        FindUniqueQuery(
+          model: 'Group',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in Group.');
@@ -8633,7 +6375,10 @@ class GroupDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Group');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Group', where: predicates),
+        FindUniqueQuery(
+          model: 'Group',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -8664,7 +6409,10 @@ class GroupDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('Group');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'Group', where: predicates),
+          FindManyQuery(
+            model: 'Group',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -8680,77 +6428,12 @@ class GroupDelegate {
       });
     }
     return _delegate.updateMany(
-      UpdateManyQuery(model: 'Group', where: predicates, data: data.toData()),
-    );
-  }
-
-  Future<List<Group>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required GroupWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
+      UpdateManyQuery(
         model: 'Group',
         where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
+        data: data.toData(),
       ),
     );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <Group>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords.map(Group.fromRecord).toList(growable: false);
-    }
-    final projectedRecords = <Group>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'Group',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'Group.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(Group.fromRecord(projected));
-    }
-    return List<Group>.unmodifiable(projectedRecords);
   }
 
   Future<Group> _performCreateWithRelationWrites({
@@ -8788,9 +6471,7 @@ class GroupDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Group create branch could not reload the created record by primary key.',
-      );
+      throw StateError('Group create branch could not reload the created record by primary key.');
     }
     return Group.fromRecord(projected);
   }
@@ -8832,9 +6513,7 @@ class GroupDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Group update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('Group update branch could not reload the updated record for the provided unique selector.');
     }
     return Group.fromRecord(projected);
   }
@@ -8849,95 +6528,65 @@ class GroupDelegate {
       // No nested writes for users.
     } else {
       final nested = data.users!;
-      final relation = QueryRelation(
-        field: 'users',
-        targetModel: 'User',
-        cardinality: QueryRelationCardinality.many,
-        localKeyField: 'id',
-        targetKeyField: 'id',
-        localKeyFields: const <String>['id'],
-        targetKeyFields: const <String>['id'],
-        storageKind: QueryRelationStorageKind.implicitManyToMany,
-        sourceModel: 'Group',
-        inverseField: 'groups',
-      );
+      final relation = QueryRelation(field: 'users', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'Group', inverseField: 'groups');
       final parentKeyValues = <String, Object?>{
-        'id': _requireRecordValue(
-          existing,
-          'id',
-          'nested implicit many-to-many write on Group.users',
-        ),
+        'id': _requireRecordValue(existing, 'id', 'nested implicit many-to-many write on Group.users'),
       };
-      if (nested.set != null &&
-          (nested.connect.isNotEmpty ||
-              nested.disconnect.isNotEmpty ||
-              nested.connectOrCreate.isNotEmpty)) {
-        throw StateError(
-          'Only set or connect/disconnect/connectOrCreate may be provided for GroupUpdateInput.users.',
-        );
+      if (nested.set != null && (nested.connect.isNotEmpty || nested.disconnect.isNotEmpty || nested.connectOrCreate.isNotEmpty)) {
+        throw StateError('Only set or connect/disconnect/connectOrCreate may be provided for GroupUpdateInput.users.');
       }
       if (nested.set != null) {
-        await tx._client
-            .model('Group')
-            .removeImplicitManyToManyLinks(
-              relation: relation,
-              sourceKeyValues: parentKeyValues,
-            );
+        await tx._client.model('Group').removeImplicitManyToManyLinks(
+          relation: relation,
+          sourceKeyValues: parentKeyValues,
+        );
         for (final selector in nested.set!) {
           final related = await tx.user._delegate.findUnique(
-            FindUniqueQuery(model: 'User', where: selector.toPredicates()),
+            FindUniqueQuery(
+              model: 'User',
+              where: selector.toPredicates(),
+            ),
           );
           if (related == null) {
-            throw StateError(
-              'No related User record found for nested set on Group.users.',
-            );
+            throw StateError('No related User record found for nested set on Group.users.');
           }
           final targetKeyValues = <String, Object?>{
-            'id': _requireRecordValue(
-              related,
-              'id',
-              'nested implicit many-to-many write on Group.users',
-            ),
+            'id': _requireRecordValue(related, 'id', 'nested implicit many-to-many write on Group.users'),
           };
-          await tx._client
-              .model('Group')
-              .addImplicitManyToManyLink(
-                relation: relation,
-                sourceKeyValues: parentKeyValues,
-                targetKeyValues: targetKeyValues,
-              );
+          await tx._client.model('Group').addImplicitManyToManyLink(
+            relation: relation,
+            sourceKeyValues: parentKeyValues,
+            targetKeyValues: targetKeyValues,
+          );
         }
       }
       for (final selector in nested.connect) {
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related User record found for nested connect on Group.users.',
-          );
+          throw StateError('No related User record found for nested connect on Group.users.');
         }
         final targetKeyValues = <String, Object?>{
-          'id': _requireRecordValue(
-            related,
-            'id',
-            'nested implicit many-to-many write on Group.users',
-          ),
+          'id': _requireRecordValue(related, 'id', 'nested implicit many-to-many write on Group.users'),
         };
-        await tx._client
-            .model('Group')
-            .addImplicitManyToManyLink(
-              relation: relation,
-              sourceKeyValues: parentKeyValues,
-              targetKeyValues: targetKeyValues,
-            );
+        await tx._client.model('Group').addImplicitManyToManyLink(
+          relation: relation,
+          sourceKeyValues: parentKeyValues,
+          targetKeyValues: targetKeyValues,
+        );
       }
       for (final entry in nested.connectOrCreate) {
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: entry.where.toPredicates(),
+          ),
         );
-        final relatedRecord =
-            related ??
+        final relatedRecord = related ??
             await tx.user._delegate.create(
               CreateQuery(
                 model: 'User',
@@ -8946,82 +6595,66 @@ class GroupDelegate {
               ),
             );
         final targetKeyValues = <String, Object?>{
-          'id': _requireRecordValue(
-            relatedRecord,
-            'id',
-            'nested implicit many-to-many write on Group.users',
-          ),
+          'id': _requireRecordValue(relatedRecord, 'id', 'nested implicit many-to-many write on Group.users'),
         };
-        await tx._client
-            .model('Group')
-            .addImplicitManyToManyLink(
-              relation: relation,
-              sourceKeyValues: parentKeyValues,
-              targetKeyValues: targetKeyValues,
-            );
+        await tx._client.model('Group').addImplicitManyToManyLink(
+          relation: relation,
+          sourceKeyValues: parentKeyValues,
+          targetKeyValues: targetKeyValues,
+        );
       }
       for (final selector in nested.disconnect) {
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related User record found for nested disconnect on Group.users.',
-          );
+          throw StateError('No related User record found for nested disconnect on Group.users.');
         }
         final targetKeyValues = <String, Object?>{
-          'id': _requireRecordValue(
-            related,
-            'id',
-            'nested implicit many-to-many write on Group.users',
-          ),
+          'id': _requireRecordValue(related, 'id', 'nested implicit many-to-many write on Group.users'),
         };
-        await tx._client
-            .model('Group')
-            .removeImplicitManyToManyLinks(
-              relation: relation,
-              sourceKeyValues: parentKeyValues,
-              targetKeyValues: targetKeyValues,
-            );
+        await tx._client.model('Group').removeImplicitManyToManyLinks(
+          relation: relation,
+          sourceKeyValues: parentKeyValues,
+          targetKeyValues: targetKeyValues,
+        );
       }
     }
   }
+
 
   Future<Group> delete({
     required GroupWhereUniqueInput where,
     GroupInclude? include,
     GroupSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'Group',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(Group.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'Group',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(Group.fromRecord);
   }
 
-  Future<int> deleteMany({required GroupWhereInput where}) {
+  Future<int> deleteMany({
+    required GroupWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'Group', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'Group',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class GroupWhereInput {
-  const GroupWhereInput({
-    this.AND = const <GroupWhereInput>[],
-    this.OR = const <GroupWhereInput>[],
-    this.NOT = const <GroupWhereInput>[],
-    this.id,
-    this.idFilter,
-    this.usersSome,
-    this.usersNone,
-    this.usersEvery,
-  });
+  const GroupWhereInput({this.AND = const <GroupWhereInput>[], this.OR = const <GroupWhereInput>[], this.NOT = const <GroupWhereInput>[], this.id, this.idFilter, this.usersSome, this.usersNone, this.usersEvery, });
 
   final List<GroupWhereInput> AND;
   final List<GroupWhereInput> OR;
@@ -9035,127 +6668,35 @@ class GroupWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (id != null) {
-      predicates.add(
-        QueryPredicate(field: 'id', operator: 'equals', value: id),
-      );
+      predicates.add(QueryPredicate(field: 'id', operator: 'equals', value: id));
     }
     if (idFilter != null) {
       predicates.addAll(idFilter!.toPredicates('id'));
     }
     if (usersSome != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'users',
-          operator: 'relationSome',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'users',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['id'],
-              storageKind: QueryRelationStorageKind.implicitManyToMany,
-              sourceModel: 'Group',
-              inverseField: 'groups',
-            ),
-            predicates: usersSome!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'users', operator: 'relationSome', value: QueryRelationFilter(relation: QueryRelation(field: 'users', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'Group', inverseField: 'groups'), predicates: usersSome!.toPredicates())));
     }
     if (usersNone != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'users',
-          operator: 'relationNone',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'users',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['id'],
-              storageKind: QueryRelationStorageKind.implicitManyToMany,
-              sourceModel: 'Group',
-              inverseField: 'groups',
-            ),
-            predicates: usersNone!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'users', operator: 'relationNone', value: QueryRelationFilter(relation: QueryRelation(field: 'users', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'Group', inverseField: 'groups'), predicates: usersNone!.toPredicates())));
     }
     if (usersEvery != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'users',
-          operator: 'relationEvery',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'users',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.many,
-              localKeyField: 'id',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['id'],
-              targetKeyFields: const <String>['id'],
-              storageKind: QueryRelationStorageKind.implicitManyToMany,
-              sourceModel: 'Group',
-              inverseField: 'groups',
-            ),
-            predicates: usersEvery!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'users', operator: 'relationEvery', value: QueryRelationFilter(relation: QueryRelation(field: 'users', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'Group', inverseField: 'groups'), predicates: usersEvery!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class GroupWhereUniqueInput {
-  const GroupWhereUniqueInput({this.id});
+  const GroupWhereUniqueInput({this.id, });
 
   final int? id;
 
@@ -9167,11 +6708,13 @@ class GroupWhereUniqueInput {
       ]);
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for GroupWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for GroupWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -9182,16 +6725,14 @@ class GroupWhereUniqueInput {
       matches = record['id'] == id;
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for GroupWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for GroupWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class GroupOrderByInput {
-  const GroupOrderByInput({this.id});
+  const GroupOrderByInput({this.id, });
 
   final SortOrder? id;
 
@@ -9204,10 +6745,12 @@ class GroupOrderByInput {
   }
 }
 
-enum GroupScalarField { id }
+enum GroupScalarField {
+  id
+}
 
 class GroupCountAggregateInput {
-  const GroupCountAggregateInput({this.all = false, this.id = false});
+  const GroupCountAggregateInput({this.all = false, this.id = false, });
 
   final bool all;
   final bool id;
@@ -9217,15 +6760,12 @@ class GroupCountAggregateInput {
     if (id) {
       fields.add('id');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class GroupAvgAggregateInput {
-  const GroupAvgAggregateInput({this.id = false});
+  const GroupAvgAggregateInput({this.id = false, });
 
   final bool id;
 
@@ -9239,7 +6779,7 @@ class GroupAvgAggregateInput {
 }
 
 class GroupSumAggregateInput {
-  const GroupSumAggregateInput({this.id = false});
+  const GroupSumAggregateInput({this.id = false, });
 
   final bool id;
 
@@ -9253,7 +6793,7 @@ class GroupSumAggregateInput {
 }
 
 class GroupMinAggregateInput {
-  const GroupMinAggregateInput({this.id = false});
+  const GroupMinAggregateInput({this.id = false, });
 
   final bool id;
 
@@ -9267,7 +6807,7 @@ class GroupMinAggregateInput {
 }
 
 class GroupMaxAggregateInput {
-  const GroupMaxAggregateInput({this.id = false});
+  const GroupMaxAggregateInput({this.id = false, });
 
   final bool id;
 
@@ -9281,55 +6821,64 @@ class GroupMaxAggregateInput {
 }
 
 class GroupCountAggregateResult {
-  const GroupCountAggregateResult({this.all, this.id});
+  const GroupCountAggregateResult({this.all, this.id, });
 
   final int? all;
   final int? id;
 
-  factory GroupCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
-    return GroupCountAggregateResult(all: result.all, id: result.fields['id']);
+  factory GroupCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
+    return GroupCountAggregateResult(
+      all: result.all,
+      id: result.fields['id'],
+    );
   }
 }
 
 class GroupAvgAggregateResult {
-  const GroupAvgAggregateResult({this.id});
+  const GroupAvgAggregateResult({this.id, });
 
   final double? id;
 
   factory GroupAvgAggregateResult.fromMap(Map<String, double?> values) {
-    return GroupAvgAggregateResult(id: _asDouble(values['id']));
+    return GroupAvgAggregateResult(
+      id: _asDouble(values['id']),
+    );
   }
 }
 
 class GroupSumAggregateResult {
-  const GroupSumAggregateResult({this.id});
+  const GroupSumAggregateResult({this.id, });
 
   final int? id;
 
   factory GroupSumAggregateResult.fromMap(Map<String, num?> values) {
-    return GroupSumAggregateResult(id: values['id']?.toInt());
+    return GroupSumAggregateResult(
+      id: values['id']?.toInt(),
+    );
   }
 }
 
 class GroupMinAggregateResult {
-  const GroupMinAggregateResult({this.id});
+  const GroupMinAggregateResult({this.id, });
 
   final int? id;
 
   factory GroupMinAggregateResult.fromMap(Map<String, Object?> values) {
-    return GroupMinAggregateResult(id: values['id'] as int?);
+    return GroupMinAggregateResult(
+      id: values['id'] as int?,
+    );
   }
 }
 
 class GroupMaxAggregateResult {
-  const GroupMaxAggregateResult({this.id});
+  const GroupMaxAggregateResult({this.id, });
 
   final int? id;
 
   factory GroupMaxAggregateResult.fromMap(Map<String, Object?> values) {
-    return GroupMaxAggregateResult(id: values['id'] as int?);
+    return GroupMaxAggregateResult(
+      id: values['id'] as int?,
+    );
   }
 }
 
@@ -9350,249 +6899,24 @@ class GroupAggregateResult {
 
   factory GroupAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return GroupAggregateResult(
-      count: result.count == null
-          ? null
-          : GroupCountAggregateResult.fromQueryCountResult(result.count!),
-      avg: result.avg == null
-          ? null
-          : GroupAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : GroupSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : GroupMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : GroupMaxAggregateResult.fromMap(result.max!),
-    );
-  }
-}
-
-class GroupGroupByHavingInput {
-  const GroupGroupByHavingInput({this.id});
-
-  final NumericAggregatesFilter? id;
-
-  List<QueryAggregatePredicate> toAggregatePredicates() {
-    final predicates = <QueryAggregatePredicate>[];
-    if (id != null) {
-      predicates.addAll(id!.toPredicates('id'));
-    }
-    return List<QueryAggregatePredicate>.unmodifiable(predicates);
-  }
-}
-
-class GroupCountAggregateOrderByInput {
-  const GroupCountAggregateOrderByInput({this.all, this.id});
-
-  final SortOrder? all;
-  final SortOrder? id;
-
-  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
-    final orderings = <GroupByOrderBy>[];
-    if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
-    }
-    if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
-    }
-    return List<GroupByOrderBy>.unmodifiable(orderings);
-  }
-}
-
-class GroupAvgAggregateOrderByInput {
-  const GroupAvgAggregateOrderByInput({this.id});
-
-  final SortOrder? id;
-
-  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
-    final orderings = <GroupByOrderBy>[];
-    if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
-    }
-    return List<GroupByOrderBy>.unmodifiable(orderings);
-  }
-}
-
-class GroupSumAggregateOrderByInput {
-  const GroupSumAggregateOrderByInput({this.id});
-
-  final SortOrder? id;
-
-  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
-    final orderings = <GroupByOrderBy>[];
-    if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
-    }
-    return List<GroupByOrderBy>.unmodifiable(orderings);
-  }
-}
-
-class GroupMinAggregateOrderByInput {
-  const GroupMinAggregateOrderByInput({this.id});
-
-  final SortOrder? id;
-
-  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
-    final orderings = <GroupByOrderBy>[];
-    if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
-    }
-    return List<GroupByOrderBy>.unmodifiable(orderings);
-  }
-}
-
-class GroupMaxAggregateOrderByInput {
-  const GroupMaxAggregateOrderByInput({this.id});
-
-  final SortOrder? id;
-
-  List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
-    final orderings = <GroupByOrderBy>[];
-    if (id != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'id',
-          direction: id!,
-        ),
-      );
-    }
-    return List<GroupByOrderBy>.unmodifiable(orderings);
-  }
-}
-
-class GroupGroupByOrderByInput {
-  const GroupGroupByOrderByInput({
-    this.id,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
-
-  final SortOrder? id;
-  final GroupCountAggregateOrderByInput? count;
-  final GroupAvgAggregateOrderByInput? avg;
-  final GroupSumAggregateOrderByInput? sum;
-  final GroupMinAggregateOrderByInput? min;
-  final GroupMaxAggregateOrderByInput? max;
-
-  List<GroupByOrderBy> toGroupByOrderBy() {
-    final orderings = <GroupByOrderBy>[];
-    if (id != null) {
-      orderings.add(GroupByOrderBy.field(field: 'id', direction: id!));
-    }
-    if (count != null) {
-      orderings.addAll(count!.toGroupByOrderBy(QueryAggregateFunction.count));
-    }
-    if (avg != null) {
-      orderings.addAll(avg!.toGroupByOrderBy(QueryAggregateFunction.avg));
-    }
-    if (sum != null) {
-      orderings.addAll(sum!.toGroupByOrderBy(QueryAggregateFunction.sum));
-    }
-    if (min != null) {
-      orderings.addAll(min!.toGroupByOrderBy(QueryAggregateFunction.min));
-    }
-    if (max != null) {
-      orderings.addAll(max!.toGroupByOrderBy(QueryAggregateFunction.max));
-    }
-    return List<GroupByOrderBy>.unmodifiable(orderings);
-  }
-}
-
-class GroupGroupByRow {
-  const GroupGroupByRow({
-    this.id,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
-
-  final int? id;
-  final GroupCountAggregateResult? count;
-  final GroupAvgAggregateResult? avg;
-  final GroupSumAggregateResult? sum;
-  final GroupMinAggregateResult? min;
-  final GroupMaxAggregateResult? max;
-
-  factory GroupGroupByRow.fromQueryResultRow(GroupByQueryResultRow row) {
-    return GroupGroupByRow(
-      id: row.group['id'] as int?,
-      count: row.aggregates.count == null
-          ? null
-          : GroupCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : GroupAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : GroupSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : GroupMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : GroupMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: result.count == null ? null : GroupCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : GroupAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : GroupSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : GroupMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : GroupMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class GroupInclude {
-  const GroupInclude({this.users = false});
+  const GroupInclude({this.users = false, });
 
   final bool users;
 
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (users) {
-      relations['users'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'users',
-          targetModel: 'User',
-          cardinality: QueryRelationCardinality.many,
-          localKeyField: 'id',
-          targetKeyField: 'id',
-          localKeyFields: const <String>['id'],
-          targetKeyFields: const <String>['id'],
-          storageKind: QueryRelationStorageKind.implicitManyToMany,
-          sourceModel: 'Group',
-          inverseField: 'groups',
-        ),
-      );
+      relations['users'] = QueryIncludeEntry(relation: QueryRelation(field: 'users', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'Group', inverseField: 'groups'));
     }
     if (relations.isEmpty) {
       return null;
@@ -9602,7 +6926,7 @@ class GroupInclude {
 }
 
 class GroupSelect {
-  const GroupSelect({this.id = false});
+  const GroupSelect({this.id = false, });
 
   final bool id;
 
@@ -9619,7 +6943,7 @@ class GroupSelect {
 }
 
 class GroupCreateInput {
-  const GroupCreateInput({required this.id, this.users});
+  const GroupCreateInput({required this.id, this.users, });
 
   final int id;
   final UserCreateNestedManyWithoutGroupsInput? users;
@@ -9632,33 +6956,16 @@ class GroupCreateInput {
 
   List<List<QueryPredicate>> toUniqueSelectorPredicates() {
     final selectors = <List<QueryPredicate>>[];
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'id', operator: 'equals', value: id),
-    ]);
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'id', operator: 'equals', value: id),
+      ]);
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (users != null) {
-      writes.addAll(
-        users!.toRelationWrites(
-          QueryRelation(
-            field: 'users',
-            targetModel: 'User',
-            cardinality: QueryRelationCardinality.many,
-            localKeyField: 'id',
-            targetKeyField: 'id',
-            localKeyFields: const <String>['id'],
-            targetKeyFields: const <String>['id'],
-            storageKind: QueryRelationStorageKind.implicitManyToMany,
-            sourceModel: 'Group',
-            inverseField: 'groups',
-          ),
-        ),
-      );
+      writes.addAll(users!.toRelationWrites(QueryRelation(field: 'users', targetModel: 'User', cardinality: QueryRelationCardinality.many, localKeyField: 'id', targetKeyField: 'id', localKeyFields: const <String>['id'], targetKeyFields: const <String>['id'], storageKind: QueryRelationStorageKind.implicitManyToMany, sourceModel: 'Group', inverseField: 'groups')));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
@@ -9668,12 +6975,14 @@ class GroupCreateInput {
   }
 
   GroupUpdateInput toDeferredRelationUpdateInput() {
-    return GroupUpdateInput(users: users?.toDeferredUpdateWrite());
+    return GroupUpdateInput(
+      users: users?.toDeferredUpdateWrite(),
+    );
   }
 }
 
 class GroupUpdateInput {
-  const GroupUpdateInput({this.users});
+  const GroupUpdateInput({this.users, });
 
   final UserUpdateNestedManyWithoutGroupsInput? users;
 
@@ -9697,7 +7006,7 @@ class GroupUpdateInput {
 }
 
 class GroupCreateWithoutUsersInput {
-  const GroupCreateWithoutUsersInput({required this.id});
+  const GroupCreateWithoutUsersInput({required this.id, });
 
   final int id;
 
@@ -9711,23 +7020,14 @@ class GroupCreateWithoutUsersInput {
 }
 
 class UserConnectOrCreateWithoutGroupsInput {
-  const UserConnectOrCreateWithoutGroupsInput({
-    required this.where,
-    required this.create,
-  });
+  const UserConnectOrCreateWithoutGroupsInput({required this.where, required this.create});
 
   final UserWhereUniqueInput where;
   final UserCreateWithoutGroupsInput create;
 }
 
 class UserCreateNestedManyWithoutGroupsInput {
-  const UserCreateNestedManyWithoutGroupsInput({
-    this.create = const <UserCreateWithoutGroupsInput>[],
-    this.connect = const <UserWhereUniqueInput>[],
-    this.disconnect = const <UserWhereUniqueInput>[],
-    this.connectOrCreate = const <UserConnectOrCreateWithoutGroupsInput>[],
-    this.set,
-  });
+  const UserCreateNestedManyWithoutGroupsInput({this.create = const <UserCreateWithoutGroupsInput>[], this.connect = const <UserWhereUniqueInput>[], this.disconnect = const <UserWhereUniqueInput>[], this.connectOrCreate = const <UserConnectOrCreateWithoutGroupsInput>[], this.set});
 
   final List<UserCreateWithoutGroupsInput> create;
   final List<UserWhereUniqueInput> connect;
@@ -9735,11 +7035,7 @@ class UserCreateNestedManyWithoutGroupsInput {
   final List<UserConnectOrCreateWithoutGroupsInput> connectOrCreate;
   final List<UserWhereUniqueInput>? set;
 
-  bool get hasDeferredWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasDeferredWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
     if (create.isEmpty) {
@@ -9757,33 +7053,19 @@ class UserCreateNestedManyWithoutGroupsInput {
     if (!hasDeferredWrites) {
       return null;
     }
-    return UserUpdateNestedManyWithoutGroupsInput(
-      connect: connect,
-      disconnect: disconnect,
-      connectOrCreate: connectOrCreate,
-      set: set,
-    );
+    return UserUpdateNestedManyWithoutGroupsInput(connect: connect, disconnect: disconnect, connectOrCreate: connectOrCreate, set: set);
   }
 }
 
 class UserUpdateNestedManyWithoutGroupsInput {
-  const UserUpdateNestedManyWithoutGroupsInput({
-    this.connect = const <UserWhereUniqueInput>[],
-    this.disconnect = const <UserWhereUniqueInput>[],
-    this.connectOrCreate = const <UserConnectOrCreateWithoutGroupsInput>[],
-    this.set,
-  });
+  const UserUpdateNestedManyWithoutGroupsInput({this.connect = const <UserWhereUniqueInput>[], this.disconnect = const <UserWhereUniqueInput>[], this.connectOrCreate = const <UserConnectOrCreateWithoutGroupsInput>[], this.set});
 
   final List<UserWhereUniqueInput> connect;
   final List<UserWhereUniqueInput> disconnect;
   final List<UserConnectOrCreateWithoutGroupsInput> connectOrCreate;
   final List<UserWhereUniqueInput>? set;
 
-  bool get hasWrites =>
-      connect.isNotEmpty ||
-      disconnect.isNotEmpty ||
-      connectOrCreate.isNotEmpty ||
-      set != null;
+  bool get hasWrites => connect.isNotEmpty || disconnect.isNotEmpty || connectOrCreate.isNotEmpty || set != null;
 }
 
 class MembershipDelegate {
@@ -9797,18 +7079,14 @@ class MembershipDelegate {
     MembershipInclude? include,
     MembershipSelect? select,
   }) {
-    return _delegate
-        .findUnique(
-          FindUniqueQuery(
-            model: 'Membership',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(
-          (record) => record == null ? null : Membership.fromRecord(record),
-        );
+    return _delegate.findUnique(
+      FindUniqueQuery(
+        model: 'Membership',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then((record) => record == null ? null : Membership.fromRecord(record));
   }
 
   Future<Membership?> findFirst({
@@ -9821,46 +7099,22 @@ class MembershipDelegate {
     int? skip,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      final records = await _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findFirst(
+      FindFirstQuery(
+        model: 'Membership',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
-        take: 1,
-      );
-      if (records.isEmpty) {
-        return null;
-      }
-      return records.first;
-    }
-    return _delegate
-        .findFirst(
-          FindFirstQuery(
-            model: 'Membership',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-          ),
-        )
-        .then(
-          (record) => record == null ? null : Membership.fromRecord(record),
-        );
+      ),
+    ).then((record) => record == null ? null : Membership.fromRecord(record));
   }
 
   Future<List<Membership>> findMany({
@@ -9874,44 +7128,23 @@ class MembershipDelegate {
     int? take,
   }) async {
     final predicates = where?.toPredicates() ?? const <QueryPredicate>[];
-    final queryOrderBy =
-        orderBy
-            ?.expand((entry) => entry.toQueryOrderBy())
-            .toList(growable: false) ??
-        const <QueryOrderBy>[];
-    final queryDistinct =
-        distinct?.map((field) => field.name).toSet() ?? const <String>{};
+    final queryOrderBy = orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[];
+    final queryDistinct = distinct?.map((field) => field.name).toSet() ?? const <String>{};
     final queryInclude = include?.toQueryInclude();
     final querySelect = select?.toQuerySelect();
-    if (cursor != null) {
-      return _findManyWithCursor(
-        predicates: predicates,
-        cursor: cursor,
+    return _delegate.findMany(
+      FindManyQuery(
+        model: 'Membership',
+        where: predicates,
+        cursor: cursor?.toQueryCursor(),
         orderBy: queryOrderBy,
         distinct: queryDistinct,
         include: queryInclude,
         select: querySelect,
         skip: skip,
         take: take,
-      );
-    }
-    return _delegate
-        .findMany(
-          FindManyQuery(
-            model: 'Membership',
-            where: predicates,
-            orderBy: queryOrderBy,
-            distinct: queryDistinct,
-            include: queryInclude,
-            select: querySelect,
-            skip: skip,
-            take: take,
-          ),
-        )
-        .then(
-          (records) =>
-              records.map(Membership.fromRecord).toList(growable: false),
-        );
+      ),
+    ).then((records) => records.map(Membership.fromRecord).toList(growable: false));
   }
 
   Future<int> count({MembershipWhereInput? where}) {
@@ -9934,27 +7167,20 @@ class MembershipDelegate {
     MembershipMinAggregateInput? min,
     MembershipMaxAggregateInput? max,
   }) {
-    return _delegate
-        .aggregate(
-          AggregateQuery(
-            model: 'Membership',
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toQueryOrderBy())
-                    .toList(growable: false) ??
-                const <QueryOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(MembershipAggregateResult.fromQueryResult);
+    return _delegate.aggregate(
+      AggregateQuery(
+        model: 'Membership',
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toQueryOrderBy()).toList(growable: false) ?? const <QueryOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then(MembershipAggregateResult.fromQueryResult);
   }
 
   Future<List<MembershipGroupByRow>> groupBy({
@@ -9970,35 +7196,22 @@ class MembershipDelegate {
     MembershipMinAggregateInput? min,
     MembershipMaxAggregateInput? max,
   }) {
-    return _delegate
-        .groupBy(
-          GroupByQuery(
-            model: 'Membership',
-            by: by.map((field) => field.name).toList(growable: false),
-            where: where?.toPredicates() ?? const <QueryPredicate>[],
-            having:
-                having?.toAggregatePredicates() ??
-                const <QueryAggregatePredicate>[],
-            orderBy:
-                orderBy
-                    ?.expand((entry) => entry.toGroupByOrderBy())
-                    .toList(growable: false) ??
-                const <GroupByOrderBy>[],
-            skip: skip,
-            take: take,
-            count:
-                count?.toQueryCountSelection() ?? const QueryCountSelection(),
-            avg: avg?.toFields() ?? const <String>{},
-            sum: sum?.toFields() ?? const <String>{},
-            min: min?.toFields() ?? const <String>{},
-            max: max?.toFields() ?? const <String>{},
-          ),
-        )
-        .then(
-          (rows) => rows
-              .map(MembershipGroupByRow.fromQueryResultRow)
-              .toList(growable: false),
-        );
+    return _delegate.groupBy(
+      GroupByQuery(
+        model: 'Membership',
+        by: by.map((field) => field.name).toList(growable: false),
+        where: where?.toPredicates() ?? const <QueryPredicate>[],
+        having: having?.toAggregatePredicates() ?? const <QueryAggregatePredicate>[],
+        orderBy: orderBy?.expand((entry) => entry.toGroupByOrderBy()).toList(growable: false) ?? const <GroupByOrderBy>[],
+        skip: skip,
+        take: take,
+        count: count?.toQueryCountSelection() ?? const QueryCountSelection(),
+        avg: avg?.toFields() ?? const <String>{},
+        sum: sum?.toFields() ?? const <String>{},
+        min: min?.toFields() ?? const <String>{},
+        max: max?.toFields() ?? const <String>{},
+      ),
+    ).then((rows) => rows.map(MembershipGroupByRow.fromQueryResultRow).toList(growable: false));
   }
 
   Future<Membership> create({
@@ -10026,26 +7239,26 @@ class MembershipDelegate {
     return _client.transaction((txClient) async {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Membership');
+      final hasDeferredRelationWrites = data.any(
+        (entry) => entry.hasDeferredRelationWrites,
+      );
+      if (!hasDeferredRelationWrites) {
+        return txDelegate.createMany(
+          CreateManyQuery(
+            model: 'Membership',
+            data: data.map((entry) => entry.toData()).toList(growable: false),
+            skipDuplicates: skipDuplicates,
+          ),
+        );
+      }
       var createdCount = 0;
       for (final entry in data) {
-        if (skipDuplicates) {
-          var duplicateFound = false;
-          for (final selector in entry.toUniqueSelectorPredicates()) {
-            final existing = await txDelegate.findUnique(
-              FindUniqueQuery(model: 'Membership', where: selector),
-            );
-            if (existing != null) {
-              duplicateFound = true;
-              break;
-            }
-          }
-          if (duplicateFound) {
-            continue;
-          }
-        }
         try {
           if (entry.hasDeferredRelationWrites) {
-            await _performCreateWithRelationWrites(tx: tx, data: entry);
+            await _performCreateWithRelationWrites(
+              tx: tx,
+              data: entry,
+            );
           } else {
             await txDelegate.create(
               CreateQuery(
@@ -10080,7 +7293,10 @@ class MembershipDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Membership');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Membership', where: predicates),
+        FindUniqueQuery(
+          model: 'Membership',
+          where: predicates,
+        ),
       );
       if (existing == null) {
         throw StateError('No record found for update in Membership.');
@@ -10110,7 +7326,10 @@ class MembershipDelegate {
       final tx = GeneratedComonOrmClient._fromClient(txClient);
       final txDelegate = tx._client.model('Membership');
       final existing = await txDelegate.findUnique(
-        FindUniqueQuery(model: 'Membership', where: predicates),
+        FindUniqueQuery(
+          model: 'Membership',
+          where: predicates,
+        ),
       );
       if (existing != null) {
         return _performUpdateWithRelationWrites(
@@ -10141,7 +7360,10 @@ class MembershipDelegate {
         final tx = GeneratedComonOrmClient._fromClient(txClient);
         final txDelegate = tx._client.model('Membership');
         final existingRecords = await txDelegate.findMany(
-          FindManyQuery(model: 'Membership', where: predicates),
+          FindManyQuery(
+            model: 'Membership',
+            where: predicates,
+          ),
         );
         var updatedCount = 0;
         for (final record in existingRecords) {
@@ -10163,75 +7385,6 @@ class MembershipDelegate {
         data: data.toData(),
       ),
     );
-  }
-
-  Future<List<Membership>> _findManyWithCursor({
-    required List<QueryPredicate> predicates,
-    required MembershipWhereUniqueInput cursor,
-    required List<QueryOrderBy> orderBy,
-    required Set<String> distinct,
-    QueryInclude? include,
-    QuerySelect? select,
-    int? skip,
-    int? take,
-  }) async {
-    final rawRecords = await _delegate.findMany(
-      FindManyQuery(
-        model: 'Membership',
-        where: predicates,
-        orderBy: orderBy,
-        distinct: distinct,
-      ),
-    );
-    final cursorIndex = rawRecords.indexWhere(cursor.matchesRecord);
-    if (cursorIndex < 0) {
-      return const <Membership>[];
-    }
-    final effectiveSkip = skip ?? 0;
-    final startIndex = cursorIndex + effectiveSkip;
-    final boundedStartIndex = startIndex < 0 ? 0 : startIndex;
-    late final List<Map<String, Object?>> pagedRecords;
-    if (take == null) {
-      pagedRecords = rawRecords.skip(boundedStartIndex).toList(growable: false);
-    } else if (take >= 0) {
-      pagedRecords = rawRecords
-          .skip(boundedStartIndex)
-          .take(take)
-          .toList(growable: false);
-    } else {
-      final endExclusive = cursorIndex + 1 - effectiveSkip;
-      final boundedEndExclusive = endExclusive <= 0
-          ? 0
-          : (endExclusive > rawRecords.length
-                ? rawRecords.length
-                : endExclusive);
-      final startInclusive = boundedEndExclusive + take;
-      final boundedBackwardStart = startInclusive < 0 ? 0 : startInclusive;
-      pagedRecords = rawRecords
-          .sublist(boundedBackwardStart, boundedEndExclusive)
-          .toList(growable: false);
-    }
-    if (include == null && select == null) {
-      return pagedRecords.map(Membership.fromRecord).toList(growable: false);
-    }
-    final projectedRecords = <Membership>[];
-    for (final record in pagedRecords) {
-      final projected = await _delegate.findUnique(
-        FindUniqueQuery(
-          model: 'Membership',
-          where: _primaryKeyWhereUniqueFromRecord(record).toPredicates(),
-          include: include,
-          select: select,
-        ),
-      );
-      if (projected == null) {
-        throw StateError(
-          'Membership.findMany(cursor: ...) could not reload a paged record by primary key.',
-        );
-      }
-      projectedRecords.add(Membership.fromRecord(projected));
-    }
-    return List<Membership>.unmodifiable(projectedRecords);
   }
 
   Future<Membership> _performCreateWithRelationWrites({
@@ -10269,9 +7422,7 @@ class MembershipDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Membership create branch could not reload the created record by primary key.',
-      );
+      throw StateError('Membership create branch could not reload the created record by primary key.');
     }
     return Membership.fromRecord(projected);
   }
@@ -10318,9 +7469,7 @@ class MembershipDelegate {
       ),
     );
     if (projected == null) {
-      throw StateError(
-        'Membership update branch could not reload the updated record for the provided unique selector.',
-      );
+      throw StateError('Membership update branch could not reload the updated record for the provided unique selector.');
     }
     return Membership.fromRecord(projected);
   }
@@ -10340,43 +7489,38 @@ class MembershipDelegate {
           (nested.connectOrCreate != null ? 1 : 0) +
           (nested.disconnect ? 1 : 0);
       if (nestedWriteCount > 1) {
-        throw StateError(
-          'Only one of connect, connectOrCreate or disconnect may be provided for MembershipUpdateInput.user.',
-        );
+        throw StateError('Only one of connect, connectOrCreate or disconnect may be provided for MembershipUpdateInput.user.');
       }
       if (nested.connect != null) {
         final selector = nested.connect!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: selector.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: selector.toPredicates(),
+          ),
         );
         if (related == null) {
-          throw StateError(
-            'No related User record found for nested connect on Membership.user.',
-          );
+          throw StateError('No related User record found for nested connect on Membership.user.');
         }
-        await tx._client
-            .model('Membership')
-            .update(
-              UpdateQuery(
-                model: 'Membership',
-                where: predicates,
-                data: <String, Object?>{
-                  'userId': _requireRecordValue(
-                    related,
-                    'id',
-                    'nested direct relation write on Membership.user',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('Membership').update(
+          UpdateQuery(
+            model: 'Membership',
+            where: predicates,
+            data: <String, Object?>{
+              'userId': _requireRecordValue(related, 'id', 'nested direct relation write on Membership.user'),
+            },
+          ),
+        );
       }
       if (nested.connectOrCreate != null) {
         final entry = nested.connectOrCreate!;
         final related = await tx.user._delegate.findUnique(
-          FindUniqueQuery(model: 'User', where: entry.where.toPredicates()),
+          FindUniqueQuery(
+            model: 'User',
+            where: entry.where.toPredicates(),
+          ),
         );
-        final relatedRecord =
-            related ??
+        final relatedRecord = related ??
             await tx.user._delegate.create(
               CreateQuery(
                 model: 'User',
@@ -10384,68 +7528,52 @@ class MembershipDelegate {
                 nestedCreates: entry.create.toNestedCreates(),
               ),
             );
-        await tx._client
-            .model('Membership')
-            .update(
-              UpdateQuery(
-                model: 'Membership',
-                where: predicates,
-                data: <String, Object?>{
-                  'userId': _requireRecordValue(
-                    relatedRecord,
-                    'id',
-                    'nested direct relation write on Membership.user',
-                  ),
-                },
-              ),
-            );
+        await tx._client.model('Membership').update(
+          UpdateQuery(
+            model: 'Membership',
+            where: predicates,
+            data: <String, Object?>{
+              'userId': _requireRecordValue(relatedRecord, 'id', 'nested direct relation write on Membership.user'),
+            },
+          ),
+        );
       }
       if (nested.disconnect) {
-        throw StateError(
-          'Nested disconnect is not supported for required relation Membership.user.',
-        );
+        throw StateError('Nested disconnect is not supported for required relation Membership.user.');
       }
     }
   }
+
 
   Future<Membership> delete({
     required MembershipWhereUniqueInput where,
     MembershipInclude? include,
     MembershipSelect? select,
   }) {
-    return _delegate
-        .delete(
-          DeleteQuery(
-            model: 'Membership',
-            where: where.toPredicates(),
-            include: include?.toQueryInclude(),
-            select: select?.toQuerySelect(),
-          ),
-        )
-        .then(Membership.fromRecord);
+    return _delegate.delete(
+      DeleteQuery(
+        model: 'Membership',
+        where: where.toPredicates(),
+        include: include?.toQueryInclude(),
+        select: select?.toQuerySelect(),
+      ),
+    ).then(Membership.fromRecord);
   }
 
-  Future<int> deleteMany({required MembershipWhereInput where}) {
+  Future<int> deleteMany({
+    required MembershipWhereInput where,
+  }) {
     return _delegate.deleteMany(
-      DeleteManyQuery(model: 'Membership', where: where.toPredicates()),
+      DeleteManyQuery(
+        model: 'Membership',
+        where: where.toPredicates(),
+      ),
     );
   }
 }
 
 class MembershipWhereInput {
-  const MembershipWhereInput({
-    this.AND = const <MembershipWhereInput>[],
-    this.OR = const <MembershipWhereInput>[],
-    this.NOT = const <MembershipWhereInput>[],
-    this.tenantId,
-    this.tenantIdFilter,
-    this.slug,
-    this.slugFilter,
-    this.userId,
-    this.userIdFilter,
-    this.userIs,
-    this.userIsNot,
-  });
+  const MembershipWhereInput({this.AND = const <MembershipWhereInput>[], this.OR = const <MembershipWhereInput>[], this.NOT = const <MembershipWhereInput>[], this.tenantId, this.tenantIdFilter, this.slug, this.slugFilter, this.userId, this.userIdFilter, this.userIs, this.userIsNot, });
 
   final List<MembershipWhereInput> AND;
   final List<MembershipWhereInput> OR;
@@ -10462,117 +7590,44 @@ class MembershipWhereInput {
   List<QueryPredicate> toPredicates() {
     final predicates = <QueryPredicate>[];
     if (AND.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'AND',
-          operator: 'logicalAnd',
-          value: QueryLogicalGroup(
-            branches: AND
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'AND', operator: 'logicalAnd', value: QueryLogicalGroup(branches: AND.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (OR.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'OR',
-          operator: 'logicalOr',
-          value: QueryLogicalGroup(
-            branches: OR
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'OR', operator: 'logicalOr', value: QueryLogicalGroup(branches: OR.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (NOT.isNotEmpty) {
-      predicates.add(
-        QueryPredicate(
-          field: 'NOT',
-          operator: 'logicalNot',
-          value: QueryLogicalGroup(
-            branches: NOT
-                .map((entry) => entry.toPredicates())
-                .toList(growable: false),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'NOT', operator: 'logicalNot', value: QueryLogicalGroup(branches: NOT.map((entry) => entry.toPredicates()).toList(growable: false))));
     }
     if (tenantId != null) {
-      predicates.add(
-        QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
-      );
+      predicates.add(QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId));
     }
     if (tenantIdFilter != null) {
       predicates.addAll(tenantIdFilter!.toPredicates('tenantId'));
     }
     if (slug != null) {
-      predicates.add(
-        QueryPredicate(field: 'slug', operator: 'equals', value: slug),
-      );
+      predicates.add(QueryPredicate(field: 'slug', operator: 'equals', value: slug));
     }
     if (slugFilter != null) {
       predicates.addAll(slugFilter!.toPredicates('slug'));
     }
     if (userId != null) {
-      predicates.add(
-        QueryPredicate(field: 'userId', operator: 'equals', value: userId),
-      );
+      predicates.add(QueryPredicate(field: 'userId', operator: 'equals', value: userId));
     }
     if (userIdFilter != null) {
       predicates.addAll(userIdFilter!.toPredicates('userId'));
     }
     if (userIs != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'user',
-          operator: 'relationIs',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'user',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'userId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['userId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: userIs!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'user', operator: 'relationIs', value: QueryRelationFilter(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']), predicates: userIs!.toPredicates())));
     }
     if (userIsNot != null) {
-      predicates.add(
-        QueryPredicate(
-          field: 'user',
-          operator: 'relationIsNot',
-          value: QueryRelationFilter(
-            relation: QueryRelation(
-              field: 'user',
-              targetModel: 'User',
-              cardinality: QueryRelationCardinality.one,
-              localKeyField: 'userId',
-              targetKeyField: 'id',
-              localKeyFields: const <String>['userId'],
-              targetKeyFields: const <String>['id'],
-            ),
-            predicates: userIsNot!.toPredicates(),
-          ),
-        ),
-      );
+      predicates.add(QueryPredicate(field: 'user', operator: 'relationIsNot', value: QueryRelationFilter(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']), predicates: userIsNot!.toPredicates())));
     }
     return List<QueryPredicate>.unmodifiable(predicates);
   }
 }
 
 class MembershipTenantIdSlugCompoundUniqueInput {
-  const MembershipTenantIdSlugCompoundUniqueInput({
-    required this.tenantId,
-    required this.slug,
-  });
+  const MembershipTenantIdSlugCompoundUniqueInput({required this.tenantId, required this.slug, });
 
   final int tenantId;
   final String slug;
@@ -10590,7 +7645,7 @@ class MembershipTenantIdSlugCompoundUniqueInput {
 }
 
 class MembershipWhereUniqueInput {
-  const MembershipWhereUniqueInput({this.tenantId_slug});
+  const MembershipWhereUniqueInput({this.tenantId_slug, });
 
   final MembershipTenantIdSlugCompoundUniqueInput? tenantId_slug;
 
@@ -10600,11 +7655,13 @@ class MembershipWhereUniqueInput {
       selectors.add(tenantId_slug!.toPredicates());
     }
     if (selectors.length != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for MembershipWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for MembershipWhereUniqueInput.');
     }
     return List<QueryPredicate>.unmodifiable(selectors.single);
+  }
+
+  QueryCursor toQueryCursor() {
+    return QueryCursor(where: toPredicates());
   }
 
   bool matchesRecord(Map<String, Object?> record) {
@@ -10615,16 +7672,14 @@ class MembershipWhereUniqueInput {
       matches = tenantId_slug!.matchesRecord(record);
     }
     if (selectorCount != 1) {
-      throw StateError(
-        'Exactly one unique selector must be provided for MembershipWhereUniqueInput.',
-      );
+      throw StateError('Exactly one unique selector must be provided for MembershipWhereUniqueInput.');
     }
     return matches;
   }
 }
 
 class MembershipOrderByInput {
-  const MembershipOrderByInput({this.tenantId, this.slug, this.userId});
+  const MembershipOrderByInput({this.tenantId, this.slug, this.userId, });
 
   final SortOrder? tenantId;
   final SortOrder? slug;
@@ -10645,15 +7700,14 @@ class MembershipOrderByInput {
   }
 }
 
-enum MembershipScalarField { tenantId, slug, userId }
+enum MembershipScalarField {
+  tenantId,
+  slug,
+  userId
+}
 
 class MembershipCountAggregateInput {
-  const MembershipCountAggregateInput({
-    this.all = false,
-    this.tenantId = false,
-    this.slug = false,
-    this.userId = false,
-  });
+  const MembershipCountAggregateInput({this.all = false, this.tenantId = false, this.slug = false, this.userId = false, });
 
   final bool all;
   final bool tenantId;
@@ -10671,18 +7725,12 @@ class MembershipCountAggregateInput {
     if (userId) {
       fields.add('userId');
     }
-    return QueryCountSelection(
-      all: all,
-      fields: Set<String>.unmodifiable(fields),
-    );
+    return QueryCountSelection(all: all, fields: Set<String>.unmodifiable(fields));
   }
 }
 
 class MembershipAvgAggregateInput {
-  const MembershipAvgAggregateInput({
-    this.tenantId = false,
-    this.userId = false,
-  });
+  const MembershipAvgAggregateInput({this.tenantId = false, this.userId = false, });
 
   final bool tenantId;
   final bool userId;
@@ -10700,10 +7748,7 @@ class MembershipAvgAggregateInput {
 }
 
 class MembershipSumAggregateInput {
-  const MembershipSumAggregateInput({
-    this.tenantId = false,
-    this.userId = false,
-  });
+  const MembershipSumAggregateInput({this.tenantId = false, this.userId = false, });
 
   final bool tenantId;
   final bool userId;
@@ -10721,11 +7766,7 @@ class MembershipSumAggregateInput {
 }
 
 class MembershipMinAggregateInput {
-  const MembershipMinAggregateInput({
-    this.tenantId = false,
-    this.slug = false,
-    this.userId = false,
-  });
+  const MembershipMinAggregateInput({this.tenantId = false, this.slug = false, this.userId = false, });
 
   final bool tenantId;
   final bool slug;
@@ -10747,11 +7788,7 @@ class MembershipMinAggregateInput {
 }
 
 class MembershipMaxAggregateInput {
-  const MembershipMaxAggregateInput({
-    this.tenantId = false,
-    this.slug = false,
-    this.userId = false,
-  });
+  const MembershipMaxAggregateInput({this.tenantId = false, this.slug = false, this.userId = false, });
 
   final bool tenantId;
   final bool slug;
@@ -10773,21 +7810,14 @@ class MembershipMaxAggregateInput {
 }
 
 class MembershipCountAggregateResult {
-  const MembershipCountAggregateResult({
-    this.all,
-    this.tenantId,
-    this.slug,
-    this.userId,
-  });
+  const MembershipCountAggregateResult({this.all, this.tenantId, this.slug, this.userId, });
 
   final int? all;
   final int? tenantId;
   final int? slug;
   final int? userId;
 
-  factory MembershipCountAggregateResult.fromQueryCountResult(
-    QueryCountAggregateResult result,
-  ) {
+  factory MembershipCountAggregateResult.fromQueryCountResult(QueryCountAggregateResult result) {
     return MembershipCountAggregateResult(
       all: result.all,
       tenantId: result.fields['tenantId'],
@@ -10798,7 +7828,7 @@ class MembershipCountAggregateResult {
 }
 
 class MembershipAvgAggregateResult {
-  const MembershipAvgAggregateResult({this.tenantId, this.userId});
+  const MembershipAvgAggregateResult({this.tenantId, this.userId, });
 
   final double? tenantId;
   final double? userId;
@@ -10812,7 +7842,7 @@ class MembershipAvgAggregateResult {
 }
 
 class MembershipSumAggregateResult {
-  const MembershipSumAggregateResult({this.tenantId, this.userId});
+  const MembershipSumAggregateResult({this.tenantId, this.userId, });
 
   final int? tenantId;
   final int? userId;
@@ -10826,7 +7856,7 @@ class MembershipSumAggregateResult {
 }
 
 class MembershipMinAggregateResult {
-  const MembershipMinAggregateResult({this.tenantId, this.slug, this.userId});
+  const MembershipMinAggregateResult({this.tenantId, this.slug, this.userId, });
 
   final int? tenantId;
   final String? slug;
@@ -10842,7 +7872,7 @@ class MembershipMinAggregateResult {
 }
 
 class MembershipMaxAggregateResult {
-  const MembershipMaxAggregateResult({this.tenantId, this.slug, this.userId});
+  const MembershipMaxAggregateResult({this.tenantId, this.slug, this.userId, });
 
   final int? tenantId;
   final String? slug;
@@ -10872,31 +7902,19 @@ class MembershipAggregateResult {
   final MembershipMinAggregateResult? min;
   final MembershipMaxAggregateResult? max;
 
-  factory MembershipAggregateResult.fromQueryResult(
-    AggregateQueryResult result,
-  ) {
+  factory MembershipAggregateResult.fromQueryResult(AggregateQueryResult result) {
     return MembershipAggregateResult(
-      count: result.count == null
-          ? null
-          : MembershipCountAggregateResult.fromQueryCountResult(result.count!),
-      avg: result.avg == null
-          ? null
-          : MembershipAvgAggregateResult.fromMap(result.avg!),
-      sum: result.sum == null
-          ? null
-          : MembershipSumAggregateResult.fromMap(result.sum!),
-      min: result.min == null
-          ? null
-          : MembershipMinAggregateResult.fromMap(result.min!),
-      max: result.max == null
-          ? null
-          : MembershipMaxAggregateResult.fromMap(result.max!),
+      count: result.count == null ? null : MembershipCountAggregateResult.fromQueryCountResult(result.count!),
+      avg: result.avg == null ? null : MembershipAvgAggregateResult.fromMap(result.avg!),
+      sum: result.sum == null ? null : MembershipSumAggregateResult.fromMap(result.sum!),
+      min: result.min == null ? null : MembershipMinAggregateResult.fromMap(result.min!),
+      max: result.max == null ? null : MembershipMaxAggregateResult.fromMap(result.max!),
     );
   }
 }
 
 class MembershipGroupByHavingInput {
-  const MembershipGroupByHavingInput({this.tenantId, this.userId});
+  const MembershipGroupByHavingInput({this.tenantId, this.userId, });
 
   final NumericAggregatesFilter? tenantId;
   final NumericAggregatesFilter? userId;
@@ -10914,12 +7932,7 @@ class MembershipGroupByHavingInput {
 }
 
 class MembershipCountAggregateOrderByInput {
-  const MembershipCountAggregateOrderByInput({
-    this.all,
-    this.tenantId,
-    this.slug,
-    this.userId,
-  });
+  const MembershipCountAggregateOrderByInput({this.all, this.tenantId, this.slug, this.userId, });
 
   final SortOrder? all;
   final SortOrder? tenantId;
@@ -10929,43 +7942,23 @@ class MembershipCountAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (all != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(aggregate: function, direction: all!),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, direction: all!));
     }
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (slug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'slug',
-          direction: slug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'slug', direction: slug!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class MembershipAvgAggregateOrderByInput {
-  const MembershipAvgAggregateOrderByInput({this.tenantId, this.userId});
+  const MembershipAvgAggregateOrderByInput({this.tenantId, this.userId, });
 
   final SortOrder? tenantId;
   final SortOrder? userId;
@@ -10973,29 +7966,17 @@ class MembershipAvgAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class MembershipSumAggregateOrderByInput {
-  const MembershipSumAggregateOrderByInput({this.tenantId, this.userId});
+  const MembershipSumAggregateOrderByInput({this.tenantId, this.userId, });
 
   final SortOrder? tenantId;
   final SortOrder? userId;
@@ -11003,33 +7984,17 @@ class MembershipSumAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class MembershipMinAggregateOrderByInput {
-  const MembershipMinAggregateOrderByInput({
-    this.tenantId,
-    this.slug,
-    this.userId,
-  });
+  const MembershipMinAggregateOrderByInput({this.tenantId, this.slug, this.userId, });
 
   final SortOrder? tenantId;
   final SortOrder? slug;
@@ -11038,42 +8003,20 @@ class MembershipMinAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (slug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'slug',
-          direction: slug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'slug', direction: slug!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class MembershipMaxAggregateOrderByInput {
-  const MembershipMaxAggregateOrderByInput({
-    this.tenantId,
-    this.slug,
-    this.userId,
-  });
+  const MembershipMaxAggregateOrderByInput({this.tenantId, this.slug, this.userId, });
 
   final SortOrder? tenantId;
   final SortOrder? slug;
@@ -11082,47 +8025,20 @@ class MembershipMaxAggregateOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy(QueryAggregateFunction function) {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'tenantId',
-          direction: tenantId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'tenantId', direction: tenantId!));
     }
     if (slug != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'slug',
-          direction: slug!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'slug', direction: slug!));
     }
     if (userId != null) {
-      orderings.add(
-        GroupByOrderBy.aggregate(
-          aggregate: function,
-          field: 'userId',
-          direction: userId!,
-        ),
-      );
+      orderings.add(GroupByOrderBy.aggregate(aggregate: function, field: 'userId', direction: userId!));
     }
     return List<GroupByOrderBy>.unmodifiable(orderings);
   }
 }
 
 class MembershipGroupByOrderByInput {
-  const MembershipGroupByOrderByInput({
-    this.tenantId,
-    this.slug,
-    this.userId,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const MembershipGroupByOrderByInput({this.tenantId, this.slug, this.userId, this.count, this.avg, this.sum, this.min, this.max});
 
   final SortOrder? tenantId;
   final SortOrder? slug;
@@ -11136,9 +8052,7 @@ class MembershipGroupByOrderByInput {
   List<GroupByOrderBy> toGroupByOrderBy() {
     final orderings = <GroupByOrderBy>[];
     if (tenantId != null) {
-      orderings.add(
-        GroupByOrderBy.field(field: 'tenantId', direction: tenantId!),
-      );
+      orderings.add(GroupByOrderBy.field(field: 'tenantId', direction: tenantId!));
     }
     if (slug != null) {
       orderings.add(GroupByOrderBy.field(field: 'slug', direction: slug!));
@@ -11166,16 +8080,7 @@ class MembershipGroupByOrderByInput {
 }
 
 class MembershipGroupByRow {
-  const MembershipGroupByRow({
-    this.tenantId,
-    this.slug,
-    this.userId,
-    this.count,
-    this.avg,
-    this.sum,
-    this.min,
-    this.max,
-  });
+  const MembershipGroupByRow({this.tenantId, this.slug, this.userId, this.count, this.avg, this.sum, this.min, this.max});
 
   final int? tenantId;
   final String? slug;
@@ -11191,46 +8096,24 @@ class MembershipGroupByRow {
       tenantId: row.group['tenantId'] as int?,
       slug: row.group['slug'] as String?,
       userId: row.group['userId'] as int?,
-      count: row.aggregates.count == null
-          ? null
-          : MembershipCountAggregateResult.fromQueryCountResult(
-              row.aggregates.count!,
-            ),
-      avg: row.aggregates.avg == null
-          ? null
-          : MembershipAvgAggregateResult.fromMap(row.aggregates.avg!),
-      sum: row.aggregates.sum == null
-          ? null
-          : MembershipSumAggregateResult.fromMap(row.aggregates.sum!),
-      min: row.aggregates.min == null
-          ? null
-          : MembershipMinAggregateResult.fromMap(row.aggregates.min!),
-      max: row.aggregates.max == null
-          ? null
-          : MembershipMaxAggregateResult.fromMap(row.aggregates.max!),
+      count: row.aggregates.count == null ? null : MembershipCountAggregateResult.fromQueryCountResult(row.aggregates.count!),
+      avg: row.aggregates.avg == null ? null : MembershipAvgAggregateResult.fromMap(row.aggregates.avg!),
+      sum: row.aggregates.sum == null ? null : MembershipSumAggregateResult.fromMap(row.aggregates.sum!),
+      min: row.aggregates.min == null ? null : MembershipMinAggregateResult.fromMap(row.aggregates.min!),
+      max: row.aggregates.max == null ? null : MembershipMaxAggregateResult.fromMap(row.aggregates.max!),
     );
   }
 }
 
 class MembershipInclude {
-  const MembershipInclude({this.user = false});
+  const MembershipInclude({this.user = false, });
 
   final bool user;
 
   QueryInclude? toQueryInclude() {
     final relations = <String, QueryIncludeEntry>{};
     if (user) {
-      relations['user'] = QueryIncludeEntry(
-        relation: QueryRelation(
-          field: 'user',
-          targetModel: 'User',
-          cardinality: QueryRelationCardinality.one,
-          localKeyField: 'userId',
-          targetKeyField: 'id',
-          localKeyFields: const <String>['userId'],
-          targetKeyFields: const <String>['id'],
-        ),
-      );
+      relations['user'] = QueryIncludeEntry(relation: QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id']));
     }
     if (relations.isEmpty) {
       return null;
@@ -11240,11 +8123,7 @@ class MembershipInclude {
 }
 
 class MembershipSelect {
-  const MembershipSelect({
-    this.tenantId = false,
-    this.slug = false,
-    this.userId = false,
-  });
+  const MembershipSelect({this.tenantId = false, this.slug = false, this.userId = false, });
 
   final bool tenantId;
   final bool slug;
@@ -11269,12 +8148,7 @@ class MembershipSelect {
 }
 
 class MembershipCreateInput {
-  const MembershipCreateInput({
-    required this.tenantId,
-    required this.slug,
-    required this.userId,
-    this.user,
-  });
+  const MembershipCreateInput({required this.tenantId, required this.slug, required this.userId, this.user, });
 
   final int tenantId;
   final String slug;
@@ -11291,31 +8165,17 @@ class MembershipCreateInput {
 
   List<List<QueryPredicate>> toUniqueSelectorPredicates() {
     final selectors = <List<QueryPredicate>>[];
-    selectors.add(<QueryPredicate>[
-      QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
-      QueryPredicate(field: 'slug', operator: 'equals', value: slug),
-    ]);
-    return List<List<QueryPredicate>>.unmodifiable(
-      selectors.map(List<QueryPredicate>.unmodifiable),
-    );
+      selectors.add(<QueryPredicate>[
+        QueryPredicate(field: 'tenantId', operator: 'equals', value: tenantId),
+        QueryPredicate(field: 'slug', operator: 'equals', value: slug),
+      ]);
+    return List<List<QueryPredicate>>.unmodifiable(selectors.map(List<QueryPredicate>.unmodifiable));
   }
 
   List<CreateRelationWrite> toNestedCreates() {
     final writes = <CreateRelationWrite>[];
     if (user != null) {
-      writes.addAll(
-        user!.toRelationWrites(
-          QueryRelation(
-            field: 'user',
-            targetModel: 'User',
-            cardinality: QueryRelationCardinality.one,
-            localKeyField: 'userId',
-            targetKeyField: 'id',
-            localKeyFields: const <String>['userId'],
-            targetKeyFields: const <String>['id'],
-          ),
-        ),
-      );
+      writes.addAll(user!.toRelationWrites(QueryRelation(field: 'user', targetModel: 'User', cardinality: QueryRelationCardinality.one, localKeyField: 'userId', targetKeyField: 'id', localKeyFields: const <String>['userId'], targetKeyFields: const <String>['id'])));
     }
     return List<CreateRelationWrite>.unmodifiable(writes);
   }
@@ -11325,20 +8185,14 @@ class MembershipCreateInput {
   }
 
   MembershipUpdateInput toDeferredRelationUpdateInput() {
-    return MembershipUpdateInput(user: user?.toDeferredUpdateWrite());
+    return MembershipUpdateInput(
+      user: user?.toDeferredUpdateWrite(),
+    );
   }
 }
 
 class MembershipUpdateInput {
-  const MembershipUpdateInput({
-    this.tenantId,
-    this.tenantIdOps,
-    this.slug,
-    this.slugOps,
-    this.userId,
-    this.userIdOps,
-    this.user,
-  });
+  const MembershipUpdateInput({this.tenantId, this.tenantIdOps, this.slug, this.slugOps, this.userId, this.userIdOps, this.user, });
 
   final int? tenantId;
   final IntFieldUpdateOperationsInput? tenantIdOps;
@@ -11349,8 +8203,7 @@ class MembershipUpdateInput {
   final UserUpdateNestedOneWithoutMembershipsInput? user;
 
   bool get hasComputedOperators {
-    return tenantIdOps?.hasComputedUpdate == true ||
-        userIdOps?.hasComputedUpdate == true;
+    return tenantIdOps?.hasComputedUpdate == true || userIdOps?.hasComputedUpdate == true;
   }
 
   bool get hasRelationWrites {
@@ -11360,9 +8213,7 @@ class MembershipUpdateInput {
   Map<String, Object?> toData() {
     final data = <String, Object?>{};
     if (tenantId != null && tenantIdOps != null) {
-      throw StateError(
-        'Only one of tenantId or tenantIdOps may be provided for MembershipUpdateInput.tenantId.',
-      );
+      throw StateError('Only one of tenantId or tenantIdOps may be provided for MembershipUpdateInput.tenantId.');
     }
     if (tenantId != null) {
       data['tenantId'] = tenantId;
@@ -11370,23 +8221,17 @@ class MembershipUpdateInput {
     if (tenantIdOps != null) {
       final ops = tenantIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for MembershipUpdateInput.tenantId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for MembershipUpdateInput.tenantId.');
       }
       if (ops.hasComputedUpdate) {
-        throw StateError(
-          'Computed scalar update operators for MembershipUpdateInput.tenantId require the current record value before they can be converted to raw update data.',
-        );
+        throw StateError('Computed scalar update operators for MembershipUpdateInput.tenantId require the current record value before they can be converted to raw update data.');
       }
       if (ops.hasSet) {
         data['tenantId'] = ops.set as int?;
       }
     }
     if (slug != null && slugOps != null) {
-      throw StateError(
-        'Only one of slug or slugOps may be provided for MembershipUpdateInput.slug.',
-      );
+      throw StateError('Only one of slug or slugOps may be provided for MembershipUpdateInput.slug.');
     }
     if (slug != null) {
       data['slug'] = slug;
@@ -11398,9 +8243,7 @@ class MembershipUpdateInput {
       }
     }
     if (userId != null && userIdOps != null) {
-      throw StateError(
-        'Only one of userId or userIdOps may be provided for MembershipUpdateInput.userId.',
-      );
+      throw StateError('Only one of userId or userIdOps may be provided for MembershipUpdateInput.userId.');
     }
     if (userId != null) {
       data['userId'] = userId;
@@ -11408,14 +8251,10 @@ class MembershipUpdateInput {
     if (userIdOps != null) {
       final ops = userIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for MembershipUpdateInput.userId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for MembershipUpdateInput.userId.');
       }
       if (ops.hasComputedUpdate) {
-        throw StateError(
-          'Computed scalar update operators for MembershipUpdateInput.userId require the current record value before they can be converted to raw update data.',
-        );
+        throw StateError('Computed scalar update operators for MembershipUpdateInput.userId require the current record value before they can be converted to raw update data.');
       }
       if (ops.hasSet) {
         data['userId'] = ops.set as int?;
@@ -11427,9 +8266,7 @@ class MembershipUpdateInput {
   Map<String, Object?> resolveDataAgainstRecord(Map<String, Object?> record) {
     final data = <String, Object?>{};
     if (tenantId != null && tenantIdOps != null) {
-      throw StateError(
-        'Only one of tenantId or tenantIdOps may be provided for MembershipUpdateInput.tenantId.',
-      );
+      throw StateError('Only one of tenantId or tenantIdOps may be provided for MembershipUpdateInput.tenantId.');
     }
     if (tenantId != null) {
       data['tenantId'] = tenantId;
@@ -11437,9 +8274,7 @@ class MembershipUpdateInput {
     if (tenantIdOps != null) {
       final ops = tenantIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for MembershipUpdateInput.tenantId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for MembershipUpdateInput.tenantId.');
       }
       if (ops.hasSet) {
         data['tenantId'] = ops.set as int?;
@@ -11447,26 +8282,20 @@ class MembershipUpdateInput {
         final currentValue = record['tenantId'] as int?;
         if (ops.increment != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot increment MembershipUpdateInput.tenantId because the current value is null.',
-            );
+            throw StateError('Cannot increment MembershipUpdateInput.tenantId because the current value is null.');
           }
           data['tenantId'] = currentValue + ops.increment!;
         }
         if (ops.decrement != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot decrement MembershipUpdateInput.tenantId because the current value is null.',
-            );
+            throw StateError('Cannot decrement MembershipUpdateInput.tenantId because the current value is null.');
           }
           data['tenantId'] = currentValue - ops.decrement!;
         }
       }
     }
     if (slug != null && slugOps != null) {
-      throw StateError(
-        'Only one of slug or slugOps may be provided for MembershipUpdateInput.slug.',
-      );
+      throw StateError('Only one of slug or slugOps may be provided for MembershipUpdateInput.slug.');
     }
     if (slug != null) {
       data['slug'] = slug;
@@ -11478,9 +8307,7 @@ class MembershipUpdateInput {
       }
     }
     if (userId != null && userIdOps != null) {
-      throw StateError(
-        'Only one of userId or userIdOps may be provided for MembershipUpdateInput.userId.',
-      );
+      throw StateError('Only one of userId or userIdOps may be provided for MembershipUpdateInput.userId.');
     }
     if (userId != null) {
       data['userId'] = userId;
@@ -11488,9 +8315,7 @@ class MembershipUpdateInput {
     if (userIdOps != null) {
       final ops = userIdOps!;
       if (ops.hasMultipleOperations) {
-        throw StateError(
-          'Only one scalar update operator may be provided for MembershipUpdateInput.userId.',
-        );
+        throw StateError('Only one scalar update operator may be provided for MembershipUpdateInput.userId.');
       }
       if (ops.hasSet) {
         data['userId'] = ops.set as int?;
@@ -11498,17 +8323,13 @@ class MembershipUpdateInput {
         final currentValue = record['userId'] as int?;
         if (ops.increment != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot increment MembershipUpdateInput.userId because the current value is null.',
-            );
+            throw StateError('Cannot increment MembershipUpdateInput.userId because the current value is null.');
           }
           data['userId'] = currentValue + ops.increment!;
         }
         if (ops.decrement != null) {
           if (currentValue == null) {
-            throw StateError(
-              'Cannot decrement MembershipUpdateInput.userId because the current value is null.',
-            );
+            throw StateError('Cannot decrement MembershipUpdateInput.userId because the current value is null.');
           }
           data['userId'] = currentValue - ops.decrement!;
         }
@@ -11519,10 +8340,7 @@ class MembershipUpdateInput {
 }
 
 class MembershipCreateWithoutUserInput {
-  const MembershipCreateWithoutUserInput({
-    required this.tenantId,
-    required this.slug,
-  });
+  const MembershipCreateWithoutUserInput({required this.tenantId, required this.slug, });
 
   final int tenantId;
   final String slug;
@@ -11538,41 +8356,26 @@ class MembershipCreateWithoutUserInput {
 }
 
 class UserConnectOrCreateWithoutMembershipsInput {
-  const UserConnectOrCreateWithoutMembershipsInput({
-    required this.where,
-    required this.create,
-  });
+  const UserConnectOrCreateWithoutMembershipsInput({required this.where, required this.create});
 
   final UserWhereUniqueInput where;
   final UserCreateWithoutMembershipsInput create;
 }
 
 class UserCreateNestedOneWithoutMembershipsInput {
-  const UserCreateNestedOneWithoutMembershipsInput({
-    this.create,
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserCreateNestedOneWithoutMembershipsInput({this.create, this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserCreateWithoutMembershipsInput? create;
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutMembershipsInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasDeferredWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasDeferredWrites => connect != null || connectOrCreate != null || disconnect;
 
   List<CreateRelationWrite> toRelationWrites(QueryRelation relation) {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutMembershipsInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutMembershipsInput.');
     }
     if (create == null) {
       return const <CreateRelationWrite>[];
@@ -11586,40 +8389,25 @@ class UserCreateNestedOneWithoutMembershipsInput {
   }
 
   UserUpdateNestedOneWithoutMembershipsInput? toDeferredUpdateWrite() {
-    final nestedWriteCount =
-        (create != null ? 1 : 0) +
-        (connect != null ? 1 : 0) +
-        (connectOrCreate != null ? 1 : 0) +
-        (disconnect ? 1 : 0);
+    final nestedWriteCount = (create != null ? 1 : 0) + (connect != null ? 1 : 0) + (connectOrCreate != null ? 1 : 0) + (disconnect ? 1 : 0);
     if (nestedWriteCount > 1) {
-      throw StateError(
-        'Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutMembershipsInput.',
-      );
+      throw StateError('Only one of create, connect, connectOrCreate or disconnect may be provided for UserCreateNestedOneWithoutMembershipsInput.');
     }
     if (!hasDeferredWrites) {
       return null;
     }
-    return UserUpdateNestedOneWithoutMembershipsInput(
-      connect: connect,
-      connectOrCreate: connectOrCreate,
-      disconnect: disconnect,
-    );
+    return UserUpdateNestedOneWithoutMembershipsInput(connect: connect, connectOrCreate: connectOrCreate, disconnect: disconnect);
   }
 }
 
 class UserUpdateNestedOneWithoutMembershipsInput {
-  const UserUpdateNestedOneWithoutMembershipsInput({
-    this.connect,
-    this.connectOrCreate,
-    this.disconnect = false,
-  });
+  const UserUpdateNestedOneWithoutMembershipsInput({this.connect, this.connectOrCreate, this.disconnect = false});
 
   final UserWhereUniqueInput? connect;
   final UserConnectOrCreateWithoutMembershipsInput? connectOrCreate;
   final bool disconnect;
 
-  bool get hasWrites =>
-      connect != null || connectOrCreate != null || disconnect;
+  bool get hasWrites => connect != null || connectOrCreate != null || disconnect;
 }
 
 DateTime? _asDateTime(Object? value) {
@@ -11712,14 +8500,10 @@ int _deepHash(Object? value) {
     return Object.hashAll(value.map(_deepHash));
   }
   if (value is Map<Object?, Object?>) {
-    final entries =
-        value.entries
-            .map(
-              (entry) =>
-                  Object.hash(_deepHash(entry.key), _deepHash(entry.value)),
-            )
-            .toList(growable: false)
-          ..sort();
+    final entries = value.entries
+        .map((entry) => Object.hash(_deepHash(entry.key), _deepHash(entry.value)))
+        .toList(growable: false)
+      ..sort();
     return Object.hashAll(entries);
   }
   return value.hashCode;
@@ -11758,7 +8542,9 @@ Object? _requireRecordValue(
 ) {
   final value = record[field];
   if (value == null) {
-    throw StateError('Missing required key "$field" for $context.');
+    throw StateError(
+      'Missing required key "$field" for $context.',
+    );
   }
   return value;
 }
@@ -11769,9 +8555,7 @@ bool _isSkippableDuplicateError(Object error) {
     return true;
   }
   final normalized = error.toString().toLowerCase();
-  return normalized.contains(
-        'duplicate key value violates unique constraint',
-      ) ||
+  return normalized.contains('duplicate key value violates unique constraint') ||
       normalized.contains('unique constraint failed') ||
       normalized.contains('unique violation');
 }
@@ -11785,3 +8569,4 @@ String? _errorCode(Object error) {
     return null;
   }
 }
+

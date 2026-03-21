@@ -325,6 +325,57 @@ model Group {
         );
       },
     );
+
+    test('collects implicit many-to-many storage for compound ids', () {
+      final schema = const SchemaParser().parse('''
+model User {
+  tenantId Int
+  slug     String
+  tags     Tag[]
+
+  @@id([tenantId, slug])
+}
+
+model Tag {
+  scope String
+  code  String
+  users User[]
+
+  @@id([scope, code])
+}
+''');
+
+      final view = runtimeSchemaViewFromSchemaDocument(schema);
+      final storage = collectRuntimeImplicitManyToManyStorages(view).single;
+
+      expect(
+        <String>{storage.sourceModel, storage.targetModel},
+        <String>{'User', 'Tag'},
+      );
+      expect(
+        <String>{storage.sourceField, storage.targetField},
+        <String>{'tags', 'users'},
+      );
+      expect(
+        <List<String>>[storage.sourceKeyFields, storage.targetKeyFields],
+        containsAll(<List<String>>[
+          <String>['tenantId', 'slug'],
+          <String>['scope', 'code'],
+        ]),
+      );
+      expect(storage.sourceJoinColumns, hasLength(2));
+      expect(storage.targetJoinColumns, hasLength(2));
+      final parsed = parseImplicitManyToManyTableName(storage.tableName);
+      expect(parsed, isNotNull);
+      expect(
+        <String>{parsed!.firstModelName, parsed.secondModelName},
+        <String>{'User', 'Tag'},
+      );
+      expect(
+        <String>{parsed.firstFieldName, parsed.secondFieldName},
+        <String>{'tags', 'users'},
+      );
+    });
   });
 }
 

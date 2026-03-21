@@ -404,16 +404,40 @@ class QuerySelect {
 }
 
 @immutable
+/// Unique cursor selector used for cursor-based pagination.
+class QueryCursor {
+  /// Creates a cursor selector.
+  const QueryCursor({required this.where});
+
+  /// Predicates expected to identify exactly one cursor row.
+  final List<QueryPredicate> where;
+}
+
+/// Strategy an adapter should use to resolve include relations.
+enum IncludeStrategy {
+  /// Resolve each parent row individually.
+  perRow,
+
+  /// Resolve includes with JOIN-based eager loading.
+  join,
+
+  /// Resolve includes with batched follow-up queries.
+  batch,
+}
+
+@immutable
 /// Query object for fetching multiple records.
 class FindManyQuery {
   /// Creates a `findMany` query.
   const FindManyQuery({
     required this.model,
     this.where = const <QueryPredicate>[],
+    this.cursor,
     this.orderBy = const <QueryOrderBy>[],
     this.distinct = const <String>{},
     this.include,
     this.select,
+    this.includeStrategy,
     this.skip,
     this.take,
   });
@@ -423,6 +447,9 @@ class FindManyQuery {
 
   /// Predicates combined by the adapter.
   final List<QueryPredicate> where;
+
+  /// Unique cursor selector used to window records around a known row.
+  final QueryCursor? cursor;
 
   /// Ordering clauses.
   final List<QueryOrderBy> orderBy;
@@ -436,11 +463,30 @@ class FindManyQuery {
   /// Scalar fields to project.
   final QuerySelect? select;
 
+  /// Preferred eager-loading strategy for [include].
+  final IncludeStrategy? includeStrategy;
+
   /// Number of matching rows to skip.
   final int? skip;
 
   /// Maximum number of rows to return.
   final int? take;
+
+  /// Returns a copy of this query with [includeStrategy] overridden.
+  FindManyQuery copyWithIncludeStrategy(IncludeStrategy? includeStrategy) {
+    return FindManyQuery(
+      model: model,
+      where: where,
+      cursor: cursor,
+      orderBy: orderBy,
+      distinct: distinct,
+      include: include,
+      select: select,
+      includeStrategy: includeStrategy,
+      skip: skip,
+      take: take,
+    );
+  }
 }
 
 @immutable
@@ -474,10 +520,12 @@ class FindFirstQuery {
   const FindFirstQuery({
     required this.model,
     this.where = const <QueryPredicate>[],
+    this.cursor,
     this.orderBy = const <QueryOrderBy>[],
     this.distinct = const <String>{},
     this.include,
     this.select,
+    this.includeStrategy,
     this.skip,
   });
 
@@ -486,6 +534,9 @@ class FindFirstQuery {
 
   /// Predicates combined by the adapter.
   final List<QueryPredicate> where;
+
+  /// Unique cursor selector used to window records around a known row.
+  final QueryCursor? cursor;
 
   /// Ordering clauses used before selecting the first record.
   final List<QueryOrderBy> orderBy;
@@ -499,8 +550,26 @@ class FindFirstQuery {
   /// Scalar fields to project.
   final QuerySelect? select;
 
+  /// Preferred eager-loading strategy for [include].
+  final IncludeStrategy? includeStrategy;
+
   /// Number of matches to skip before taking the first row.
   final int? skip;
+
+  /// Returns a copy of this query with [includeStrategy] overridden.
+  FindFirstQuery copyWithIncludeStrategy(IncludeStrategy? includeStrategy) {
+    return FindFirstQuery(
+      model: model,
+      where: where,
+      cursor: cursor,
+      orderBy: orderBy,
+      distinct: distinct,
+      include: include,
+      select: select,
+      includeStrategy: includeStrategy,
+      skip: skip,
+    );
+  }
 }
 
 @immutable
@@ -639,4 +708,56 @@ class DeleteManyQuery {
 
   /// Predicates used to select rows for deletion.
   final List<QueryPredicate> where;
+}
+
+@immutable
+/// Query object for atomically creating or updating a single record.
+class UpsertQuery {
+  /// Creates an `upsert` query.
+  const UpsertQuery({
+    required this.model,
+    required this.where,
+    required this.create,
+    required this.update,
+    this.include,
+    this.select,
+  });
+
+  /// Model name to upsert into.
+  final String model;
+
+  /// Predicates used to identify an existing record.
+  final List<QueryPredicate> where;
+
+  /// Scalar data used when no existing record is found.
+  final Map<String, Object?> create;
+
+  /// Scalar data merged into the existing record when one is found.
+  final Map<String, Object?> update;
+
+  /// Relations to materialize in the returned payload.
+  final QueryInclude? include;
+
+  /// Scalar fields to project in the returned payload.
+  final QuerySelect? select;
+}
+
+@immutable
+/// Query object for inserting multiple records in a single operation.
+class CreateManyQuery {
+  /// Creates a `createMany` query.
+  const CreateManyQuery({
+    required this.model,
+    required this.data,
+    this.skipDuplicates = false,
+  });
+
+  /// Model name to insert into.
+  final String model;
+
+  /// List of scalar row data to insert.
+  final List<Map<String, Object?>> data;
+
+  /// When true, silently skips rows that would violate a unique constraint.
+  final bool skipDuplicates;
 }

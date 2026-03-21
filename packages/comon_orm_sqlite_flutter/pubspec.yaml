@@ -1,10 +1,10 @@
 name: comon_orm_sqlite_flutter
 description: Flutter-oriented SQLite runtime adapter for comon_orm built on the sqflite ecosystem.
-version: 0.0.1-alpha.1
+version: 0.0.1-alpha.2
 homepage: https://github.com/serezhia/comon_orm
 repository: https://github.com/serezhia/comon_orm
 issue_tracker: https://github.com/serezhia/comon_orm/issues
-documentation: https://github.com/serezhia/comon_orm/blob/main/packages/comon_orm_sqlite_flutter/README.md
+documentation: https://comon.serezhia.ru/docs/orm
 topics:
   - orm
   - prisma
@@ -21,7 +21,7 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  comon_orm: ^0.0.1-alpha.1
+  comon_orm: ^0.0.1-alpha.2
   sqflite: ^2.4.2
   sqflite_common: ^2.5.6
   sqflite_common_ffi: ^2.4.0+2

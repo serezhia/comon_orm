@@ -16,14 +16,22 @@
 - migration planning, apply, rollback, history и status helpers
 - generated-metadata-first runtime bootstrap для file-backed и in-memory adapter-ов
 
+# AI Документация
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Документация
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## 🚀 Быстрый старт
 
 Добавьте зависимости:
 
 ```yaml
 dependencies:
-	comon_orm: ^0.0.1-alpha.1
-	comon_orm_sqlite: ^0.0.1-alpha.1
+	comon_orm: ^0.0.1-alpha.2
+	comon_orm_sqlite: ^0.0.1-alpha.2
 ```
 
 Пример с generated client:
@@ -62,6 +70,7 @@ final db = await GeneratedComonOrmClientSqlite.open();
 
 - Runtime path: `GeneratedComonOrmClient.openInMemory()` или `GeneratedComonOrmClientSqlite.open(...)`
 - Tooling/setup path: schema-driven migrate/apply flow через CLI и schema tools
+- runtime open, который делает этот пакет, по умолчанию включает SQLite foreign key enforcement через `PRAGMA foreign_keys = ON`
 
 ## 🎯 Ключевые фичи
 
@@ -90,9 +99,11 @@ final db = await GeneratedComonOrmClientSqlite.open();
 Предпочтительный flow идет через unified core CLI:
 
 ```bash
-dart run comon_orm migrate diff --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate apply --schema schema.prisma --name 20260315_init
-dart run comon_orm migrate rollback --schema schema.prisma --from prisma/migrations
+dart run comon_orm check
+dart run comon_orm generate
+dart run comon_orm migrate dev --name 20260315_init
+dart run comon_orm migrate status
+dart run comon_orm migrate deploy
 ```
 
 Важно:
@@ -101,6 +112,7 @@ dart run comon_orm migrate rollback --schema schema.prisma --from prisma/migrati
 - preferred application runtime path теперь это `GeneratedComonOrmClient.runtimeSchema` плюс `openFromGeneratedSchema(...)`
 - schema apply остается в tooling/setup flow, а не в runtime adapter convenience API
 - часть schema transitions требует rebuild, потому что SQLite не умеет выразить их через `ALTER TABLE`
+- `db push` или `migrate reset` подходят для disposable local database, но shared или long-lived SQLite лучше вести через reviewed migrations
 
 ## 📱 Платформы
 
