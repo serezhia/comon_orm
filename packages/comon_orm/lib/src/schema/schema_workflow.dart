@@ -523,7 +523,7 @@ class SchemaWorkflow {
   }
 
   String _normalizeLogicalPosixPath(String path) {
-    return path.replaceAll(r'\', '/');
+    return path.replaceAll('\\', '/');
   }
 
   String _dirname(String path) {
@@ -562,7 +562,7 @@ class SchemaWorkflow {
       return path.replaceAll('/', Platform.pathSeparator);
     }
 
-    return path.replaceAll(r'\', Platform.pathSeparator);
+    return path.replaceAll('\\', Platform.pathSeparator);
   }
 
   String _stripQuotes(String value) {

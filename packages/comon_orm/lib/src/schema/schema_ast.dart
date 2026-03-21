@@ -497,10 +497,11 @@ class ValidationIssue {
       }
       buffer.write(': ');
     } else if (line != null) {
-      buffer.write('line $line: ');
+      buffer.write('line $line');
       if (column != null) {
-        buffer.write('$column: ');
+        buffer.write(':$column');
       }
+      buffer.write(': ');
     }
 
     if (modelName != null) {
