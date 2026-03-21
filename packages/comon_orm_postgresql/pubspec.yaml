@@ -4,7 +4,7 @@ version: 0.0.1-alpha.2
 homepage: https://github.com/serezhia/comon_orm
 repository: https://github.com/serezhia/comon_orm
 issue_tracker: https://github.com/serezhia/comon_orm/issues
-documentation: https://github.com/serezhia/comon_orm/blob/main/packages/comon_orm_postgresql/README.md
+documentation: https://comon.serezhia.ru/docs/orm
 topics:
   - orm
   - prisma

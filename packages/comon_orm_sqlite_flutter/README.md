@@ -6,6 +6,14 @@
 
 It is intended to cover Flutter mobile, desktop, and web scenarios on top of the `sqflite` ecosystem, while keeping `comon_orm_sqlite` focused on Dart VM, CLI workflows, migrations, and introspection.
 
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## Why A Separate Package
 
 This package is separate on purpose.

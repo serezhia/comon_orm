@@ -1,10 +1,16 @@
 # comon_orm
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/anomalyco/opencode)
-
 `comon_orm` is a schema-first ORM toolkit for Dart inspired by Prisma.
 
 The core idea is simple: define your models in `schema.prisma`, generate a typed Dart client, apply the schema to the database through the migration flow, and work through the generated API instead of hand-written maps and raw SQL strings.
+
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
 
 ## Quick Start
 

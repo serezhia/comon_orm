@@ -16,6 +16,14 @@ Use it when your schema declares `provider = "postgresql"` and you need a real a
 - migration planning, apply, rollback, history, and status helpers
 - the provider implementation behind `dart run comon_orm migrate ...`
 
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## 🚀 Quick Start
 
 Add dependencies:

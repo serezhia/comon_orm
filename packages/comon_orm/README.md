@@ -2,8 +2,6 @@
 
 # comon_orm
 
-[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
-
 `comon_orm` is the provider-agnostic core of the package family: schema parsing, validation, formatting, code generation, query models, and the in-memory runtime.
 
 Use this package when you want to work with `schema.prisma`, generate a typed Dart client, or run fast schema-driven tests without starting a real database.
@@ -18,6 +16,14 @@ Use this package when you want to work with `schema.prisma`, generate a typed Da
 - migration artifacts and risk-analysis helpers that are not tied to a SQL dialect
 
 Use `comon_orm_postgresql` or `comon_orm_sqlite` when you need a real database adapter, introspection, or migration execution.
+
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
 
 ## 🚀 Quick Start
 

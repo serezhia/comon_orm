@@ -16,6 +16,14 @@
 - migration planning, apply, rollback, history и status helpers
 - generated-metadata-first runtime bootstrap для file-backed и in-memory adapter-ов
 
+# AI Документация
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Документация
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## 🚀 Быстрый старт
 
 Добавьте зависимости:

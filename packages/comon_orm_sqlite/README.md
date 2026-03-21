@@ -16,6 +16,14 @@ Use it when your schema declares `provider = "sqlite"` and you want an embedded 
 - migration planning, apply, rollback, history, and status helpers
 - generated-metadata-first runtime bootstrap for file-backed and in-memory adapters
 
+# AI Documentation
+
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-comon__orm-0EA5E9?logo=bookstack&logoColor=white)](https://deepwiki.com/serezhia/comon_orm)
+
+# Documentation
+
+[Comon | DOCS](https://comon.serezhia.ru/docs/orm)
+
 ## 🚀 Quick Start
 
 Add dependencies:
