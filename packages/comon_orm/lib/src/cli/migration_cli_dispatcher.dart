@@ -111,6 +111,7 @@ class MigrationCliDispatcher {
         _out.writeln(
           '  push      Push the current schema without creating migration history.',
         );
+        break;
       case 'migrate':
         _out.writeln(
           '  diff      Compare schema sources and print or write an SQL diff.',
@@ -133,6 +134,7 @@ class MigrationCliDispatcher {
         _out.writeln(
           '  status    Compare local migration artifacts with database history.',
         );
+        break;
     }
     _out.writeln('Options:');
     _out.writeln(

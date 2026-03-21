@@ -1176,6 +1176,7 @@ class SchemaValidator {
             message: '@db.SmallInt does not accept arguments.',
           );
         }
+        return null;
       case 'db.BigInt':
         if (field.type != 'BigInt' || field.isList) {
           return ValidationIssue(
@@ -1191,6 +1192,7 @@ class SchemaValidator {
             message: '@db.BigInt does not accept arguments.',
           );
         }
+        return null;
       case 'db.DoublePrecision':
         if (field.type != 'Float' || field.isList) {
           return ValidationIssue(
@@ -1207,6 +1209,7 @@ class SchemaValidator {
             message: '@db.DoublePrecision does not accept arguments.',
           );
         }
+        return null;
       case 'db.VarChar':
         final length = value == null ? null : int.tryParse(value.trim());
         if (field.type != 'String' || field.isList) {
@@ -1239,6 +1242,7 @@ class SchemaValidator {
             message: '@db.Char requires a positive length argument.',
           );
         }
+        return null;
       case 'db.Text':
         if (field.type != 'String' || field.isList) {
           return ValidationIssue(
@@ -1333,6 +1337,7 @@ class SchemaValidator {
             message: '@db.Xml does not accept arguments.',
           );
         }
+        return null;
       case 'db.Timestamp':
       case 'db.Timestamptz':
         if (field.type != 'DateTime' || field.isList) {

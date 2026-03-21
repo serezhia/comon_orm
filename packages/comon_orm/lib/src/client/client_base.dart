@@ -91,6 +91,7 @@ class ModelDelegate {
       );
     }
     _validatePredicateFields(query.where);
+    _validatePredicateFields(query.cursor?.where ?? const []);
 
     final planned = _planner.planFindMany(query);
     return _adapter.findMany(
@@ -122,6 +123,7 @@ class ModelDelegate {
       );
     }
     _validatePredicateFields(query.where);
+    _validatePredicateFields(query.cursor?.where ?? const []);
 
     final planned = _planner.planFindFirst(query);
     return _adapter.findFirst(
