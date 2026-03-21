@@ -95,7 +95,21 @@ void main() {
         (metric) =>
             metric.name == ComonOrmOtelAttributes.operationErrorCountMetric,
       );
-      expect(errorMetric.points.single.value, 1);
+        expect(errorMetric.points, hasLength(2));
+
+        final transactionErrorPoint = errorMetric.points.firstWhere(
+          (point) =>
+              point.attributes[otel.SemanticAttributes.dbOperation] ==
+              'TRANSACTION',
+        );
+        final queryErrorPoint = errorMetric.points.firstWhere(
+          (point) =>
+              point.attributes[otel.SemanticAttributes.dbOperation] == 'SELECT' &&
+              point.attributes[otel.SemanticAttributes.dbTable] == 'User',
+        );
+
+        expect(transactionErrorPoint.value, 1);
+        expect(queryErrorPoint.value, 1);
     });
   });
 }
